@@ -4,7 +4,7 @@ Extrae empleos reportados por la plataforma SIMO del gobierno de Colombia.
 ```mermaid
 flowchart TD;
 source("Official Website") -->
-start[n = 1, attempt = 1] -->
+start[n = 1, i = 1] -->
 scrap[[Scrap from pages n to N]] -->
 check{"(n = N) <br/> OR <br/> (i = last_attempt)?"} -- YES --> 
 post[Process Data]
