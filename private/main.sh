@@ -8,35 +8,40 @@
 ####
 
 ##### BEGIN BLOCK: CRON
+
 ## Extra commands required for crontab exec of the script
 
-####
-# $PATH is a persistent environment variable
+#####################################################
+# $PATH is a persistent environment variable;
 # crontab commands have a $PATH value (/usr/bin:/bin)
-# different than that of the Terminal;
-# hence some programs working in Terminal
-# may not be found in crontab
+# different from that of Terminal.
+# For this reason, some programs working in Terminal
+# may not be found when exec from crontab
 #echo $PATH
 #
 #export PHANTOMJS_EXECUTABLE=/usr/local/bin ## opt 1 (issue: requires knowing the name of env var for each program)
-#export PATH=$PATH:/usr/local/bin ## opt 2 (issue: repeated exec under same session creates redundancy in PATH)
+#export PATH=$PATH:/usr/local/bin           ## opt 2 (issue: repeated exec under same session creates redundancy in PATH)
 
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin ## opt 3 (use Terminal's)
-####
+# UNCOMMENT THIS OPTION (opt 3) WHEN USING CRON
+#export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin ## opt 3 (use Terminal's)
+#####################################################
 
-####
-## crontab exec the script from '/root' directory
-## hence local dependencies in the project may not
-## be found.
-## SOLUTION: Find script's directory ($DIR)
-## and move to it.
+#####################################################
+## By default, crontab execs the script from '/root' directory,
+## preveting project's locally stored dependencies to be found.
+## SOLUTION: Move to project's directory ($DIR)
+## before exec of any dependency.
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $DIR
-####
+####################################################
+
 ##### END BLOCK: CRON
 
+# fix bug related with phpcasperjs
+export OPENSSL_CONF=dev/null
+
 ############################################
-# If after running main.sh  
+# If after running main.sh
 # loading data incomplete, run again
 # from new init page.
 ############################################
@@ -45,7 +50,7 @@ cd $DIR
 ## always start scraping from page 1
 init_pg=1  ## 1st page to be downloaded
 #end_pg=$(php get_total_pages.php)
-end_pg=2  ## test (comment remove_outdated...)
+end_pg=2  ## Test (while testing, comment command `remove_outdated...`)
 
 last_pg=$((init_pg - 1)) ## offset
 
@@ -62,7 +67,7 @@ fi
 ####################################
 # Everytime main.sh is executed,
 # we will try to download ALL pages
-# executing imax times the 
+# executing imax times the
 # program: get_jobs.php
 ####################################
 
@@ -73,7 +78,7 @@ imax=5  # number of max loops
 #waitunit=15
 
 ####################################################
-# -lt : less than, -a : AND, -le : less or equal 
+# -lt : less than, -a : AND, -le : less or equal
 # Single-bracket [...] syntax is the oldest and most compatible
 # Good habit to quote str vars within conditionals (not our case)
 # acloudguru.com/blog/engineering/conditions-in-bash-scripting-if-statements
@@ -103,7 +108,8 @@ last_pg=$(php <<EOF
 require 'functions.php';
 echo last_pg_loaded();
 ?>
-EOF)
+EOF
+)
 
 ## Record download attempts in table Activity_Monitor
 php Activity_Monitor.php -- "time=${exec_time}&run=${i}&run_max=${imax}&ex_last=${ex_last_pg}&last=${last_pg}&end=${end_pg}"
@@ -122,6 +128,7 @@ done
 
 ## Post-processing table Jobs: Keywords and Depts
 #if [ $last_pg -eq $end_pg ]; then
+    # php make_Static_Data.php // only once
     php update_Jobs_tmp_with_Static_Data.php
 #fi
 
