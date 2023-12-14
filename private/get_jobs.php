@@ -63,7 +63,7 @@
     
     // vendor/autoload: stackoverflow.com/questions/41209349/requirevendor-autoload-php-failed-to-open-stream
     
-    require 'vendor/autoload.php';
+    require '../vendor/autoload.php';
     require 'functions.php';
     
     // MAX_FILE_SIZE: stackoverflow.com/questions/48098911/the-use-of-the-php-simple-html-dom-parser-when-parsing-large-html-files-result
@@ -85,7 +85,9 @@
     // Instantiate the PHP Object Casper
     //  with my location of Casper.js
     
-    // Default: $casper = new Casper();
+    // Default path 
+    #$casper = new Casper();
+    // Custom path
     $casper = new Casper($path2casper);
     
     // Forward options to phantomJS
