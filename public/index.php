@@ -52,47 +52,47 @@ Author: judijasa <ciudadania.ab@gmail.com>
 <body>
     <!-- <p id="demo"></p> -->
     <?php
-        
+
         $items_per_page = 5;  // entries per page
-        
+
         if (isset($_GET["page"])) {
             $page  = intval($_GET["page"]);
         }
         else {
             $page = 1;
         }
-        
+
         if (isset($_GET["dept"])) {
             $dept  = intval($_GET["dept"]);
         }
         else {
             $dept = -1;
         }
-        
+
         //***********************************
         // Get total pages...
         //***********************************
-       
+
         $today = '1001-01-01'; //date("Y-m-d");
- 
+
         // Import file where we define connection to Database
-        require_once "../private/connection.php";
-        
+        require_once "/srv/git/SIMOExpress/private/connection.php";
+
         $query = "SELECT COUNT(*) FROM Jobs WHERE `Cierre` > '$today'";
         $result = mysqli_query($conn, $query);
         $row = mysqli_fetch_row($result);
         $total_records = $row[0];
-        
+
         echo "</br>";
         // Number of pages required.
         $total_pages = ceil($total_records / $items_per_page);
-        
+
         //*******************************
         // Get current page records...
         //*******************************
-        
+
         $start_from = ($page-1) * $items_per_page;
-        
+
         //// Without limit includes null components (?)
         //"SELECT Departamento FROM Static_Data LIMIT 0, 33" (working alt)
         $query = "SELECT Departamento FROM Static_Data WHERE Departamento IS NOT NULL";
@@ -101,15 +101,15 @@ Author: judijasa <ciudadania.ab@gmail.com>
         mysqli_free_result($result_depts);
         //print_r($row);
         $arr_length = count($row);
-        
+
         $query = "SELECT * FROM Jobs WHERE `Cierre` > '$today' LIMIT $start_from, $items_per_page";
-        
+
         if($dept !== -1){
-        $str_dept = $row[$dept][0];
-        $query = "SELECT * FROM Jobs WHERE `Cierre` > '$today' AND `Departamento` = '$str_dept' LIMIT $start_from, $items_per_page";
+            $str_dept = $row[$dept][0];
+            $query = "SELECT * FROM Jobs WHERE `Cierre` > '$today' AND `Departamento` = '$str_dept' LIMIT $start_from, $items_per_page";
         }
         $result_jobs = mysqli_query($conn, $query);
-        ?>
+    ?>
 
     <div class="container">
         <center>
@@ -141,7 +141,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 }else{
                     echo "<option value=-1> -- todos los deptos -- </option>";
                 }
-                
+
                 $i = 0; // initial val in option
                 /* Also works but since we already
                    fetched all data from $result_depts we
@@ -217,10 +217,10 @@ Author: judijasa <ciudadania.ab@gmail.com>
         </thead>
         <tbody>
         <?php
-            
+
             while ($row = mysqli_fetch_array($result_jobs)) {
                 // Display each field of the records.
-                ?>
+        ?>
         <tr>
         <!-- <td><?php echo $row["Nivel"]. ". ". $row["Keywords"]; ?></td> -->
         <td><?php
@@ -262,16 +262,16 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <?php
 
                 $pagLink = "";
-                $here = basename(__FILE__); // name of current file 
-               
+                $here = basename(__FILE__); // name of current file
+
                 if($page>=2){
                     echo "<a href='". $here. "?page=".($page-1). "&dept=". $dept. "'><i class='fas fa-angle-left' style='font-size:24px'></i></a>";
                 }
-                
+
                 $pagLink .= "<a class = 'active' href=''>".$page."</a>";
-                
+
                 echo $pagLink;
-                
+
                 if($page<$total_pages){
                     echo "<a href='". $here. "?page=".($page+1). "&dept=". $dept. "'><i class='fas fa-angle-right' style='font-size:24px'></i></i></a>";
                 }
