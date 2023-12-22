@@ -15,11 +15,30 @@ Author: judijasa <ciudadania.ab@gmail.com>
     <title>SimoEx</title>
     <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" type="text/css" href="mystyle.css">
+    <!-- More: http://www.webweaver.nu/html-tips/favicon.shtml -->
+    <link rel="shortcut icon" href="favicon.ico">
 
-    <!-- Bootstrap -->
-    <!-- <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
+    <!-- My custom CSS-->
+    <!-- Uncommented in original config
+    <link rel="stylesheet" type="text/css" href="mystyle.css">
+    -->
+
+    <!-- Bootstrap 3 HMTL Framework (plugin) -->
+    <!--
+    <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    -->
+
+    <!-- Bootstrap 5 HTML Framework (plugin)
+         https://getbootstrap.com/docs/5.1/getting-started/introduction/
+    -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+        crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
 
     <!-- Load search icon library
     www.w3schools.com/howto/howto_css_search_button.asp
@@ -29,16 +48,19 @@ Author: judijasa <ciudadania.ab@gmail.com>
     <!-- Load arrow icon script src
     www.w3schools.com/icons/tryit.asp?icon=fas_fa-angle-left&unicon=f104
     -->
-    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+    <script src='https://kit.fontawesome.com/1d6d59d2e9.js' crossorigin='anonymous'></script>
 
     <!-- Twitter Bootstrap: Button to match the style of the select menu with selectBoxIt
 
     www.c-sharpcorner.com/UploadFile/736ca4/twitter-bootstrap-3-layout-and-buttons/
     -->
 
+    <!-- Bootstrap HTML Framework (from local file) -->
+    <!-- Uncommentd in original config
     <link href="bootstrap/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="bootstrap/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" />
     <script src="bootstrap/bootstrap/js/bootstrap.min.js"></script>
+    -->
 
     <!--
          To handle long text in select options
@@ -67,6 +89,10 @@ Author: judijasa <ciudadania.ab@gmail.com>
         }
         else {
             $dept = -1;
+        }
+
+        if (isset($_GET["width"])) {
+            $width = intval($_GET["width"]);
         }
 
         //***********************************
@@ -136,16 +162,19 @@ Author: judijasa <ciudadania.ab@gmail.com>
 
             <select id="dept" onChange="go2Dept();">
             <?php
-                if($dept == -1){
+                if($dept == -1) {
                     echo "<option selected value=-1> -- todos los deptos -- </option>";
                 }else{
                     echo "<option value=-1> -- todos los deptos -- </option>";
                 }
 
                 $i = 0; // initial val in option
-                /* Also works but since we already
-                   fetched all data from $result_depts we
-                   better not fetch again.
+
+                /*
+                The commented lines below also work,
+                but since we already fetched all data from $result_depts
+                we better not fetch again.
+
                 while($row = mysqli_fetch_row($result_depts)) {
                     if(!$row[0]){
                         break;
@@ -156,7 +185,9 @@ Author: judijasa <ciudadania.ab@gmail.com>
                         echo "<option value=$i>". $row[0]. "</option><br>";
                     }
                     $i++;
-                }; */
+                };
+                */
+
                 for($x = 0; $x<$arr_length; $x++) {
                     if($dept == $i) {
                         echo "<option selected value=$i>". $row[$x][0]. "</option><br>";
@@ -165,7 +196,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                     }
                     $i++;
                 };
-                ?>
+            ?>
             </select>
 
             <!--*****************-->
@@ -264,8 +295,8 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $pagLink = "";
                 $here = basename(__FILE__); // name of current file
 
-                if($page>=2){
-                    echo "<a href='". $here. "?page=".($page-1). "&dept=". $dept. "'><i class='fas fa-angle-left' style='font-size:24px'></i></a>";
+                if($page>1){
+                    echo "<a href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "'><i class='fas fa-angle-left' style='font-size:24px'></i></a>";
                 }
 
                 $pagLink .= "<a class = 'active' href=''>".$page."</a>";
@@ -273,7 +304,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 echo $pagLink;
 
                 if($page<$total_pages){
-                    echo "<a href='". $here. "?page=".($page+1). "&dept=". $dept. "'><i class='fas fa-angle-right' style='font-size:24px'></i></i></a>";
+                    echo "<a href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "'><i class='fas fa-angle-right' style='font-size:24px'></i></i></a>";
                 }
             ?>
         </div>
@@ -284,10 +315,10 @@ Author: judijasa <ciudadania.ab@gmail.com>
     window.onload = function ()
     {
         let width = screen.width;
-        var val = "<?php echo isset($_GET['width']);?>";
+        var bool = "<?php echo isset($_GET['width']);?>";
         var here = "<?php echo $here;?>";
         //document.getElementById("demo").innerHTML = width+"px";
-        if(!val){
+        if(!bool){
             window.location.href = here+'?width='+width;
         }
     }
@@ -307,7 +338,8 @@ Author: judijasa <ciudadania.ab@gmail.com>
         var page = document.getElementById("page").value;
         var dept = "<?php echo $dept;?>";
         var here = "<?php echo $here;?>";
-        page = ((page><?php echo $total_pages; ?>)?<?php echo $total_pages; ?>:((page<1)?1:page));
+        var totalPages = "<?php echo $total_pages; ?>";
+        page = ((page > totalPages) ? totalPages: ((page < 1) ? 1 : page));
         window.location.href = here+'?width='+width+'&page='+page+'&dept='+dept;
     }
 
