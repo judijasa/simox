@@ -1,17 +1,34 @@
 # SIMOExpress
-Extrae empleos reportados por la plataforma SIMO del gobierno de Colombia.
+
+## Esta aplicacion...
+1. Extrae las ofertas de empleo reportadas en la plataforma SIMO del gobierno de Colombia.
+2. Guarda las ofertas de empleo en una base de datos.
+3. Ofrece un portal en linea para ofertas de empleo.
+
+This application is comprised of three components: crawler, database and website.
+[]: # 'This is a comment'
+[]: # 'Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;'
+[]: # '      Entity: Job offer, Attributes: job title, salary, etc.;...'
+[]: # '      Entity: Static Data, Attributes: ..., etc.; ...'
+[]: # 'Database: simo_express'
+[]: # 'Database Management System (DBMS): MySQL (or MariaDB)'
+[]: # 'Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)'
+
+## Database Design
+Entities: Job Offer
+Attributes:
 
 ```mermaid
 flowchart TD;
 source("Official Website") -->
 start[n = 1, i = 1] -->
 scrap[[Scrap from pages n to N]] -->
-check{"(n = N) <br/> OR <br/> (i = last_attempt)?"} -- YES --> 
+check{"(n = N) <br/> OR <br/> (i = last_attempt)?"} -- YES -->
 post[Process Data]
 check -- NO --> scrap
-post --> 
+post -->
 data[(My Database)] -->
-report[Report activity summary] & myweb(My Unofficial Website) 
+report[Report activity summary] & myweb(My Unofficial Website)
 
 note["<div style='text-align:left'>The overall workflow is in the file <b>main.sh</b>.<br/><br/>  To recover from connectivity crashes we run a conditional loop<br/> with an upper bound in the number of attempts.</div>"]-->
 anothernote["<div style='text-align:left'>The actual scrapping takes place in the file <b>get_jobs.php</b>.<br/><br/>We use the Casper class from [1] to script navigate the web:<br/><br/><pre>$casper = Casper(#quot;simo.cnsc.gov.co/#ofertaEmpleo#quot;);</pre><br/>[1] github.com/alwex/php-casperjs: A PHP wrapper of the library CasperJS.</div>"]
