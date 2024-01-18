@@ -14,6 +14,11 @@ This application is comprised of three components: crawler, database and website
 []: # 'Database Management System (DBMS): MySQL (or MariaDB)'
 []: # 'Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)'
 
+## DEBUG
+1. Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
+    of the boolean option `reset`.  Such an option is already defined in
+    vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()
+
 ## Database Design
 Entities: Job Offer
 Attributes:
