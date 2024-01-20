@@ -1,5 +1,5 @@
 <?php
-require '../vendor/autoload.php'; // in case pdo class in vendor
+require 'vendor/autoload.php'; // in case pdo class in vendor
 function getTotalPages($tot_res_var){
     // They use 10 job items per page.  Extract the total
     // Nr of pages from the total # of results:
@@ -64,14 +64,14 @@ function prepare_jobprofile($e_var) {
     $debris = explode('|',$e_var->innertext);
     // 1st element is empty. Remove it:
     array_shift($debris);
-    // Get the first 10 items of Job Profile after index 0:
+    // Get the first 10 items of job offer profile after index 0:
     $debris = array_slice($debris,0,10);
     $arrObj_jobitems = polish($debris);
     return $arrObj_jobitems;
 } // function
 
-// Job Details show after click
-// of the Down Arrow in the Job Profile.
+// Job details show after click
+// of the Down Arrow in the job offer profile.
 function prepare_jobdetails($arrObj_elems2_var) {
     $arrObj_details = new ArrayObject(array());
 
@@ -103,7 +103,7 @@ function prepare_jobdetails($arrObj_elems2_var) {
 
 function prepare_and_merge($arrObj_elems1_var,$arrObj_elems2_var){
     // Filter outdated job profiles and save their positions
-    // to later filter job details...
+    // to later filter job offer details...
     $current_date = "0000-01-01"; // default: date("Y-m-d");
     $arrObj_profiles = new ArrayObject(array());
     $arrObj_selection = new ArrayObject(array());
@@ -122,7 +122,7 @@ function prepare_and_merge($arrObj_elems1_var,$arrObj_elems2_var){
 
     $arrObj_details = prepare_jobdetails($arrObj_elems2_var);
 
-    // Filter Job Details and merge with Job Profile...
+    // Filter job offer details and merge with job offer Profile...
     $n = 0;
     $arrObj_elems = new ArrayObject(array());
     foreach($arrObj_selection as $i){
@@ -239,192 +239,151 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
 
 //************************************************************
 
-function make_table_Jobs_tmp(){
-    // Old method to fetch config data (no need of parsing):
-    //require 'admin_config.php';
-
-    // Current method to fetch config data:
-    // https://stackoverflow.com/questions/3480186/best-easiest-way-to-parse-configuration-parameters-in-sh-bash-and-php
-
-    $cnf = parse_ini_file("admin_config.sh"); // INI format similar to SH
-    $servername = $cnf["SERVER"];
-    $username = $cnf["USER"];
-    $password = $cnf["PASSWORD"];
-    $dbname = $cnf["DATABASE"];
-
-    try {
-        $conn = new PDO("mysql:host=$servername;port=3306;dbname=$dbname", $username, $password);
-        // set the PDO error mode to exception
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        //echo "Connected successfully";
-        // SQL Query
-        // columns with spacings: https://www.tutorialspoint.com/how-to-select-a-column-name-with-spaces-in-mysql
-        // utf8_decode() to handle tildes and ñ in columns' names
-        $stmt = $conn->prepare("DROP TABLE IF EXISTS Jobs_tmp; CREATE TABLE Jobs_tmp (id INTEGER PRIMARY KEY NOT NULL AUTO_INCREMENT, `Creado` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,`Página` SMALLINT, `Nivel` VARCHAR(25), `Denominación` VARCHAR(250), `Grado` TINYINT, `Código` VARCHAR(10), `OPEC` VARCHAR(50), `Salario` VARCHAR(50), `Convocatoria` VARCHAR(250), `Cierre` DATE NOT NULL, `Vacantes` SMALLINT, `Estudio` TEXT, `Keywords` TEXT, `Dependencia` VARCHAR(5000), `Departamento` VARCHAR(150), `Municipio` VARCHAR(1000)) DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci;");
-        $stmt->execute();
-        return true;
-    } catch(PDOException $e) {
-        echo "Error: " . "<br>" . $e->getMessage();
-    }
-        $conn = null;
-}
-
 function last_pg_loaded(){
-    // Old method to fetch config data (no need of parsing):
-    //require 'admin_config.php';
-
-    // Current method to fetch config data:
-    // https://stackoverflow.com/questions/3480186/best-easiest-way-to-parse-configuration-parameters-in-sh-bash-and-php
-
-    $cnf = parse_ini_file("admin_config.sh"); // INI format similar to SH
-    $servername = $cnf["SERVER"];
-    $username = $cnf["USER"];
-    $password = $cnf["PASSWORD"];
-    $dbname = $cnf["DATABASE"];
-
     try {
-        $conn = new PDO("mysql:host=$servername;port=3306;dbname=$dbname", $username, $password);
+        $dbname="simo";
+        $conn = new clientPDO($dbname);
         // set the PDO error mode to exception
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        //echo "Connected successfully";
-        // SQL Query
-        // columns with spacings: www.tutorialspoint.com/how-to-select-a-column-name-with-spaces-in-mysql
-        // utf8_decode() to handle tildes and ñ in columns' names
-        // "SELECT `Página` FROM Jobs_tmp ORDER BY `Página` DESC LIMIT 1;"
-        // "SELECT `Página` FROM Jobs_tmp WHERE id=(SELECT max(id) FROM Jobs_tmp);"
-        // query(): https://phpdelusions.net/pdo_examples/select
-        $stmt = $conn->query("SELECT `Página` FROM Jobs_tmp ORDER BY id DESC LIMIT 1");
+        #$stmt = $conn->query("SELECT pagina FROM job_offer_snapshot ORDER BY id DESC LIMIT 1");
+        $stmt = $conn->query("SELECT value FROM cursorseq WHERE key='simo_website_page'");
         $result = $stmt->fetch();
-        if($result['Página'] == ''){
+        if($result['Página'] == '') {
             return 0;
         }
         return $result['Página'];
     } catch(PDOException $e) {
         echo "Error: " . "<br>" . $e->getMessage();
+    } finally {
+        $conn = null;
     }
-    $conn = null;
 }
 
-function insert2db($arrObj_items_var, $conn){
-    // Old method to fetch config data (no need of parsing):
-    //require 'admin_config.php';
-
-    // Current method to fetch config data:
-    //stackoverflow.com/questions/3480186/best-easiest-way-to-parse-configuration-parameters-in-sh-bash-and-php
-
-    // Connection and try{} env commented out
-    // INI format similar to SH
-    //$cnf = parse_ini_file("admin_config.sh");
-    //$servername = $cnf["SERVER"];
-    //$username = $cnf["USER"];
-    //$password = $cnf["PASSWORD"];
-    //$dbname = $cnf["DATABASE"];
-
-    //try {
-         //$conn = new PDO("mysql:host=$servername;port=3306;dbname=$dbname", $username, $password);
-         // set the PDO error mode to exception
-         //$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        //*************************************
-        // ... use INSERT IF NOT EXISTS to avoid duplicates:
-        //*************************************
-        // Columns with spacings:
-        // www.tutorialspoint.com/how-to-select-a-column-name-with-spaces-in-mysql
-        //foreach(){$stmt = $conn->(...); $stmt->bindValue(...);...}
-        // Insert record if not exist:
-        // thispointer.com/insert-record-if-not-exists-in-mysql/
-        // Other:
-        // utf8_decode() to handle tildes and ñ in columns' names
-    //******************************************
-
-    $stmt = $conn->prepare("INSERT INTO Jobs_tmp (`Página`, `Nivel`, `Denominación`, `Grado`, `Código`, `OPEC`, `Salario`, `Convocatoria`, `Cierre`, `Vacantes`, `Estudio`, `Dependencia`, `Municipio`) SELECT * FROM (SELECT :pagina AS `Página`, :nivel AS `Nivel`, :denominacion AS `Denominación`, :grado AS `Grado`, :codigo AS `Código`, :opec AS `OPEC`, :salario AS `Salario`, :convocatoria AS `Convocatoria`, :cierre AS `Cierre`, :vacantes AS `Vacantes`, :estudio AS `Estudio`, :dependencia AS `Dependencia(s)`, :municipio AS `Municipio`) AS temp WHERE NOT EXISTS (SELECT `OPEC` FROM Jobs_tmp WHERE `OPEC` = :opec) LIMIT 1");
-    //echo 'arrObj_items_var = ';
-    //var_dump($arrObj_items_var);
+function insert2db($conn, $arrObj_job_data){
+    $stmt = $conn->prepare(
+        <<<EOD
+        INSERT INTO job_offer_snapshot (
+            pagina,
+            nivel,
+            denominacion,
+            grado,
+            codigo,
+            opec,
+            salario,
+            vigencia_salarial,
+            convocatoria,
+            entidad_codigo,
+            cierre,
+            vacantes,
+            estudio,
+            experiencia,
+            dependencia,
+            municipio,
+            otros
+        ) VALUES (
+            :pagina,
+            :nivel,
+            :denominacion,
+            :grado,
+            :codigo,
+            :opec,
+            :salario,
+            :vigencia_salarial,
+            :convocatoria,
+            :entidad_codigo,
+            :cierre,
+            :vacantes,
+            :estudio,
+            :experiencia,
+            :dependencia,
+            :municipio,
+            :otros
+        ) ON DUPLICATE KEY UPDATE id = id; /* i.e. do nothing */
+        EOD);
     // Default biding
     $stmt->bindValue(':pagina', NULL);
-    $stmt->bindValue(':nivel', NULL);
     $stmt->bindValue(':denominacion', NULL);
     $stmt->bindValue(':grado', NULL);
     $stmt->bindValue(':codigo', NULL);
     $stmt->bindValue(':opec', NULL);
-    //$stmt->bindValue(':entidad_id', NULL);
+    $stmt->bindValue(':entidad_codigo', NULL);
     $stmt->bindValue(':salario', NULL);
-    //$stmt->bindValue(':vigencia_salarial', NULL);
+    $stmt->bindValue(':vigencia_salarial', '1000');
     $stmt->bindValue(':convocatoria', NULL);
     $stmt->bindValue(':cierre', '1000-01-01');
     $stmt->bindValue(':vacantes', NULL);
     $stmt->bindValue(':estudio', NULL);
-    //$stmt->bindValue(':experiencia', NULL);
+    $stmt->bindValue(':experiencia', NULL);
     $stmt->bindValue(':dependencia', NULL);
     $stmt->bindValue(':municipio', NULL);
-    //$stmt->bindValue(':otros', NULL);
-
-    $array_items = (array) $arrObj_items_var;
-    foreach($array_items as $item){
-        if(str_contains($item, 'Página:')){ // 1
+    $stmt->bindValue(':otros', NULL);
+    $arr = (array) $arrObj_job_data; // old version
+    //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
+    foreach($arr as $item){
+        if(str_contains($item, 'Página:')){ // 0
             $pagina = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':pagina', $pagina);
         }
-        if(str_contains($item, 'Nivel:')){ // 2
+        if(str_contains($item, 'Nivel:')){ // 1
             $nivel = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':nivel', $nivel);
         }
-        if(str_contains($item, 'Denominación:')){ // 3
+        if(str_contains($item, 'Denominación:')){ // 2
             $denominacion = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':denominacion', $denominacion);
         }
-        if(str_contains($item, 'Grado:')){ // 4
+        if(str_contains($item, 'Grado:')){ // 3
             $grado = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':grado', $grado);
         }
-        if(str_contains($item, 'Código:')){ // 5
+        if(str_contains($item, 'Código:')){ // 4
             $codigo = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':codigo', $codigo);
         }
-        if(str_contains($item, 'OPEC:')){ // 6
+        if(str_contains($item, 'OPEC:')){ // 5
             $opec = trim(explode(': ',$item)[1]);
             $stmt->bindValue(':opec', $opec);
         }
-        if(str_contains($item, 'ID único entidad:')){ // 7 # TODO: add col
-            $entidad_id = trim(explode(': ',$item)[1]); // small int
-            //$stmt->bindValue(':entidad_id', $entidad_id);
+        if(str_contains($item, 'ID único entidad:')){ // 6
+            $entidad_codigo = trim(explode(': ',$item)[1]); // small int
+            $stmt->bindValue(':entidad_codigo', $entidad_codigo);
         }
-        if(str_contains($item, 'Asignación salarial:')){ // 8
+        if(str_contains($item, 'Asignación salarial:')){ // 7
             $salario = explode(': ',$item)[1];
             $salario = trim(str_replace('$', '', $salario));
             $salario = substr_replace($salario, ".", -3, 0);
             $salario = substr_replace($salario, "'", -7, 0);
             $stmt->bindValue(':salario', $salario);
         }
-        if(str_contains($item, 'Vigencia salarial:')){ // 9 # TODO: add col
-            $vigencia_salarial = trim(explode(': ',$item)[1]); // date (year)
-            //$stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
+        if(str_contains($item, 'Vigencia salarial:')){ // 8
+            $vigencia_salarial = trim(explode(': ',$item)[1]); // year
+            $stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
         }
-        if(str_contains($item, 'CONVOCATORIA')){ // 10
+        if(str_contains($item, 'CONVOCATORIA')){ // 9
             $convocatoria = trim($item);
             $stmt->bindValue(':convocatoria', $convocatoria, 2);
         }
-        if(str_contains($item, 'Cierre de inscripciones')){
+        if(str_contains($item, 'Cierre de inscripciones')){ // 10
             $cierre = trim(explode(': ',$item)[1]); // fecha del cierre de la convocatoria
             if($cierre == 'por definir'){ $cierre = '1000-01-01';}
             if(count(explode('-',$cierre)) == 1){$cierre = $cierre. '-01-01';}
             $stmt->bindValue(':cierre', $cierre);
         }
-        if(str_contains($item, 'Estudio:')){ // 12
+        if(str_contains($item, 'Estudio:')){ // 11
             $estudio = trim(explode(': ', $item,2)[1]);
             $stmt->bindValue(':estudio', $estudio);
         }
-        if(str_contains($item, 'Experiencia:')){ // 13 TODO: add col
-            $experiencia = trim(explode(': ',$item)[1]); // string
-            //$stmt->bindValue(':experiencia', $experiencia);
+        if(str_contains($item, 'Experiencia:')){ // 12
+            #$experiencia = trim(explode(': ',$item)[1]); // string
+            #$stmt->bindValue(':experiencia', $experiencia);
         }
-        if(str_contains($item, 'Dependencia:')){ // 14
+        if(str_contains($item, 'Dependencia:')){ // 16
             if (count(explode(': ',$item, 2)) > 1){
                 $dependencia = trim(explode(': ',$item,2)[1]);
                 $stmt->bindValue(':dependencia', $dependencia);
             } else {$dependencia = NULL;}
         }
-        if(str_contains($item, 'Municipio:')){ // 15
+        if(str_contains($item, 'Municipio:')){ // 17
             if (count(explode(': ', $item)) > 1){
                 $municipio = trim(explode(': ', $item)[1]);
                 if(stripos($municipio, "Bogot") !== false) {
@@ -433,130 +392,21 @@ function insert2db($arrObj_items_var, $conn){
                 $stmt->bindValue(':municipio', $municipio);
             }
         }
-        if(str_contains($item, 'Vacantes:')){ // 16
+        if(str_contains($item, 'Vacantes:')){ // 18
             $vacantes = explode(',',$item,2)[0];
             if (count(explode(': ',$vacantes)) > 1){
                 $vacantes = trim(explode(': ',$vacantes)[1]);
                 $stmt->bindValue(':vacantes', $vacantes);
             }
         }
-        if(str_contains($item, 'Otros:')){ // 17 TODO: add col
+        if(str_contains($item, 'Otros:')){ // 17
             $otros = trim(explode(': ',$item)[1]); // string
             //$stmt->bindValue(':otros', $otros);
-        }
+        } #else {
+            #$errorMessage = "Substring 'Otros:' not found.";
+            #trigger_error($errorMessage, E_USER_WARNING);
+        #}
     }
-    /*
-    // The lines above, replace the commented lines below
-    $stmt->bindValue(':pagina', trim(explode(': ',$array_items[0])[1]));
-    $stmt->bindValue(':nivel', trim(explode(': ',$array_items[1])[1]));
-    $stmt->bindValue(':denominacion', trim(explode(': ',$array_items[2])[1]));
-    $grado = trim(explode(': ',$array_items[3])[1]);
-    if(gettype($grado)== 'string'){
-        $grado = 0; // set Grado = 'no aplica' to Grado = 0
-    }
-    $stmt->bindValue(':grado', $grado);
-    $stmt->bindValue(':codigo', trim(explode(': ',$array_items[4])[1]));
-    $stmt->bindValue(':opec',trim(explode(': ',$array_items[5])[1]));
-    $salario = trim(substr(explode(': ',$array_items[7])[1], 2));
-    $salario = substr_replace($salario, ".", -3, 0);
-    $salario = substr_replace($salario, "'", -7, 0);
-	$stmt->bindValue(':salario', "$". $salario);
-    // Item 'Convocatoria': no need for explode()
-    $stmt->bindValue(':convocatoria', trim($array_items[9]),2);
-    // Handle cierres 'por definir' 2avoid conflict with format DATE
-    $cierre = trim(explode(': ',$array_items[8])[1]);
-	if($cierre == 'por definir'){ $cierre = '1000-01-01';}
-	if(count(explode('-',$cierre)) == 1){ $cierre = $cierre. '-01-01';}
-    $stmt->bindValue(':cierre', $cierre);
-    $estudio = trim(explode(': ', $array_items[10],2)[1]);
-    $stmt->bindValue(':estudio', $estudio);
-	if(count(explode(': ',$array_items[15],2)) > 1){
-	    $dependencia = trim(explode(': ',$array_items[12],2)[1]);
-        $stmt->bindValue(':dependencia', $dependencia);
-	} else {
-        $stmt->bindValue(':dependencia', 'Undefined array key 1 in $array_items[12] ($dependencia): '. $array_items[12]);
-	}
-    if (count(explode(': ', $array_items[16])) > 1){
-        $municipio = trim(explode(': ', $array_items[13])[1]);
-	    $stmt->bindValue(':municipio', $municipio);
-        if(stripos($municipio, "Bogot") !== false) {
-            $municipio = "Bogotá D.C.";
-        }
-	} else {
-        $stmt->bindValue(':municipio', 'Undefined array key 1 in $array_items[13] ($municipios)'. $array_items[13]);
-	}
-	$vacantes = explode(',',$array_items[17],2)[0];
-	// echo $vacantes;
-	if (count(explode(': ',$vacantes)) > 1){
-	    $stmt->bindValue(':vacantes', trim(explode(': ',$vacantes)[1]));
-	} else {
-	    $stmt->bindValue(':vacantes', 'Undefined array key 1 in $vacantes: '. substr($vacantes,0,5). ' CODIGO: '. explode(': ',$array_items[4])[1]);
-    }
-    */
     $stmt->execute();
-        //return true;
-    //} catch(PDOException $e) {
-        //echo "Error: " . "<br>" . $e->getMessage();
-    //}
-    //$conn = null;
-} // function
-
-function display_table(){
-    /* www.w3schools.com/php/php_mysql_select.asp
-       www.php.net/manual/en/functions.arguments.php */
-
-    // Old method to fetch config data (no need of parsing):
-    //require 'admin_config.php';
-
-    // Current method to fetch config data:
-    // stackoverflow.com/questions/3480186/best-easiest-way-to-parse-configuration-parameters-in-sh-bash-and-php
-
-    $cnf = parse_ini_file("admin_config.sh");  // INI format similar to SH
-    $servername = $cnf["SERVER"];
-    $username = $cnf["USER"];
-    $password = $cnf["PASSWORD"];
-    $dbname = $cnf["DATABASE"];
-
-    echo "<table style='border: solid 1px black;'>";
-    echo "<tr><th>Página</th><th>Nivel</th><th>Denominación</th><th>Grado</th><th>Código</th><th>OPEC</th><th><font color='#FFFFFF'>ss</font>Salario<font color='#FFFFFF'>ss</font></th><th>Convocatoria</th><th>Cierre de inscripciones</th><th>Número de vacantes</th><th>Estudio</th><th>Palabras clave</th><th>Dependencia</th><th>Municipio</th><th>Departamento</th></tr>";
-
-    class TableRows extends RecursiveIteratorIterator {
-        function __construct($it) {
-            parent::__construct($it, self::LEAVES_ONLY);
-        }
-
-        function current() {
-            return "<td style='width:150px;border:1px solid black;'>" . parent::current(). "</td>";
-        }
-
-        function beginChildren() {
-            echo "<tr>";
-        }
-
-        function endChildren() {
-            echo "</tr>" . "\n";
-        }
-    }
-
-    try {
-        $conn = new PDO("mysql:host=$servername;port=3306;dbname=$dbname", $username, $password);
-        // set the PDO error mode to exception
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        // SQL Query
-        // columns with spacings: https://www.tutorialspoint.com/how-to-select-a-column-name-with-spaces-in-mysql
-        // utf8_decode() to handle tildes and ñ in columns' names
-        $stmt = $conn->prepare("SELECT `Página`, `Nivel`, `Denominación`, `Grado`, `Código`, `OPEC`, `Salario`, `Convocatoria`, `Cierre`, `Vacantes`, `Estudio`, `Keywords`, `Dependencia`, `Municipio`, `Departamento` FROM Jobs_tmp");
-        $stmt->execute();
-
-        // set the resulting array to associative
-        $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        foreach(new TableRows(new RecursiveArrayIterator($stmt->fetchAll())) as $k=>$v) {
-            echo $v;
-        }
-    } catch(PDOException $e) {
-        echo "Error: " . $e->getMessage();
-    }
-    $conn = null;
-    echo "</table>";
 }
 ?>

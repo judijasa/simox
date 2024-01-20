@@ -1,0 +1,66 @@
+<?php
+// Keyword Generator:
+// Extrae palabras clave (carreras, estudios, oficios, etc.) de la lista 'Estudios' de la tabla 'job_offer_snapshot'.
+
+require 'src/utils/connectivity.php'; # adminPDO()
+require 'src/utils/string_ops.php'; # contains()
+
+try {
+    $dbname = 'simo';
+    $conn = new adminPDO($dbname);
+
+    // Use $conn->exec() if no results are returned
+    // Use $conn->prepare() if using bindValue()
+
+    $stmt0 = $conn->prepare("UPDATE job_offer SET departamento_id = 6 WHERE municipio = 'Bogotá D.C.'");
+    $stmt0->execute();
+
+    // Query "SELECT Estudio FROM job_offer LIMIT n OFFSET m"
+    // returns only n records, starting from record m (1st item m = 0)
+    $stmt = $conn->prepare("SELECT id, convocatoria FROM job_offer WHERE id > (SELECT value FROM cursorseq WHERE key = 'update_job_offer_id_seq')");
+    $stmt->execute();
+    $stmt->setFetchMode(PDO::FETCH_ASSOC);
+    $job_offer_obj = $stmt1->fetchAll();
+
+    $stmt = $conn->prepare("SELECT nombre FROM dpto_colombia");
+    $stmt->execute();
+    $stmt->setFetchMode(PDO::FETCH_ASSOC);
+    $res = new RecursiveArrayIterator($stmt2->fetchAll());
+    $depto_colombia_obj = new RecursiveIteratorIterator($res);
+
+    // TODO: Create UAE tbl, similar to dpto_colombia tbl
+
+    // Find `Departamento` in `Dependencia` from job_offer_snapshot
+    $kmax = count($job_offer_obj)-1;
+    foreach(range(0, $kmax) as $k) {
+        $v = $job_offer_obj[$k]["convocatoria"];
+        //echo $v. " || ";  // Only for testing
+
+        $flag = False;
+        if(contains($v, "Valle del Cauca")){
+            $dept_found = "Valle del Cauca";
+            $flag = True;
+        }else{
+            foreach($depto_colombia_obj as $i=>$j) {
+                if(contains($v,$j)) {
+                    $dept_found = $j;
+                    $flag = True;
+                    break;
+                }
+            }
+        }
+
+        if($flag){
+        // Renaming $stmt...
+        $stmt = $conn->prepare("UPDATE job_offer SET departamento = :w WHERE id = :id");
+        $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
+        $stmt->bindValue(':w', $dept_found);
+        $stmt->execute();
+        }
+    } // foreach
+} catch(PDOException $e) {
+    echo "Error: " . "<br>" . $e->getMessage();
+} finally {
+    $conn = null;
+}
+?>

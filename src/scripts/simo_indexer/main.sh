@@ -7,6 +7,14 @@
 # . [filename].sh
 ####
 
+# If exec not using CRON, check if you're in repo's root dir
+root_dir=/srv/git/SIMOExpress
+if [[ "$PWD" != $root_dir ]]
+then
+  echo "This command must be executed from the repository's root directory."
+  exit
+fi
+
 ##### BEGIN BLOCK: CRON
 
 ## Extra commands required for crontab exec of the script
@@ -31,8 +39,9 @@
 ## preveting project's locally stored dependencies to be found.
 ## SOLUTION: Move to project's directory ($DIR)
 ## before exec of any dependency.
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd $DIR
+#DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
+# DIR=$root_dir # redirect to repo's root dir
+#cd $DIR
 ####################################################
 
 ##### END BLOCK: CRON
@@ -48,34 +57,11 @@ export OPENSSL_CONF=dev/null
 
 ## Since we don't know ordering of simo table,
 ## always start scraping from page 1
-init_pg=1  ## 1st page to be downloaded
+#init_pg=1  ## 1st page to be downloaded
 #end_pg=$(php get_total_pages.php)
-end_pg=2  ## Test (while testing, comment command `remove_outdated...`)
+#end_pg=5  ## remove after test # relocated to get_jobs.py
 
-last_pg=$((init_pg - 1)) ## offset
-
-if [ $init_pg -eq 1 ]; then
-## Create table Jobs
-php <<EOF
-<?php
-require 'functions.php';
-make_table_Jobs_tmp();
-?>
-EOF
-fi
-
-####################################
-# Everytime main.sh is executed,
-# we will try to download ALL pages
-# executing imax times the
-# program: get_jobs.php
-####################################
-
-i=0
-
-imax=5  # number of max loops
-
-#waitunit=15
+#last_pg=$((init_pg - 1)) ## offset # relocated to get_jobs.py
 
 ####################################################
 # -lt : less than, -a : AND, -le : less or equal
@@ -86,55 +72,21 @@ imax=5  # number of max loops
 ## Args for php: stackoverflow.com/questions/6779576/how-to-pass-parameters-from-bash-to-php-script
 ###################################################
 
-while [ $last_pg -lt $end_pg -a $i -lt $imax ]
-do
-
-i=$((i + 1))
-
-## tee sends output to stdout (exec_time) and also to specified file (err.log)
-#exec_time=$(php get_jobs.php -- "last=${last_pg}&end=${end_pg}" | tee err.log)
-
 ti=`date +%s`
-php get_jobs.php -- "last=${last_pg}&end=${end_pg}" | tee err.log
+php src/scripts/simo_indexer/get_jobs.php | tee src/scripts/simo_indexer/err.log
+#php src/scripts/simo_indexer/get_jobs.php > src/scripts/simo_indexer/err.log # test
+#exit # test
 tf=`date +%s`
 secs=$((tf-ti))
 exec_time=$(printf '%02d:%02d:%02d' $((secs%86400/3600)) $((secs%3600/60)) $((secs%60)))
+echo "Execution time: $exec_time"; # remove after test
 
-ex_last_pg=$last_pg
+## Record download attempts in activity_monitor tbl
+# php src/activity_monitor.php -- "time=${exec_time}&run=${i}&run_max=${imax}&ex_last=${ex_last_pg}&last=${last_pg}&end=${end_pg}" # uncomment after test
 
-## Update last page loaded
-last_pg=$(php <<EOF
-<?php
-require 'functions.php';
-echo last_pg_loaded();
-?>
-EOF
-)
-
-## Record download attempts in table Activity_Monitor
-php Activity_Monitor.php -- "time=${exec_time}&run=${i}&run_max=${imax}&ex_last=${ex_last_pg}&last=${last_pg}&end=${end_pg}"
-
-if [ $last_pg -lt $end_pg ]; then
-let last_pg=$((last_pg - 1))
-## h(hours) m(mins) s(secs)
-#sleep $((i * waitunit))h
-fi
-done
-
-## Redirect to null message:
-## mysql: [Warning] ...
-## Comment during test
-#bash remove_outdated_entries_from_Jobs_tmp.sh > /dev/null 2>&1
-
-## Post-processing table Jobs: Keywords and Depts
-#if [ $last_pg -eq $end_pg ]; then
-    # php make_Static_Data.php // only once
-    php update_Jobs_tmp_with_Static_Data.php
-#fi
-
-# make copy of Jobs_tmp named Jobs
-bash make_public_table.sh > /dev/null 2>&1
+## postprocessing of job_offer tbl
+php src/scripts/simo_indexer/update_job_offer.php
 
 ## Email download status with summary
-#opec=$(php sampling_new_jobs.php)
-#php mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"
+#opec=$(php get_new_jobs.php)
+#php src/scripts/simo_indexer/mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"

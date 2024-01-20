@@ -5,7 +5,7 @@
     // PHP Connect to MySQL
     // https://www.w3schools.com/php/php_mysql_connect.asp
 
-    $cnf = parse_ini_file("client_config.sh"); // INI format similar to SH
+    $cnf = parse_ini_file("private/client_config.sh"); // INI format similar to SH
     $servername = $cnf["SERVER"];
     $username = $cnf["USER"];
     $password = $cnf["PASSWORD"];
@@ -30,6 +30,7 @@
         // set the PDO error mode to exception
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         echo "Connected successfully";
+        $conn = null;
     } catch(PDOException $e) {
         echo "Connection failed: " . $e->getMessage();
     }

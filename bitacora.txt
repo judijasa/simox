@@ -1,0 +1,26 @@
+-   the link (busqueda por rango de salario)
+        <a class="enlaceOver puntero" data-sigeca-click-oferta-empleo-r="16">
+    is suppossed to take you from
+        https://simo.cnsc.gov.co/#homeCiudadano
+    to
+        https://simo.cnsc.gov.co/#ofertaEmpleo
+
+    That link a custom attribute. Defs of attributes are given in javascript:
+    https://www.tutorialspoint.com/how-to-declare-a-custom-attribute-in-html
+
+    I need to find the def of this attribute in the javascript files of the website
+    which are in the head tag.
+
+-   crawling https://simo.cnsc.gov.co/#empleosOferta is not straightforward.
+    crawler seems unable to distinguish to go from
+        https://simo.cnsc.gov.co/#homeCiudadano
+    to
+        https://simo.cnsc.gov.co/#ofertaEmpleo
+    despite there is a link for it.
+
+-   https://simo.cnsc.gov.co/ redirects to https://simo.cnsc.gov.co/#homeCiudadano
+
+-   create a new get_jobs.php that starts from
+        https://simo.cnsc.gov.co/#homeCiudadano
+    instead of
+        https://simo.cnsc.gov.co/#ofertaEmpleo
