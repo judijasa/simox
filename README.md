@@ -15,9 +15,34 @@ This application is comprised of three components: crawler, database and website
 []: # 'Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)'
 
 ## DEBUG
-1. Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
+1.  Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
     of the boolean option `reset`.  Such an option is already defined in
     vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()
+2.  Add the function fetchText() to
+        `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()`
+    Other interesting functions (eg addStep etc) can be found at
+        https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php
+    with basic Usage at
+        https://github.com/synackSA/casperjs-php
+    The code to insert is
+             /**
+             *  @param string $selector
+             */
+
+                public function fetchText($selector)
+            {
+                $fragment = <<<FRAGMENT
+        casper.then(function () {
+                    this.echo(this.fetchText('$selector'));
+                    //this.echo(this.getHTML('$selector',true));
+        });
+
+        FRAGMENT;
+
+                $this->script .= $fragment;
+
+                return $this;
+            }
 
 ## Database Design
 Entities: Job Offer
