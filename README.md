@@ -77,8 +77,8 @@ This application is comprised of three components: crawler, database and website
     Basic usage:<br/>
     [https://github.com/synackSA/casperjs-php](https://github.com/synackSA/casperjs-php)
 
-3.  casperjs sendKeys() uses phantomjs sendEvent(). Useful references:
-    [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)
+3.  casperjs sendKeys() uses phantomjs sendEvent(). Useful references:<br/>
+    [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
 
 ## Database Design
