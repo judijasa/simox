@@ -72,9 +72,9 @@ This application is comprised of three components: crawler, database and website
             }
     ``
 
-    Other interesting functions to incorporate:\n
-    [https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php](https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php)\n
-    Basic usage:\n
+    Other interesting functions to incorporate:<br/>
+    [https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php](https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php)<br/>
+    Basic usage:<br/>
     [https://github.com/synackSA/casperjs-php](https://github.com/synackSA/casperjs-php)
 
 3.  casperjs sendKeys() uses phantomjs sendEvent(). Useful references:
