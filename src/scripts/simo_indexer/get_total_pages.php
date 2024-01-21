@@ -33,13 +33,17 @@
 
     $casper->run();
 
-    //print_r(array_slice($casper->getOutput(), 5, 15,true));
-
+    #$output = $casper->getOutput(); # test
+    #$output[17] = null; # test
+    #$output[18] = null; # test
+    #print_r(array_slice($casper->getOutput(), 5, 15,true)); # test
+    #print_r($output); # test
+    #exit(); # test
     $fetch = ($casper->getOutput())[15];
-    //echo "Fetched element: ". $fetch. "\n";
+    # echo "Fetched element: ". $fetch. "\n"; # test
     $tot_res = trim(explode('de',explode('resultados',$fetch)[0])[1]);
-    //echo "Total results: ". $tot_res. "\n";
+    //echo "Total results: ". $tot_res. "\n"; # test
     $tot_pgs = getTotalPages($tot_res);
-    //echo "Total pages: ". $tot_pgs. "\n";
+    //echo "Total pages: ". $tot_pgs. "\n"; # test
     echo $tot_pgs;
 ?>
