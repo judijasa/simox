@@ -18,13 +18,43 @@ This application is comprised of three components: crawler, database and website
 1.  Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
     of the boolean option `reset`.  Such an option is already defined in
     vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()
-2.  Add the function fetchText() to
+2.  Define fetchText() in
         `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()`
-    Other interesting functions (eg addStep etc) can be found at
-        https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php
-    with basic Usage at
-        https://github.com/synackSA/casperjs-php
     The code to insert is
+    `{verbatim}
+    public function sendKeysReset($selector, $string)
+        {
+        // Customized sendKeys()...
+        // www.py4u.net/discuss/351251
+            $jsonData = json_encode($string);
+
+            $fragment = <<<FRAGMENT
+    casper.then(function () {
+                // sendKeys (casperjs Documentation):
+                // casperjs-dev.readthedocs.io/en/latest/modules/casper.html
+                this.sendKeys('$selector', $jsonData, { reset: true });
+                //{ reset: true, keepFocus: true }
+                //this.echo(this.fetchText('$selector'));
+        // this.page.[...]:
+        // stackoverflow.com/questions/32131977/where-is-casper-js-sendevent-defined
+        // "Since CasperJS is built on top of PhantomJS,
+        // you can use any PhantomJS function inside a CasperJS script
+        // through the casper.page object."
+        // sendEvent implementation:
+        // github.com/ariya/phantomjs/blob/master/src/webpage.cpp
+        // sendEvent tutorial:
+        // phantomjs.org/api/webpage/method/send-event.html
+        // page.sendEvent() is not working
+        //this.page.sendEvent("keypress", this.page.event.key.Enter);
+    });
+
+    FRAGMENT;
+
+            $this->script .= $fragment;
+
+            return $this;
+        }
+
              /**
              *  @param string $selector
              */
@@ -43,6 +73,11 @@ This application is comprised of three components: crawler, database and website
 
                 return $this;
             }
+    `
+    Other interesting functions (eg addStep etc) can be found at
+        https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php
+    with basic Usage at
+        https://github.com/synackSA/casperjs-php
 
 ## Database Design
 Entities: Job Offer
