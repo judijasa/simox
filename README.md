@@ -23,27 +23,27 @@ This application is comprised of three components: crawler, database and website
 
     ``{verbatim}
 
-     /**
-     *  @param string $selector
-     *  @param string $input
-     *  @param boolean $reset
-     */
+         /**
+         *  @param string $selector
+         *  @param string $input
+         *  @param boolean $reset
+         */
 
-    public function sendKeys($selector, $input, $reset=false)
-        {
-            $jsonData = json_encode($input);
+        public function sendKeys($selector, $input, $reset=false)
+            {
+                $jsonData = json_encode($input);
 
-            $fragment = <<<FRAGMENT
-    casper.then(function () {
-                this.sendKeys('$selector', $jsonData, { reset: $reset });
-    });
+                $fragment = <<<FRAGMENT
+        casper.then(function () {
+                    this.sendKeys('$selector', $jsonData, { reset: $reset });
+        });
 
-    FRAGMENT;
+        FRAGMENT;
 
-            $this->script .= $fragment;
+                $this->script .= $fragment;
 
-            return $this;
-        }
+                return $this;
+            }
     ``
 
 2.  Define sendKeysReset() and define fetchText() in
@@ -53,23 +53,23 @@ This application is comprised of three components: crawler, database and website
 
     ``{verbatim}
 
-     /**
-     *  @param string $selector
-     */
+         /**
+         *  @param string $selector
+         */
 
-    public function fetchText($selector)
-        {
-            $fragment = <<<FRAGMENT
-    casper.then(function () {
-                this.echo(this.fetchText('$selector'));
-    });
+        public function fetchText($selector)
+            {
+                $fragment = <<<FRAGMENT
+        casper.then(function () {
+                    this.echo(this.fetchText('$selector'));
+        });
 
-    FRAGMENT;
+        FRAGMENT;
 
-            $this->script .= $fragment;
+                $this->script .= $fragment;
 
-            return $this;
-        }
+                return $this;
+            }
     ``
 
     Other interesting functions (eg addStep etc) can be found at
