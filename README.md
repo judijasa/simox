@@ -72,16 +72,16 @@ This application is comprised of three components: crawler, database and website
             }
     ``
 
-    Other interesting functions (eg addStep etc) can be found at
-        `https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php`
-    with basic Usage at
-        `https://github.com/synackSA/casperjs-php`
+    Other interesting functions to incorporate:
+    [github.com/synackSA/.../Casper.php](https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php)
+    Basic usage:
+    [github.com/synackSA/.../README.md](https://github.com/synackSA/casperjs-php)
 
-3.  Casperjs' sendKeys() uses phantomjs' sendEvent(). Useful references
+3.  casperjs sendKeys() uses phantomjs sendEvent(). Useful references
     ### Documentation
-        `https://phantomjs.org/api/webpage/method/send-event.html`
+    [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)
     ### Code
-        `https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp`
+    [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
 
 ## Database Design
 Entities: Job Offer
