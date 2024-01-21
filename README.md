@@ -21,7 +21,7 @@ This application is comprised of three components: crawler, database and website
 
     Code:
 
-    `{verbatim}
+    ``{verbatim}
 
      /**
      *  @param string $selector
@@ -44,14 +44,14 @@ This application is comprised of three components: crawler, database and website
 
             return $this;
         }
-    `
+    ``
 
 2.  Define sendKeysReset() and define fetchText() in
         `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()`
 
     Code:
 
-    `{verbatim}
+    ``{verbatim}
 
      /**
      *  @param string $selector
@@ -70,7 +70,8 @@ This application is comprised of three components: crawler, database and website
 
             return $this;
         }
-    `
+    ``
+
     Other interesting functions (eg addStep etc) can be found at
         `https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php`
     with basic Usage at
