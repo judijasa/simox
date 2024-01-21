@@ -16,7 +16,7 @@ This application is comprised of three components: crawler, database and website
 
 ## PHP CASPER CLASS
 1.  Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
-    of the boolean option `reset`.  Such an option is already defined in
+    of the boolean option `reset`, which is already defined in
     `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
 
     Code:
@@ -76,6 +76,12 @@ This application is comprised of three components: crawler, database and website
         `https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php`
     with basic Usage at
         `https://github.com/synackSA/casperjs-php`
+
+3.  Casperjs' sendKeys() uses phantomjs' sendEvent(). Useful references
+    ### Documentation
+        `https://phantomjs.org/api/webpage/method/send-event.html`
+    ### Code
+        `https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp`
 
 ## Database Design
 Entities: Job Offer
