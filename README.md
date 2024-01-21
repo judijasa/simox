@@ -22,26 +22,28 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     `{verbatim}
-         /**
-         *  @param string $selector
-         *  @param string $input
-         *  @param boolean $reset
-         */
-        public function sendKeys($selector, $input, $reset=false)
-            {
-                $jsonData = json_encode($input);
 
-                $fragment = <<<FRAGMENT
-        casper.then(function () {
-                    this.sendKeys('$selector', $jsonData, { reset: $reset });
-        });
+     /**
+     *  @param string $selector
+     *  @param string $input
+     *  @param boolean $reset
+     */
 
-        FRAGMENT;
+    public function sendKeys($selector, $input, $reset=false)
+        {
+            $jsonData = json_encode($input);
 
-                $this->script .= $fragment;
+            $fragment = <<<FRAGMENT
+    casper.then(function () {
+                this.sendKeys('$selector', $jsonData, { reset: $reset });
+    });
 
-                return $this;
-            }
+    FRAGMENT;
+
+            $this->script .= $fragment;
+
+            return $this;
+        }
     `
 
 2.  Define sendKeysReset() and define fetchText() in
@@ -50,22 +52,24 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     `{verbatim}
-         /**
-         *  @param string $selector
-         */
-        public function fetchText($selector)
-            {
-                $fragment = <<<FRAGMENT
-        casper.then(function () {
-                    this.echo(this.fetchText('$selector'));
-        });
 
-        FRAGMENT;
+     /**
+     *  @param string $selector
+     */
 
-                $this->script .= $fragment;
+    public function fetchText($selector)
+        {
+            $fragment = <<<FRAGMENT
+    casper.then(function () {
+                this.echo(this.fetchText('$selector'));
+    });
 
-                return $this;
-            }
+    FRAGMENT;
+
+            $this->script .= $fragment;
+
+            return $this;
+        }
     `
     Other interesting functions (eg addStep etc) can be found at
         `https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php`
