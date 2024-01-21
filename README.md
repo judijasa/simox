@@ -22,12 +22,11 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     `{verbatim}
-             /**
-             *  @param string  $selector
-             *  @param string  $input
-             *  @param boolean $reset
-             */
-
+         /**
+         *  @param string $selector
+         *  @param string $input
+         *  @param boolean $reset
+         */
         public function sendKeys($selector, $input, $reset=false)
             {
                 $jsonData = json_encode($input);
@@ -51,16 +50,14 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     `{verbatim}
-             /**
-             *  @param string $selector
-             */
-
+         /**
+         *  @param string $selector
+         */
         public function fetchText($selector)
             {
                 $fragment = <<<FRAGMENT
         casper.then(function () {
                     this.echo(this.fetchText('$selector'));
-                    //this.echo(this.getHTML('$selector',true));
         });
 
         FRAGMENT;
@@ -71,9 +68,9 @@ This application is comprised of three components: crawler, database and website
             }
     `
     Other interesting functions (eg addStep etc) can be found at
-        https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php
+        `https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php`
     with basic Usage at
-        https://github.com/synackSA/casperjs-php
+        `https://github.com/synackSA/casperjs-php`
 
 ## Database Design
 Entities: Job Offer
