@@ -308,9 +308,9 @@ function insert2db($conn, $arrObj_job_data){
     $stmt->bindValue(':opec', NULL);
     $stmt->bindValue(':entidad_codigo', NULL);
     $stmt->bindValue(':salario', NULL);
-    $stmt->bindValue(':vigencia_salarial', 0000);
+    $stmt->bindValue(':vigencia_salarial', NULL);
     $stmt->bindValue(':convocatoria', NULL);
-    $stmt->bindValue(':cierre', '0000-00-00');
+    $stmt->bindValue(':cierre', NULL);
     $stmt->bindValue(':vacantes', NULL);
     $stmt->bindValue(':estudio', NULL);
     $stmt->bindValue(':experiencia', NULL);
