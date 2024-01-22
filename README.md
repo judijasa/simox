@@ -46,8 +46,8 @@ This application is comprised of three components: crawler, database and website
             }
     ``
 
-2.  Define sendKeysReset() and define fetchText() in
-        `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()`
+2.  Define fetchText() in
+        `vendor/phpcasperjs/phpcasperjs/src/Casper.php`
 
     Code:
 
@@ -78,11 +78,13 @@ This application is comprised of three components: crawler, database and website
     Basic usage:<br/>
     [https://github.com/synackSA/casperjs-php](https://github.com/synackSA/casperjs-php)
 
-3.  casperjs sendKeys() uses phantomjs sendEvent(). Useful references:<br/>
+3.  casperjs method sendKeys() uses phantomjs method sendEvent(). Useful references about the latter:<br/>
     Documentation:
     [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)<br/>
     Code:<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
+4.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
+    used in casperjs method sendKeys().
 
 ## Database Design
 Entities: Job Offer
