@@ -77,7 +77,7 @@ try {
     $conn = null;
 }
 
-$end_pg = $last_pg_loaded + 11; // remove after test. It must be greater than batch page size
+$end_pg = $last_pg_loaded + 7; // remove after test. It must be greater than batch page size
 
 // How to set a value of an input tag in casperJS:
 // stackoverflow.com/questions/18172040/how-to-set-value-of-an-input-tag-in-casperjs
@@ -97,15 +97,15 @@ $dbname = 'simo';
 $pg = $last_pg_loaded + 1;
 if($pg > 1){
     $casper->waitForSelector('input.dgrid-page-input',30000);
-    // sendKeysReset includes Enter keypress
-    //$casper->sendKeysReset('input.dgrid-page-input', $pg); (deprecated in vendor)
-    $casper->sendKeys('input.dgrid-page-input', $pg, $reset=true);
-    // Don't click with command below, it will send you to pg 1 again.
-    //$casper->click('span.b_buscarEmpleo.botonGrande');
+    $casper->sendKeys('input.dgrid-page-input', (string) $pg, $reset=true);
+    $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000);
+    $casper->click('span.dgrid-next.dgrid-page-link');
 
-    //$casper->waitForSelector('input.dgrid-page-input',30000); // test
-    //$casper->fetchText('input.dgrid-page-input'); // test
-    //$casper->fetchText('.dgrid-status'); // test
+    //$casper->waitForSelector('.dgrid-status',30000); // test: current page
+    //$casper->fetchText('.dgrid-status'); // test: current page
+    //$casper->run(); // test: current page
+    //print_r(array_slice($casper->getOutput(), 0, 46,true)); // test: current page
+    //exit(); // test: current page
 }
 
 //********************************
@@ -127,7 +127,7 @@ if($pg > 1){
 // Code here to fetch data if you want
 
 $arrObj_batch = new ArrayObject();
-$batch_pg_size = 5;
+$batch_pg_size = 3;
 while ($pg < $end_pg) {
     // Wait for 3 secs:
     //$casper->wait(3000);
