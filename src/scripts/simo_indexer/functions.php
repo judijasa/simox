@@ -317,6 +317,7 @@ function insert2db($conn, $arrObj_job_data){
     $stmt->bindValue(':dependencia', NULL);
     $stmt->bindValue(':municipio', NULL);
     $stmt->bindValue(':otros', NULL);
+    var_dump($arrObj_job_data); // text
     $arr = (array) $arrObj_job_data; // old version
     //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
     foreach($arr as $item){
@@ -374,8 +375,8 @@ function insert2db($conn, $arrObj_job_data){
             $stmt->bindValue(':estudio', $estudio);
         }
         if(str_contains($item, 'Experiencia:')){ // 12
-            #$experiencia = trim(explode(': ',$item)[1]); // string
-            #$stmt->bindValue(':experiencia', $experiencia);
+            $experiencia = trim(explode(': ',$item)[1]); // string
+            $stmt->bindValue(':experiencia', $experiencia);
         }
         if(str_contains($item, 'Dependencia:')){ // 16
             if (count(explode(': ',$item, 2)) > 1){
@@ -401,7 +402,7 @@ function insert2db($conn, $arrObj_job_data){
         }
         if(str_contains($item, 'Otros:')){ // 17
             $otros = trim(explode(': ',$item)[1]); // string
-            //$stmt->bindValue(':otros', $otros);
+            $stmt->bindValue(':otros', $otros);
         } #else {
             #$errorMessage = "Substring 'Otros:' not found.";
             #trigger_error($errorMessage, E_USER_WARNING);
