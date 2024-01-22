@@ -20,6 +20,7 @@ CREATE OR REPLACE TABLE job_offer (
     keywords TEXT,
 
     PRIMARY KEY(id),
+    UNIQUE INDEX(opec),
     INDEX idx_job_offer_cierre(cierre),
     INDEX idx_job_offer_departamento_id(departamento_id),
     FOREIGN KEY fk_job_offer_departamento_id(departamento_id)
