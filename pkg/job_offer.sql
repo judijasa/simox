@@ -4,7 +4,7 @@ CREATE OR REPLACE TABLE job_offer (
     denominacion VARCHAR(250),
     grado TINYINT,
     codigo VARCHAR(10), -- check if this is unique
-    opec INT UNIQUE NOT NULL,
+    opec INT NOT NULL,
     salario VARCHAR(50),
     vigencia_salarial YEAR,
     convocatoria VARCHAR(250),
