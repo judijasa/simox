@@ -8,9 +8,9 @@ CREATE OR REPLACE TABLE cursorseq (
     CONSTRAINT chk_cursorseq_key CHECK (`key` REGEXP '^[a-zA-Z0-9_]+$')
 );
 
--- MariaDB doesn't supports check constraints with inequalities between columns
+/* MariaDB doesn't supports check constraints with inequalities between columns */
 DELIMITER //
-CREATE TRIGGER chk_cursorseq_insert_mod
+CREATE OR REPLACE TRIGGER chk_cursorseq_insert_mod
 BEFORE INSERT ON cursorseq
 FOR EACH ROW
 BEGIN
@@ -20,9 +20,11 @@ BEGIN
         SET error_message = 'Constraint violation: cursorseq._mod must be greater than cursorseq.div';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     END IF;
-END //
+END; //
+DELIMITER ;
 
-CREATE TRIGGER chk_cursorseq_update_mod
+DELIMITER //
+CREATE OR REPLACE TRIGGER chk_cursorseq_update_mod
 BEFORE UPDATE ON cursorseq
 FOR EACH ROW
 BEGIN
@@ -32,7 +34,8 @@ BEGIN
         SET error_message = 'Constraint violation: cursorseq._mod must be greater than cursorseq.div';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     END IF;
-END //
+END; //
+DELIMITER ;
 
 INSERT INTO cursorseq (`key`, value) VALUES ('update_job_offer_id_seq', 0);
 INSERT INTO cursorseq (`key`, value) VALUES ('simo_website_page', 0);
