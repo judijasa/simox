@@ -22,12 +22,11 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     ```php
-         /**
+        /**
          *  @param string $selector
          *  @param string $input
          *  @param boolean $reset
          */
-
         public function sendKeys($selector, $input, $reset=false)
             {
                 $jsonData = json_encode($input);
@@ -51,10 +50,9 @@ This application is comprised of three components: crawler, database and website
     Code:
 
     ```php
-         /**
+        /**
          *  @param string $selector
          */
-
         public function fetchText($selector)
             {
                 $fragment = <<<FRAGMENT
