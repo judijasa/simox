@@ -4,7 +4,8 @@ CREATE OR REPLACE TABLE nivel (
     id SMALLINT AUTO_INCREMENT,
     nombre VARCHAR(100) UNIQUE NOT NULL,
 
-    PRIMARY KEY(id)
+    PRIMARY KEY(id),
+    UNIQUE KEY unique_nivel_nombre (nombre)
 );
 
 /*
