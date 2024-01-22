@@ -317,7 +317,6 @@ function insert2db($conn, $arrObj_job_data){
     $stmt->bindValue(':dependencia', NULL);
     $stmt->bindValue(':municipio', NULL);
     $stmt->bindValue(':otros', NULL);
-    var_dump($arrObj_job_data); // text
     $arr = (array) $arrObj_job_data; // old version
     //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
     foreach($arr as $item){
