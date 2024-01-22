@@ -1,3 +1,4 @@
+DELIMITER //
 CREATE OR REPLACE TRIGGER after_job_offer_snapshot_upsert_job_offer
 AFTER INSERT ON job_offer_snapshot
 FOR EACH ROW
@@ -47,4 +48,5 @@ BEGIN
         dependencia         = NEW.dependencia,
         municipio           = NEW.municipio,
         max_snap_id         = NEW.id;
-END;
+END; //
+DELIMITER ;

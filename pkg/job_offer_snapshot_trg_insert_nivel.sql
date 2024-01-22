@@ -1,3 +1,4 @@
+DELIMITER //
 CREATE OR REPLACE TRIGGER after_job_offer_snapshot_insert_nivel
 AFTER INSERT ON job_offer_snapshot
 FOR EACH ROW
@@ -9,4 +10,5 @@ BEGIN
     ) ON DUPLICATE KEY
     UPDATE
         id = id;
-END;
+END; //
+DELIMITER ;
