@@ -45,7 +45,7 @@ Note: CHAR SET and COLLATE now defined at database level.
 */
 
 DELIMITER //
-CREATE OR REPLACE FUNCTION norm_null_from_str(input_str VARCHAR(5000))
+CREATE OR REPLACE FUNCTION null_from_default_str(input_str VARCHAR(5000))
 RETURNS VARCHAR(5000)
 BEGIN
     DECLARE output_str VARCHAR(5000);
@@ -61,7 +61,7 @@ END; //
 DELIMITER ;
 
 DELIMITER //
-CREATE OR REPLACE FUNCTION norm_null_from_num(input_num INT)
+CREATE OR REPLACE FUNCTION null_from_default_num(input_num INT)
 RETURNS INT
 BEGIN
     DECLARE output_num INT;
@@ -77,7 +77,7 @@ END; //
 DELIMITER ;
 
 DELIMITER //
-CREATE OR REPLACE FUNCTION norm_null_from_date(input_date DATE)
+CREATE OR REPLACE FUNCTION null_from_default_date(input_date DATE)
 RETURNS DATE
 BEGIN
     DECLARE output_date DATE;

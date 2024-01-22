@@ -36,18 +36,18 @@ BEGIN
             NEW.id
         ) ON DUPLICATE KEY
         UPDATE
-            denominacion        = norm_null_str(NEW.denominacion),
-            grado               = norm_null_num(NEW.grado),
-            codigo              = norm_null_str(NEW.codigo),
-            salario             = norm_null_str(NEW.salario),
-            vigencia_salarial   = norm_null_year(NEW.vigencia_salarial),
-            convocatoria        = norm_null_str(NEW.convocatoria),
-            entidad_codigo      = norm_null_num(NEW.entidad_codigo),
-            cierre              = norm_null_date(NEW.cierre),
-            vacantes            = norm_null_num(NEW.vacantes),
-            estudio             = norm_null_str(NEW.estudio),
-            dependencia         = norm_null_str(NEW.dependencia),
-            municipio           = norm_null_str(NEW.municipio),
+            denominacion        = null_from_default_str(NEW.denominacion),
+            grado               = null_from_default_num(NEW.grado),
+            codigo              = null_from_default_str(NEW.codigo),
+            salario             = null_from_default_str(NEW.salario),
+            vigencia_salarial   = null_from_default_year(NEW.vigencia_salarial),
+            convocatoria        = null_from_default_str(NEW.convocatoria),
+            entidad_codigo      = null_from_default_num(NEW.entidad_codigo),
+            cierre              = null_from_default_date(NEW.cierre),
+            vacantes            = null_from_default_num(NEW.vacantes),
+            estudio             = null_from_default_str(NEW.estudio),
+            dependencia         = null_from_default_str(NEW.dependencia),
+            municipio           = null_from_default_str(NEW.municipio),
             max_snap_id         = NEW.id;
         END IF;
 END; //
