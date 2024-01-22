@@ -20,19 +20,19 @@ BEGIN
             municipio,
             max_snap_id
         ) VALUES (
-            NEW.denominacion,
-            NEW.grado,
-            NEW.codigo,
+            null_from_default_str(NEW.denominacion),
+            null_from_default_num(NEW.grado),
+            null_from_default_str(NEW.codigo),
             NEW.opec,
-            NEW.salario,
-            NEW.vigencia_salarial,
-            NEW.convocatoria,
-            NEW.entidad_codigo,
-            NEW.cierre,
-            NEW.vacantes,
-            NEW.estudio,
-            NEW.dependencia,
-            NEW.municipio,
+            null_from_default_str(NEW.salario),
+            null_from_default_year(NEW.vigencia_salarial),
+            null_from_default_str(NEW.convocatoria),
+            null_from_default_num(NEW.entidad_codigo),
+            null_from_default_date(NEW.cierre),
+            null_from_default_num(NEW.vacantes),
+            null_from_default_str(NEW.estudio),
+            null_from_default_str(NEW.dependencia),
+            null_from_default_str(NEW.municipio),
             NEW.id
         ) ON DUPLICATE KEY
         UPDATE
