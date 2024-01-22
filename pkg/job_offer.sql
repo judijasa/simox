@@ -93,7 +93,7 @@ END; //
 DELIMITER ;
 
 DELIMITER //
-CREATE OR REPLACE FUNCTION norm_null_year(input_year YEAR)
+CREATE OR REPLACE FUNCTION null_from_default_year(input_year YEAR)
 RETURNS YEAR
 BEGIN
     DECLARE output_year YEAR;
