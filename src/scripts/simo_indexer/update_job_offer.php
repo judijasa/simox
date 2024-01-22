@@ -248,31 +248,42 @@ try {
     $flag = True; // Detect new careers
 
     $kmax = count($job_offer_obj)-1;
-    foreach(range(0, $kmax) as $k) {
-        $sql = <<<SQL
-        START TRANSACTION;
+    if(empty($job_offer_obj)){
+        $message = "WARNING: Nothing to update.";
+        #error_log($message, E_WARNING);
+        echo $message. PHP_EOL;
+    } else {
+        foreach(range(0, $kmax) as $k) {
+            $sql = <<<SQL
+            START TRANSACTION;
 
-        UPDATE job_offer
-        SET
-            departamento_id = (SELECT id FROM dpto_colombia WHERE nombre = :dpto_nombre),
-            keywords = :keywords,
-            nivel_id = (SELECT id FROM nivel WHERE nombre = (SELECT nivel FROM job_offer_snapshot WHERE id = :max_snap_id))
-        WHERE id = :id;
+            UPDATE job_offer
+            SET
+                departamento_id = (SELECT id FROM dpto_colombia WHERE nombre = :dpto_nombre),
+                keywords = :keywords,
+                nivel_id = (SELECT id FROM nivel WHERE nombre = (SELECT nivel FROM job_offer_snapshot WHERE id = :max_snap_id))
+            WHERE id = :id;
 
-        UPDATE cursorseq SET value = :id WHERE `key` = 'update_job_offer_id_seq';
+            /* UPDATE cursorseq SET value = :id WHERE `key` = 'update_job_offer_id_seq'; */
 
-        COMMIT;
-        SQL;
-        $stmt = $conn->prepare($sql);
-        // Use bindValue() with prepare() instead of exec().
+            COMMIT;
+
+            ROLLBACK;
+            SQL;
+            $stmt = $conn->prepare($sql);
+            // Use bindValue() with prepare() instead of exec().
+            $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
+            $stmt->bindValue(':max_snap_id', $job_offer_obj[$k]["max_snap_id"]);
+            #$stmt->bindValue(':dpto_nombre', $dpto_colombia_nombre);
+            $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $dpto_colombia_obj));
+            #$stmt->bindValue(':keywords', $keywords);
+            $stmt->bindValue(':keywords', find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
+            $stmt->execute();
+        } // foreach
+        $stmt = $conn->prepare("UPDATE cursorseq SET value = :id WHERE `key` = 'update_job_offer_id_seq'");
         $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
-        $stmt->bindValue(':max_snap_id', $job_offer_obj[$k]["max_snap_id"]);
-        #$stmt->bindValue(':dpto_nombre', $dpto_colombia_nombre);
-        $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $dpto_colombia_obj));
-        #$stmt->bindValue(':keywords', $keywords);
-        $stmt->bindValue(':keywords', find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
         $stmt->execute();
-    } // foreach
+    } // if
 } catch(PDOException $e) {
     echo "Error: " . "<br>" . $e->getMessage();
 } finally {
