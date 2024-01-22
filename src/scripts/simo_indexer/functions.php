@@ -308,9 +308,9 @@ function insert2db($conn, $arrObj_job_data){
     $stmt->bindValue(':opec', NULL);
     $stmt->bindValue(':entidad_codigo', NULL);
     $stmt->bindValue(':salario', NULL);
-    $stmt->bindValue(':vigencia_salarial', '1000');
+    $stmt->bindValue(':vigencia_salarial', 0000);
     $stmt->bindValue(':convocatoria', NULL);
-    $stmt->bindValue(':cierre', '1000-01-01');
+    $stmt->bindValue(':cierre', '0000-00-00');
     $stmt->bindValue(':vacantes', NULL);
     $stmt->bindValue(':estudio', NULL);
     $stmt->bindValue(':experiencia', NULL);
@@ -367,7 +367,11 @@ function insert2db($conn, $arrObj_job_data){
         if(str_contains($item, 'Cierre de inscripciones')){ // 10
             $cierre = trim(explode(': ',$item)[1]); // fecha del cierre de la convocatoria
             if($cierre == 'por definir'){ $cierre = '1000-01-01';}
-            if(count(explode('-',$cierre)) == 1){$cierre = $cierre. '-01-01';}
+            $arr_date = explode('-',$cierre);
+            $year = $arr_date;
+            if(count($arr_date) === 1 AND strlen($year) === 4 AND strlen((int) $year) === 4){
+                $cierre = $year. '-01-01';
+            }
             $stmt->bindValue(':cierre', $cierre);
         }
         if(str_contains($item, 'Estudio:')){ // 11
