@@ -21,8 +21,7 @@ This application is comprised of three components: crawler, database and website
 
     Code:
 
-    ``{verbatim}
-
+    ```php
          /**
          *  @param string $selector
          *  @param string $input
@@ -44,15 +43,14 @@ This application is comprised of three components: crawler, database and website
 
                 return $this;
             }
-    ``
+    ```
 
 2.  Define fetchText() in
         `vendor/phpcasperjs/phpcasperjs/src/Casper.php`
 
     Code:
 
-    ``{verbatim}
-
+    ```php
          /**
          *  @param string $selector
          */
@@ -70,7 +68,7 @@ This application is comprised of three components: crawler, database and website
 
                 return $this;
             }
-    ``
+    ```
 
     There are other interesting functions.<br/>
     Code:<br/>
