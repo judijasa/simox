@@ -1,6 +1,31 @@
 <?php
 require 'vendor/autoload.php'; // in case pdo class in vendor
-function getTotalPages($tot_res_var){
+use Browser\Casper; // used in get_total_job_offers
+
+function get_total_job_offers($path2casper, $target_site){
+    $casper = new Casper($path2casper);
+    $casper->setOptions(array(
+                              'ignore-ssl-errors' => 'yes'
+                              ));
+
+    $casper->start($target_site);
+
+    // Wait for '.itemEmpleo' but fetch '.dgrid-status',
+    // otherise problems arise.
+    // '.dgrid-navigation' is at bottom right
+    $casper->waitForSelector('.itemEmpleo', 30000);
+    // '.dgrid-status' is at bottom left
+    $casper->fetchText('.dgrid-status');
+
+    $casper->run();
+
+    $text = ($casper->getOutput())[15];
+    $casper = null;
+
+    return trim(explode('de',explode('resultados', $text)[0])[1]);
+}
+
+function TotalPages_from_TotalJobOffers($tot_res_var){
     // They use 10 job items per page.  Extract the total
     // Nr of pages from the total # of results:
     $tot_pgs = 1;  // default
