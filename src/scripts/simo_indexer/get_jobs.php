@@ -11,6 +11,13 @@ require 'src/scripts/simo_indexer/functions.php';
 require 'src/utils/connectivity.php';
 require 'src/utils/db_ops.php';
 
+define('MAX_FILE_SIZE', 4000000);
+use Sunra\PhpSimple\HtmlDomParser;
+
+// The PHP Object Casper is defined in:
+// vendor/phpcasperjs/phpcasperjs/src/Casper.php
+use Browser\Casper;
+
 // Starting clock time in seconds
 //$start_time = microtime(true);
 
@@ -19,6 +26,15 @@ $cnf = parse_ini_file("src/config.sh");
 $path2casper = $cnf["PATH2CASPER"];
 $target_site = $cnf["SITE"];
 
+$dbname = 'simo';
+try {
+    $conn = new readerPDO($dbname);
+    $last_page_loaded = get_cursor($conn, 'simo_website_page');
+} catch (PDOException $e) {
+    echo "Error: ". $e->getMessage(). PHP_EOL;
+} finally {
+    $conn = null;
+}
 
 // MAX_FILE_SIZE: stackoverflow.com/questions/48098911/the-use-of-the-php-simple-html-dom-parser-when-parsing-large-html-files-result
 //  stackoverflow.com/questions/30966569/str-get-html-doesnt-work-and-return-blank/30967650
@@ -28,12 +44,6 @@ $target_site = $cnf["SITE"];
 // The search is restricted to
 // dependencies listed in Composer.json
 
-define('MAX_FILE_SIZE', 4000000);
-use Sunra\PhpSimple\HtmlDomParser;
-
-// The PHP Object Casper is defined in:
-// vendor/phpcasperjs/phpcasperjs/src/Casper.php
-use Browser\Casper;
 
 // Casper.php is a wrapper of Casper.js
 // Instantiate the PHP Object Casper
@@ -67,17 +77,6 @@ $casper->start($target_site);
 // $last_pg_loaded = $page_number['last']; // old
 
 // new method: stop if (pg == null), insted of stop at if (pg == pg_end)
-try {
-    $dbname = 'simo';
-    $conn = new readerPDO($dbname);
-    $last_pg_loaded = get_cursor($conn, 'simo_website_page');
-} catch (PDOException $e) {
-    echo "Error: ". $e->getMessage(). PHP_EOL;
-} finally {
-    $conn = null;
-}
-
-$end_pg = $last_pg_loaded + 7; // remove after test. It must be greater than batch page size
 
 // How to set a value of an input tag in casperJS:
 // stackoverflow.com/questions/18172040/how-to-set-value-of-an-input-tag-in-casperjs
@@ -93,13 +92,19 @@ $end_pg = $last_pg_loaded + 7; // remove after test. It must be greater than bat
 // 'value' whose value is 'search'.
 
 // Go to page...
-$dbname = 'simo';
-$pg = $last_pg_loaded + 1;
-if($pg > 1){
-    $casper->waitForSelector('input.dgrid-page-input',30000);
-    $casper->sendKeys('input.dgrid-page-input', (string) $pg, $reset=true);
-    $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000);
-    $casper->click('span.dgrid-next.dgrid-page-link');
+$page = $last_page_loaded + 1;
+$pages_per_load = 3;
+$end_pg = $last_page_loaded + $pages_per_load*2; // test
+$arrObj_batch = new ArrayObject();
+
+$total_job_offers = get_total_job_offers($path2casper, $target_site);
+$total_pages = TotalPages_from_TotalJobOffers($total_job_offers);
+
+if($page > 1 AND $page < $total_pages){
+    $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
+    $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
+    $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
+    $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
 
     //$casper->waitForSelector('.dgrid-status',30000); // test: current page
     //$casper->fetchText('.dgrid-status'); // test: current page
@@ -125,10 +130,14 @@ if($pg > 1){
 // github.com/synackSA/casperjs-php
 // github.com/alwex/php-casperjs/blob/master/src/Casper.php
 // Code here to fetch data if you want
+#while ($page < $end_pg) { # old
+while (True) {
+    #if ($page > $total_pages){
+    if ($page > $end_pg){ # test
+        echo 'Total pages reached.'. PHP_EOL;
+        break;
+    }
 
-$arrObj_batch = new ArrayObject();
-$batch_pg_size = 3;
-while ($pg < $end_pg) {
     // Wait for 3 secs:
     //$casper->wait(3000);
 
@@ -145,18 +154,17 @@ while ($pg < $end_pg) {
     $casper->click('i.fuenteCNSC.material-icons.t-24.puntero.expandir_mas');
     $casper->waitForSelector('.detalleEmpleo',30000);
 
-    $casper->run();
-
     //*****************************
     // DEBUGGING...
     //*****************************
-    //if($pg == 1){
+    //if($page == 1){
     //Display 15 steps starting from step 10:
     //print_r(array_slice($casper->getOutput(), 10, 15,true));
     //print_r(array_slice($casper->getOutput(), 25, 30,true));
     //}
     //exit;
     //*****************************
+    $casper->run();
 
     // getHtml([Selector]):
     // webdriver.io/docs/api/element/getHTML/
@@ -182,9 +190,9 @@ while ($pg < $end_pg) {
     $curr_pg = $dom->find('input.dgrid-page-input',0)->value;
 
     //************************************
-    // Check if $curr_pg matches par $pg:
+    // Check if $curr_pg matches par $page:
     //************************************
-    //echo "<br>Current page = ". $curr_pg. ", Loop param = ". $pg. ". <br><br>";
+    //echo "<br>Current page = ". $curr_pg. ", Loop param = ". $page. ". <br><br>";
     //************************************
 
     // Capture Job Profiles...
@@ -210,7 +218,7 @@ while ($pg < $end_pg) {
     }
 
     $arr = $arrObj_batch->getArrayCopy();
-    if ($pg % $batch_pg_size === 0 and !empty($arr)){
+    if (($page % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
         try{
             $conn = new adminPDO($dbname);
             foreach($arrObj_batch as $arrObj_elems){
@@ -218,23 +226,26 @@ while ($pg < $end_pg) {
                     insert2db($conn, $arrObj_items);
                 }
             }
-            set_cursor($conn, 'simo_website_page', $pg);
+        set_cursor($conn, 'simo_website_page', $page);
         } catch (PDOException $e) {
             echo "Error: " . $e->getMessage();
         } finally {
             $conn = null;
         }
         $arrObj_batch = new ArrayObject(array());
+        $total_job_offers = get_total_job_offers($path2casper, $target_site);
+        $total_pages = TotalPages_from_TotalJobOffers($total_job_offers);
     }
 
     $dom->clear();
     unset($dom);
-    // Go to next page...
-    // TODO Identify error type when trying `next page` at the end page;
-    // handle exception as to replace or complement use of get_total_pages.php
-    $pg++;
-    $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000);
-    $casper->click('span.dgrid-next.dgrid-page-link');
+    // go to next page or to page 1
+    // CAREFUL: statements of the typ `$casper->...` are only exec after $casper->run(),
+    // but there's no such line after the statements below.
+    //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button selector
+    $casper->click('span.dgrid-next.dgrid-page-link'); // go to next page
+    $page++;
+    // set a break every n batches processed (resumes in 1 hour using cron)
 } //while
 
 //$end_time = microtime(true);
