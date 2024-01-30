@@ -41,9 +41,9 @@
     #exit(); # test
     $fetch = ($casper->getOutput())[15];
     # echo "Fetched element: ". $fetch. "\n"; # test
-    $tot_res = trim(explode('de',explode('resultados',$fetch)[0])[1]);
-    //echo "Total results: ". $tot_res. "\n"; # test
-    $tot_pgs = getTotalPages($tot_res);
+    $total_job_offers = trim(explode('de',explode('resultados',$fetch)[0])[1]);
+    //echo "Total results: ". $tot_job_offers. "\n"; # test
+    $tot_pgs = TotalPages_from_TotalJobOffers($total_job_offers);
     //echo "Total pages: ". $tot_pgs. "\n"; # test
     echo $tot_pgs;
 ?>
