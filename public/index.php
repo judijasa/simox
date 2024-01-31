@@ -99,7 +99,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             // Get total pages...
             //***********************************
 
-            $today = '1001-01-01'; //date("Y-m-d");
+            $today = '0000-00-00'; //date("Y-m-d");
 
             // Import file where we define connection to Database
             require_once "/srv/git/SIMOExpress/src/utils/connectivity.php";
@@ -126,12 +126,11 @@ Author: judijasa <ciudadania.ab@gmail.com>
             mysqli_free_result($result_depts);
             //print_r($row);
             $arr_length = count($row);
-
-            $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' LIMIT $start_from, $items_per_page";
-
             if($dept !== -1){
                 $str_dept = $row[$dept][0];
                 $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' AND departamento = '$str_dept' LIMIT $start_from, $items_per_page";
+            } else {
+                $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' LIMIT $start_from, $items_per_page";
             }
             $result_jobs = mysqli_query($conn, $query);
         ?>
