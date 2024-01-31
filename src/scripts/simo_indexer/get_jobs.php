@@ -94,13 +94,13 @@ $casper->start($target_site);
 // Go to page...
 $page = $last_page_loaded + 1;
 $pages_per_load = 3;
-$end_pg = $last_page_loaded + $pages_per_load*2; // test
+$pages_per_hour = $pages_per_load*2;
 $arrObj_batch = new ArrayObject();
 
 $total_job_offers = get_total_job_offers($path2casper, $target_site);
 $total_pages = TotalPages_from_TotalJobOffers($total_job_offers);
 
-if($page > 1 AND $page < $total_pages){
+if($page > 1 AND $page <= $total_pages){
     $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
     $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
     $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
@@ -130,12 +130,14 @@ if($page > 1 AND $page < $total_pages){
 // github.com/synackSA/casperjs-php
 // github.com/alwex/php-casperjs/blob/master/src/Casper.php
 // Code here to fetch data if you want
-#while ($page < $end_pg) { # old
-while (True) {
-    #if ($page > $total_pages){
-    if ($page > $end_pg){ # test
-        echo 'Total pages reached.'. PHP_EOL;
-        break;
+$counter = 1;
+while ($counter <= $pages_per_hour) {
+    if ($page > $total_pages){ # back to page 1
+        $page = 1;
+        $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
+        $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
+        $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
+        $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
     }
 
     // Wait for 3 secs:
@@ -218,7 +220,7 @@ while (True) {
     }
 
     $arr = $arrObj_batch->getArrayCopy();
-    if (($page % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
+    if (($counter % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
         try{
             $conn = new adminPDO($dbname);
             foreach($arrObj_batch as $arrObj_elems){
@@ -244,6 +246,7 @@ while (True) {
     // but there's no such line after the statements below.
     //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button selector
     $casper->click('span.dgrid-next.dgrid-page-link'); // go to next page
+    $counter++;
     $page++;
     // set a break every n batches processed (resumes in 1 hour using cron)
 } //while
