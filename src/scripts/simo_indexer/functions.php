@@ -432,10 +432,7 @@ function insert2db($conn, $arrObj_job_data){
         if(str_contains($item, 'Otros:')){ // 17
             $otros = trim(explode(': ',$item)[1]); // string
             $stmt->bindValue(':otros', $otros);
-        } #else {
-            #$errorMessage = "Substring 'Otros:' not found.";
-            #trigger_error($errorMessage, E_USER_WARNING);
-        #}
+        }
     }
     $stmt->execute();
 }
