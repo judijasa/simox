@@ -102,7 +102,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             $today = '1001-01-01'; //date("Y-m-d");
 
             // Import file where we define connection to Database
-            require_once "/srv/git/SIMOExpress/private/utils/connectivity.php";
+            require_once "/srv/git/SIMOExpress/src/utils/connectivity.php";
 
             $conn = publicMySQLi('simo');
             $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre > '$today'";
