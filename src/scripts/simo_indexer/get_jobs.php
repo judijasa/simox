@@ -136,6 +136,7 @@ while ($counter <= $pages_per_hour) {
         $page = 1;
         $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
         $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
+        // Even at the last page, there is a next page button...
         $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
         $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
     }
@@ -244,8 +245,10 @@ while ($counter <= $pages_per_hour) {
     // go to next page or to page 1
     // CAREFUL: statements of the typ `$casper->...` are only exec after $casper->run(),
     // but there's no such line after the statements below.
-    //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button selector
-    $casper->click('span.dgrid-next.dgrid-page-link'); // go to next page
+    if($page < $total_pages){
+        //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button selector
+        $casper->click('span.dgrid-next.dgrid-page-link'); // go to next page
+    }
     $counter++;
     $page++;
     // set a break every n batches processed (resumes in 1 hour using cron)
