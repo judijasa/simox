@@ -326,22 +326,23 @@ function insert2db($conn, $arrObj_job_data){
         ) ON DUPLICATE KEY UPDATE id = id; /* i.e. do nothing */
         EOD);
     // Default biding
-    $stmt->bindValue(':pagina', NULL);
-    $stmt->bindValue(':denominacion', NULL);
-    $stmt->bindValue(':grado', NULL);
-    $stmt->bindValue(':codigo', NULL);
-    $stmt->bindValue(':opec', NULL);
-    $stmt->bindValue(':entidad_codigo', NULL);
-    $stmt->bindValue(':salario', NULL);
-    $stmt->bindValue(':vigencia_salarial', NULL);
-    $stmt->bindValue(':convocatoria', NULL);
-    $stmt->bindValue(':cierre', NULL);
-    $stmt->bindValue(':vacantes', NULL);
-    $stmt->bindValue(':estudio', NULL);
-    $stmt->bindValue(':experiencia', NULL);
-    $stmt->bindValue(':dependencia', NULL);
-    $stmt->bindValue(':municipio', NULL);
-    $stmt->bindValue(':otros', NULL);
+    $stmt->bindValue(':pagina', -1);
+    $stmt->bindValue(':nivel', 'NONE');
+    $stmt->bindValue(':denominacion', 'NONE');
+    $stmt->bindValue(':grado', -1);
+    $stmt->bindValue(':codigo', 'NONE');
+    $stmt->bindValue(':opec', -1);
+    $stmt->bindValue(':entidad_codigo', -1);
+    $stmt->bindValue(':salario', 'NONE');
+    $stmt->bindValue(':vigencia_salarial', 0000);
+    $stmt->bindValue(':convocatoria', 'NONE');
+    $stmt->bindValue(':cierre', '0000-00-00');
+    $stmt->bindValue(':vacantes', -1);
+    $stmt->bindValue(':estudio', 'NONE');
+    $stmt->bindValue(':experiencia', 'NONE');
+    $stmt->bindValue(':dependencia', 'NONE');
+    $stmt->bindValue(':municipio', 'NONE');
+    $stmt->bindValue(':otros', 'NONE');
     $arr = (array) $arrObj_job_data; // old version
     //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
     foreach($arr as $item){
