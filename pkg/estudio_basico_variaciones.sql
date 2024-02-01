@@ -9,7 +9,7 @@ CREATE OR REPLACE TABLE estudio_basico_variaciones (
         REFERENCES estudio_basico(id)
 );
 
-INSERT INTO estudio_basico_variaciones (
+INSERT INTO estudio_basico_variaciones ( /* initial dump */
     nombre
 ) VALUES
     ('Administración'), ('Administrativo'), ('Administrativa'),
