@@ -6,13 +6,13 @@
 3. Ofrece un portal en linea para ofertas de empleo.
 
 This application is comprised of three components: crawler, database and website.
-[]: # 'This is a comment'
-[]: # 'Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;'
-[]: # '      Entity: Job offer, Attributes: job title, salary, etc.;...'
-[]: # '      Entity: Static Data, Attributes: ..., etc.; ...'
-[]: # 'Database: simo_express'
-[]: # 'Database Management System (DBMS): MySQL (or MariaDB)'
-[]: # 'Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)'
+[comment]: # "This is a comment"
+[comment]: # "Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;"
+[comment]: # "      Entity: Job offer, Attributes: job title, salary, etc.;..."
+[comment]: # "      Entity: Static Data, Attributes: ..., etc.; ..."
+[comment]: # "Database: simo_express"
+[comment]: # "Database Management System (DBMS): MySQL (or MariaDB)"
+[comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
 
 ## Resources
 1. Currently using 10.6.11-MariaDB MariaDB Server.
