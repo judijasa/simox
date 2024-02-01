@@ -17,7 +17,10 @@ This application is comprised of three components: crawler, database and website
 1. Currently using 10.6.11-MariaDB MariaDB Server.
 
 ## PHP CASPER CLASS
-1.  Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
+1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
+    It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
+    `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private script` with `protected script`.
+2.  Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
     of the boolean option `reset`, which is already defined in
     `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
 
@@ -46,7 +49,7 @@ This application is comprised of three components: crawler, database and website
             }
     ```
 
-2.  Define `vendor/phpcasperjs/phpcasperjs/src/Casper.php:fetchText()`
+And define `vendor/phpcasperjs/phpcasperjs/src/Casper.php:fetchText()`
 
     Code:
 
@@ -75,12 +78,12 @@ This application is comprised of three components: crawler, database and website
     Basic usage:<br/>
     [https://github.com/synackSA/casperjs-php](https://github.com/synackSA/casperjs-php)
 
-3.  casperjs method sendKeys() uses phantomjs method sendEvent(). Useful references about the latter:<br/>
+2.  casperjs method sendKeys() uses phantomjs method sendEvent(). Useful references about the latter:<br/>
     Documentation:
     [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)<br/>
     Code:<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
-4.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
+3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
     used in casperjs method sendKeys().
 
 ## Database Design

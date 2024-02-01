@@ -1,9 +1,10 @@
 <?php
 require 'vendor/autoload.php'; // in case pdo class in vendor
-use Browser\Casper; // used in get_total_job_offers
+//use Browser\Casper; // used in get_total_job_offers (old method: editing Casper class)
+require_once 'src/utils/CasperTrio.php'; // used in get_total_job_offers (new method: child of Casper class)
 
 function get_total_job_offers($path2casper, $target_site){
-    $casper = new Casper($path2casper);
+    $casper = new CasperTrio($path2casper);
     $casper->setOptions(array(
                               'ignore-ssl-errors' => 'yes'
                               ));

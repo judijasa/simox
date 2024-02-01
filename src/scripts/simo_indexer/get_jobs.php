@@ -4,13 +4,14 @@ require 'vendor/autoload.php';
 require 'src/scripts/simo_indexer/functions.php';
 require 'src/utils/connectivity.php';
 require 'src/utils/db_ops.php';
+require_once 'src/utils/CasperTrio.php'; // Replaces `use Browser\Casper;`
 
 define('MAX_FILE_SIZE', 4000000);
 use Sunra\PhpSimple\HtmlDomParser;
 
 // The PHP Object Casper is defined in:
 // vendor/phpcasperjs/phpcasperjs/src/Casper.php
-use Browser\Casper;
+//use Browser\Casper; // replaced by `require_once 'src/utils/CasperTrio.php';`
 
 // Starting clock time in seconds
 //$start_time = microtime(true);
@@ -44,7 +45,8 @@ try {
 //  with my location of Casper.js
 
 #$casper = new Casper(); # default path
-$casper = new Casper($path2casper);
+#$casper = new Casper($path2casper);
+$casper = new CasperTrio($path2casper);
 
 // Forward options to phantomJS
 // for example to ignore ssl errors
