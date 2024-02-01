@@ -14,6 +14,9 @@ This application is comprised of three components: crawler, database and website
 []: # 'Database Management System (DBMS): MySQL (or MariaDB)'
 []: # 'Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)'
 
+## Resources
+1. Currently using 10.6.11-MariaDB MariaDB Server.
+
 ## PHP CASPER CLASS
 1.  Edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
     of the boolean option `reset`, which is already defined in
