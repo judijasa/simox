@@ -195,10 +195,9 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
                 if($a == $b){
                     // It also removes comma in 'dependencia' item
                     $aux = explode(":",$current_item)[1];
-                    $aux2 = trim(str_replace(",","",$aux));
-                    $arrObj_dependencia->append($aux2);
+                    $aux = trim(str_replace(",","",$aux));
+                    $arrObj_dependencia->append($aux);
                 } elseif($a == $c) {
-                    //echo $current_item. PHP_EOL;
                     $aux = explode(":",$current_item)[1];
                     $aux = trim(str_replace(", Total vacantes","",$aux));
                     $arrObj_municipio->append($aux);
@@ -221,12 +220,16 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
         // re-indexing...
         $arrObj_items_new2 = (object) array_values((array) $arrObj_items_new);
         // Remove duplicated dependencies and municipalities...
-        $aux = array_unique((array) $arrObj_dependencia);
+        $aux = array_unique((array) $arrObj_dependencia); // remove duplicates
+        //$aux = (array) $arrObj_dependencia; // keeping duplicates
         $dep = (object) ("Dependencia: ". implode(", ",$aux));
-        $aux = array_unique((array) $arrObj_municipio);
+        $aux = array_unique((array) $arrObj_municipio); // remove duplicates
+        //$aux = (array) $arrObj_municipio; // keeping duplicates
         $mun = (object) ("Municipio: ". implode(", ",$aux));
-        $aux = array_unique((array) $arrObj_vacantes);
-        $vac = (object) ("Vacantes: ". implode(", ",$aux));
+        //$aux = array_unique((array) $arrObj_vacantes); // remove duplicates
+        $aux = (array) $arrObj_vacantes; // keeping duplicates
+        //$vac = (object) ("Vacantes: ". implode(", ",$aux));
+        $vac = (object) ("Vacantes: ". array_sum($aux));
         // Prepend labels "Dependencia: ", "Municipio: ", "Vacantes: ", respectively.
         $dep = array_values((array) $dep);
         $mun = array_values((array) $mun);
@@ -325,69 +328,51 @@ function insert2db($conn, $arrObj_job_data){
             :otros
         ) ON DUPLICATE KEY UPDATE id = id; /* i.e. do nothing */
         EOD);
-    // Default biding
-    $stmt->bindValue(':pagina', -1);
-    $stmt->bindValue(':nivel', 'NONE');
-    $stmt->bindValue(':denominacion', 'NONE');
-    $stmt->bindValue(':grado', -1);
-    $stmt->bindValue(':codigo', 'NONE');
-    $stmt->bindValue(':opec', -1);
-    $stmt->bindValue(':entidad_codigo', -1);
-    $stmt->bindValue(':salario', 'NONE');
-    $stmt->bindValue(':vigencia_salarial', 0000);
-    $stmt->bindValue(':convocatoria', 'NONE');
-    $stmt->bindValue(':cierre', '0000-00-00');
-    $stmt->bindValue(':vacantes', -1);
-    $stmt->bindValue(':estudio', 'NONE');
-    $stmt->bindValue(':experiencia', 'NONE');
-    $stmt->bindValue(':dependencia', 'NONE');
-    $stmt->bindValue(':municipio', 'NONE');
-    $stmt->bindValue(':otros', 'NONE');
     $arr = (array) $arrObj_job_data; // old version
     //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
     foreach($arr as $item){
         if(str_contains($item, 'Página:')){ // 0
             $pagina = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':pagina', $pagina);
+            //$stmt->bindValue(':pagina', $pagina);
         }
         if(str_contains($item, 'Nivel:')){ // 1
             $nivel = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':nivel', $nivel);
+            //$stmt->bindValue(':nivel', $nivel);
         }
         if(str_contains($item, 'Denominación:')){ // 2
             $denominacion = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':denominacion', $denominacion);
+            //$stmt->bindValue(':denominacion', $denominacion);
         }
         if(str_contains($item, 'Grado:')){ // 3
             $grado = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':grado', $grado);
+            //$stmt->bindValue(':grado', $grado);
         }
         if(str_contains($item, 'Código:')){ // 4
             $codigo = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':codigo', $codigo);
+            //$stmt->bindValue(':codigo', $codigo);
         }
         if(str_contains($item, 'OPEC:')){ // 5
             $opec = trim(explode(': ',$item)[1]);
-            $stmt->bindValue(':opec', $opec);
+            //$stmt->bindValue(':opec', $opec);
         }
         if(str_contains($item, 'ID único entidad:')){ // 6
             $entidad_codigo = trim(explode(': ',$item)[1]); // small int
-            $stmt->bindValue(':entidad_codigo', $entidad_codigo);
+            //$stmt->bindValue(':entidad_codigo', $entidad_codigo);
         }
         if(str_contains($item, 'Asignación salarial:')){ // 7
             $salario = explode(': ',$item)[1];
             $salario = trim(str_replace('$', '', $salario));
             $salario = substr_replace($salario, ".", -3, 0);
             $salario = substr_replace($salario, "'", -7, 0);
-            $stmt->bindValue(':salario', $salario);
+            //$stmt->bindValue(':salario', $salario);
         }
         if(str_contains($item, 'Vigencia salarial:')){ // 8
             $vigencia_salarial = trim(explode(': ',$item)[1]); // year
-            $stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
+            //$stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
         }
         if(str_contains($item, 'CONVOCATORIA')){ // 9
             $convocatoria = trim($item);
-            $stmt->bindValue(':convocatoria', $convocatoria, 2);
+            //$stmt->bindValue(':convocatoria', $convocatoria, 2);
         }
         if(str_contains($item, 'Cierre de inscripciones')){ // 10
             $cierre = trim(explode(': ',$item)[1]); // fecha del cierre de la convocatoria
@@ -397,21 +382,24 @@ function insert2db($conn, $arrObj_job_data){
             if(count($arr_date) === 1 AND strlen($year) === 4 AND strlen((int) $year) === 4){
                 $cierre = $year. '-01-01';
             }
-            $stmt->bindValue(':cierre', $cierre);
+            //$stmt->bindValue(':cierre', $cierre);
         }
         if(str_contains($item, 'Estudio:')){ // 11
             $estudio = trim(explode(': ', $item,2)[1]);
-            $stmt->bindValue(':estudio', $estudio);
+            //$stmt->bindValue(':estudio', $estudio);
         }
         if(str_contains($item, 'Experiencia:')){ // 12
             $experiencia = trim(explode(': ',$item)[1]); // string
-            $stmt->bindValue(':experiencia', $experiencia);
+            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
+            $replace = '';
+            $experiencia = trim(str_replace($find, $replace, $experiencia));
+            //$stmt->bindValue(':experiencia', $experiencia);
         }
         if(str_contains($item, 'Dependencia:')){ // 16
-            if (count(explode(': ',$item, 2)) > 1){
-                $dependencia = trim(explode(': ',$item,2)[1]);
-                $stmt->bindValue(':dependencia', $dependencia);
-            } else {$dependencia = NULL;}
+            if (count(explode(': ', $item, 2)) > 1){
+                $dependencia = trim(explode(': ', $item,2)[1]);
+                //$stmt->bindValue(':dependencia', $dependencia);
+            }
         }
         if(str_contains($item, 'Municipio:')){ // 17
             if (count(explode(': ', $item)) > 1){
@@ -419,20 +407,109 @@ function insert2db($conn, $arrObj_job_data){
                 if(stripos($municipio, "Bogot") !== false) {
                     $municipio = "Bogotá D.C.";
                 }
-                $stmt->bindValue(':municipio', $municipio);
+                //$stmt->bindValue(':municipio', $municipio);
             }
         }
         if(str_contains($item, 'Vacantes:')){ // 18
-            $vacantes = explode(',',$item,2)[0];
-            if (count(explode(': ',$vacantes)) > 1){
-                $vacantes = trim(explode(': ',$vacantes)[1]);
-                $stmt->bindValue(':vacantes', $vacantes);
+        //if(str_contains($item, 'Total de vacantes del Empleo:')){ // 18 // alt approach
+            $aux = explode(',', $item, 2)[0];
+            if (count(explode(': ', $aux)) > 1){
+                $vacantes = trim(explode(': ',$aux)[1]);
+                //$stmt->bindValue(':vacantes', $vacantes);
             }
         }
         if(str_contains($item, 'Otros:')){ // 17
             $otros = trim(explode(': ',$item)[1]); // string
-            $stmt->bindValue(':otros', $otros);
+            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
+            $replace = '';
+            $otros = trim(str_replace($find, $replace, $otros));
+            //$stmt->bindValue(':otros', $otros);
         }
+    }
+    if(isset($pagina)){
+        $stmt->bindValue(':pagina', $pagina);
+    } else {
+        $stmt->bindValue(':pagina', -1);
+    }
+    if(isset($nivel)){
+        $stmt->bindValue(':nivel', $nivel);
+    } else {
+        $stmt->bindValue(':nivel', 'NONE');
+    }
+    if(isset($denominacion)){
+        $stmt->bindValue(':denominacion', $denominacion);
+    } else {
+        $stmt->bindValue(':denominacion', 'NONE');
+    }
+    if(isset($grado)){
+        $stmt->bindValue(':grado', $grado);
+    } else {
+        $stmt->bindValue(':grado', -1);
+    }
+    if(isset($codigo)){
+        $stmt->bindValue(':codigo', $codigo);
+    } else {
+        $stmt->bindValue(':codigo', 'NONE');
+    }
+    if(isset($opec)){
+        $stmt->bindValue(':opec', $opec);
+    } else {
+        $stmt->bindValue(':opec', -1);
+    }
+    if(isset($entidad_codigo)){
+        $stmt->bindValue(':entidad_codigo', $entidad_codigo);
+    } else {
+        $stmt->bindValue(':entidad_codigo', -1);
+    }
+    if(isset($salario)){
+        $stmt->bindValue(':salario', $salario);
+    } else {
+        $stmt->bindValue(':salario', 'NONE');
+    }
+    if(isset($vigencia_salarial)){
+        $stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
+    } else {
+        $stmt->bindValue(':vigencia_salarial', 0000);
+    }
+    if(isset($convocatoria)){
+        $stmt->bindValue(':convocatoria', $convocatoria, 2);
+    } else {
+        $stmt->bindValue(':convocatoria', 'NONE', 2);
+    }
+    if(isset($cierre)){
+        $stmt->bindValue(':cierre', $cierre);
+    } else {
+        $stmt->bindValue(':cierre', '0000-00-00');
+    }
+    if(isset($estudio)){
+        $stmt->bindValue(':estudio', $estudio);
+    } else {
+        $stmt->bindValue(':estudio', 'NONE');
+    }
+    if(isset($experiencia)){
+        $stmt->bindValue(':experiencia', $experiencia);
+    } else {
+        $stmt->bindValue(':experiencia', 'NONE');
+    }
+    if(isset($dependencia)){
+        $stmt->bindValue(':dependencia', $dependencia);
+    } else {
+        $stmt->bindValue(':dependencia', 'NONE');
+    }
+    if(isset($municipio)){
+        $stmt->bindValue(':municipio', $municipio);
+    } else {
+        $stmt->bindValue(':municipio', 'NONE');
+    }
+    if(isset($vacantes)){
+        $stmt->bindValue(':vacantes', $vacantes);
+    } else {
+        $stmt->bindValue(':vacantes', -1);
+    }
+    if(isset($otros)){
+        $stmt->bindValue(':otros', $otros);
+    } else {
+        $stmt->bindValue(':otros', 'NONE');
     }
     $stmt->execute();
 }
