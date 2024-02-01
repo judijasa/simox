@@ -46,8 +46,7 @@ This application is comprised of three components: crawler, database and website
             }
     ```
 
-2.  Define fetchText() in
-        `vendor/phpcasperjs/phpcasperjs/src/Casper.php`
+2.  Define `vendor/phpcasperjs/phpcasperjs/src/Casper.php:fetchText()`
 
     Code:
 
