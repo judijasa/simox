@@ -17,8 +17,8 @@ CREATE OR REPLACE TABLE job_offer_snapshot (
     vacantes SMALLINT NOT NULL DEFAULT -1,
     estudio TEXT NOT NULL DEFAULT 'NONE',
     experiencia TEXT NOT NULL DEFAULT 'NONE',
-    dependencia VARCHAR(5000) NOT NULL DEFAULT 'NONE',
-    municipio VARCHAR(1000) NOT NULL DEFAULT 'NONE',
+    dependencia VARCHAR(10000) NOT NULL DEFAULT 'NONE',
+    municipio VARCHAR(10000) NOT NULL DEFAULT 'NONE', /* e.g. `Cali`, `Buga, Cartago`, `Leticia`*/
     otros TEXT NOT NULL DEFAULT 'NONE',
 
     PRIMARY KEY(id),
