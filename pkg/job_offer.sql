@@ -12,9 +12,10 @@ CREATE OR REPLACE TABLE job_offer (
     cierre DATE NOT NULL,
     vacantes SMALLINT,
     estudio TEXT,
-    dependencia VARCHAR(5000),
-    municipio VARCHAR(1000),
-    /* municipio_id SMALLINT, -- TODO: after creating `municipio` norm tbl */
+    dependencia VARCHAR(10000),
+    municipio VARCHAR(10000),
+    /* Using `municipio_id SMALLINT`, after creating `municipio` norm tbl
+    not possible because municipio can be more than one e.g. `Cali, Buga`*/
     departamento_id TINYINT,
     max_snap_id INT NOT NULL,
     keywords TEXT,
