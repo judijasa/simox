@@ -7,10 +7,8 @@
 
 This application is comprised of three components: crawler, database and website.
 <!--
-[//]: # (This is a comment)
 [comment]: # "Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;"
 [comment]: # "      Entity: Job offer, Attributes: job title, salary, etc.;..."
-[comment]: # "      Entity: Static Data, Attributes: ..., etc.; ..."
 [comment]: # "Database: simo_express"
 [comment]: # "Database Management System (DBMS): MySQL (or MariaDB)"
 [comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
