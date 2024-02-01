@@ -9,7 +9,8 @@ require 'src/utils/string_ops.php';
 function find_departamento($k, $job_offer_obj, $dpto_colombia_obj){
         $municipio = $job_offer_obj[$k]['municipio'];
         $convocatoria = $job_offer_obj[$k]['convocatoria'];
-
+        // job_offer.municipio can have more than one municipio, e.g., `Roldanillo, Cartago, Bugalagrande`.
+        // Assuming that `Bogota DC` is unique per OPEC.
         if(contains($municipio, 'Bogotá D.C.')){
             return 'Bogotá D.C.';
         }else{
