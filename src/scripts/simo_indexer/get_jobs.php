@@ -1,10 +1,4 @@
 <?php
-// On 2024-01-18, simo website changed significatively.
-// In response to this change, we create a new version
-// of this file and keep this old version for future
-// reference.
-//
-//
 // vendor/autoload: stackoverflow.com/questions/41209349/requirevendor-autoload-php-failed-to-open-stream
 require 'vendor/autoload.php';
 require 'src/scripts/simo_indexer/functions.php';
