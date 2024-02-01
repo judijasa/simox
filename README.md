@@ -6,7 +6,7 @@
 3. Ofrece un portal en linea para ofertas de empleo.
 
 This application is comprised of three components: crawler, database and website.
-[comment]: # "This is a comment"
+[//]: # (This is a comment)
 [comment]: # "Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;"
 [comment]: # "      Entity: Job offer, Attributes: job title, salary, etc.;..."
 [comment]: # "      Entity: Static Data, Attributes: ..., etc.; ..."
