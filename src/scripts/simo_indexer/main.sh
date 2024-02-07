@@ -73,8 +73,12 @@ export OPENSSL_CONF=dev/null
 ###################################################
 
 ti=`date +%s`
-php src/scripts/simo_indexer/get_jobs.php | tee src/scripts/simo_indexer/err.log
+php src/scripts/simo_indexer/get_jobs.php | tee src/scripts/simo_indexer/err.log # without concurrency
 #php src/scripts/simo_indexer/get_jobs.php > src/scripts/simo_indexer/err.log # test
+
+# with concurrency
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 2);" &
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 2);"
 #exit # test
 tf=`date +%s`
 secs=$((tf-ti))
