@@ -6,7 +6,8 @@ SELECT
     y.nombre AS departamento,
     x.municipio,
     x.opec,
-    x.keywords
+    x.keywords,
+    x.denominacion
 FROM job_offer AS x
     JOIN dpto_colombia AS y
 ON x.departamento_id = y.id
