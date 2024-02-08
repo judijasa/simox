@@ -254,7 +254,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <tr>
             <!-- <td><?php echo $row["nivel"]. ". ". $row["keywords"]; ?></td> -->
             <td><?php
-                $text = $row["nivel"]. ". ". $row["keywords"];
+                $text = $row["nivel"]. ". ". $row["denominacion"]. ". ". $row["keywords"];
                 if(isset($_GET["width"])){
                     if($_GET["width"] < 992){
                         $text = wordwrap($text, 50, "<br>", false);
