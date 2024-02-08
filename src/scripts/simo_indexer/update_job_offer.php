@@ -67,7 +67,7 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
     // (Admin, Admin de Empresas,...)
     // becomes (Admin de Empresas,...)
     //********************************
-
+    $reduce_keywords = null;
     if($foo){
         $explode_keywords = explode(", ", $keywords);
         $filter_explode_keywords = $explode_keywords;
@@ -198,7 +198,7 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
     //***************************
     // END: Detect new careers
     //***************************
-    return $reduce_keywords;
+    return $res;
 }
 
 try {
