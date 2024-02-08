@@ -77,8 +77,10 @@ php src/scripts/simo_indexer/get_jobs.php | tee src/scripts/simo_indexer/err.log
 #php src/scripts/simo_indexer/get_jobs.php > src/scripts/simo_indexer/err.log # test
 
 # with concurrency
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 2);" &
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 2);"
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 4);" &
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 4);" &
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(2, 4);" &
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(3, 4);"
 #exit # test
 tf=`date +%s`
 secs=$((tf-ti))
