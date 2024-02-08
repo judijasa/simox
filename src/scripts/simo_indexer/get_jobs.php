@@ -16,7 +16,6 @@ use Sunra\PhpSimple\HtmlDomParser;
 // Starting clock time in seconds
 //$start_time = microtime(true);
 
-
 function indexer($mod=0, $div=1){
     assert(gettype($mod) == 'integer', 'mod must be of integer type');
     assert(gettype($div) == 'integer', 'div must be of integer type');
@@ -95,17 +94,16 @@ function indexer($mod=0, $div=1){
     // whose 'name' is 'q'. It has an attribute called
     // 'value' whose value is 'search'.
 
-    // Go to page...
-    $pages_per_load = 3; // in our setting, pages per load equals batch size.
-    $loads_per_mod = 2;
-    $pages_per_mod = $pages_per_load * $loads_per_mod;
-    #$page = ($last_page_loaded + 1) + $pages_per_load * $mod;
-    $page = ($last_page_loaded + 1) + $pages_per_mod * $mod; # new appproach
-    $arrObj_chunk = new ArrayObject();
-
     $total_job_offers = get_total_job_offers($path2casper, $target_site);
     $total_pages = TotalPages_from_TotalJobOffers($total_job_offers);
+    $pages_per_mod = ceil($total_pages / $div); // scan all pages after each exec
+    $pages_per_load = 5;
+    // $loads_per_mod = ceil($pages_per_mod / $pages_per_load); // not necessary
+    // $pages_per_mod = $pages_per_load * $loads_per_mod; // in case $loads_per_mod is hard typed
+    $page = ($last_page_loaded + 1) + $pages_per_mod * $mod;
+    $arrObj_chunk = new ArrayObject();
 
+    // Go to page...
     if($page > 1 AND $page <= $total_pages){
         $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
         $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
@@ -138,17 +136,16 @@ function indexer($mod=0, $div=1){
     // Code here to fetch data if you want
     $counter = 1;
     while ($counter <= $pages_per_mod) {
-        #if ($page > $total_pages or ($counter > 1 and (($counter - 1) % $pages_per_load === 0))){ # to mod's min page if total pages or to next batch recent load
-        if ($page > $total_pages){ # to mod's min page if total pages or to next batch recent load
-            #if ($page > $total_pages){
+        if ($page > $total_pages){
+            /* // go to mod's min page
             $page = 1 + $pages_per_load * $mod;
-            #}
-            echo 'jump: mod, target: '. $mod. ' '. $page. PHP_EOL;
             $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
             $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
             // Even at the last page, there is a next page button...
             $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
             $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
+            */
+            break;
         }
 
         // Wait for 3 secs:
@@ -231,14 +228,13 @@ function indexer($mod=0, $div=1){
         }
 
         $arr = $arrObj_chunk->getArrayCopy();
-        if (($counter % $pages_per_load === 0) and !empty($arr)){
+        if (($counter % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
             try{
                 $conn = new adminPDO($dbname);
                 foreach($arrObj_chunk as $arrObj_elems){
                     foreach($arrObj_elems as $arrObj_items){
-                        $pagina = ((array) $arrObj_items)[0];
-                        $pagina = trim(explode(':', $pagina)[1]);
-                        echo 'mod, page (theory), page (reality): '. $mod. ' '. $page. ' '. $pagina. PHP_EOL; # test
+                        //$pagina = ((array) $arrObj_items)[0]; // test
+                        //$pagina = trim(explode(':', $pagina)[1]); // test
                         insert2db($conn, $arrObj_items);
                     }
                 }
@@ -248,7 +244,6 @@ function indexer($mod=0, $div=1){
             } finally {
                 $conn = null;
             }
-            #$page += $pages_per_load * ($div - 1); # old approach
             $arrObj_chunk = new ArrayObject(array());
             $total_job_offers = get_total_job_offers($path2casper, $target_site);
             $total_pages = TotalPages_from_TotalJobOffers($total_job_offers);
