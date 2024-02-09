@@ -198,7 +198,7 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
     //***************************
     // END: Detect new careers
     //***************************
-    return $res;
+    return $reduce_keywords;
 }
 
 try {
