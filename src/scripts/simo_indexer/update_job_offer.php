@@ -67,7 +67,6 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
     // (Admin, Admin de Empresas,...)
     // becomes (Admin de Empresas,...)
     //********************************
-    $reduce_keywords = null;
     if($foo){
         $explode_keywords = explode(", ", $keywords);
         $filter_explode_keywords = $explode_keywords;
@@ -92,6 +91,8 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
         // Re-index array
         $filter_explode_keywords = array_values($filter_explode_keywords);
         $reduce_keywords = implode(", ",$filter_explode_keywords);
+    } else {
+        $reduce_keywords = null;
     }
 
     // The following module named 'Detect new careers'
@@ -275,9 +276,7 @@ try {
             // Use bindValue() with prepare() instead of exec().
             $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
             $stmt->bindValue(':max_snap_id', $job_offer_obj[$k]["max_snap_id"]);
-            #$stmt->bindValue(':dpto_nombre', $dpto_colombia_nombre);
             $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $dpto_colombia_obj));
-            #$stmt->bindValue(':keywords', $keywords);
             $stmt->bindValue(':keywords', find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
             $stmt->execute();
         } // foreach
