@@ -99,13 +99,13 @@ Author: judijasa <ciudadania.ab@gmail.com>
             // Get total pages...
             //***********************************
 
-            $today = '0000-00-00'; //date("Y-m-d");
+            $today = date("Y-m-d"); // '0000-00-00';
 
             // Import file where we define connection to Database
             require_once "/srv/git/SIMOExpress/src/utils/connectivity.php";
 
             $conn = publicMySQLi('simo');
-            $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre > '$today'";
+            $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01'";
             $result = mysqli_query($conn, $query);
             $row = mysqli_fetch_row($result);
             $total_records = $row[0];
@@ -128,9 +128,9 @@ Author: judijasa <ciudadania.ab@gmail.com>
             $arr_length = count($row);
             if($dept !== -1){
                 $str_dept = $row[$dept][0];
-                $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' AND departamento = '$str_dept' LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE (cierre > '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' LIMIT $start_from, $items_per_page";
             } else {
-                $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' OR cierre = '1000-01-01' LIMIT $start_from, $items_per_page";
             }
             $result_jobs = mysqli_query($conn, $query);
         ?>
@@ -255,9 +255,10 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <!-- <td><?php echo $row["nivel"]. ". ". $row["keywords"]; ?></td> -->
             <td><?php
                 $denom = strtolower($row["denominacion"]);
-                $denom = (strtolower($row["nivel"]) === $denom)? "" : ucfirst($denom). ". ";
+                $denom = (strtolower($row["nivel"]) === $denom)? '' : ucfirst($denom). '. ';
+                $estudio = (str_contains($row["estudio"], "PROFESIONAL"))? 'Profesional. ' : '';
                 $keywords = $row["keywords"]? $row["keywords"]. "." : "";
-                $text = $row["nivel"]. ". ". $denom. $keywords;
+                $text = $row["nivel"]. ". ". $denom. $estudio. $keywords;
                 if(isset($_GET["width"])){
                     if($_GET["width"] < 992){
                         $text = wordwrap($text, 50, "<br>", false);
@@ -279,7 +280,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                     //echo $row["Municipio"]. ", ". $row["Departamento"];
                 }?></td>
             <td><?php echo $row["salario"]; ?></td>
-            <td><?php echo $row["cierre"]; ?></td>
+            <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
             <td><?php echo $row["opec"]; ?></td>
             </tr>
             <?php
