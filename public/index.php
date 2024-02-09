@@ -145,6 +145,17 @@ Author: judijasa <ciudadania.ab@gmail.com>
             Visite la página oficial:<br>
             <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo"><i>Sistema de apoyo para la Igualdad, el Mérito y la Oportunidad</i> (SIMO)</a>
             </p>
+            <p style="margin-bottom:32px;">
+            <!-- Sobre este sitio web:<br> -->
+            <a href="http://localhost/simo-express/about.php"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
+            <!-- </p> -->
+            &nbsp;
+            |
+            &nbsp;
+            <!-- <p style="margin-bottom:32px;"> -->
+            <!-- Análisis de los datos reportados:&nbsp; -->
+            <a href="http://localhost/simo-express/insight.php"><i>Análisis de los datos reportados</i></a> <!-- Veeduría ciudadana -->
+            </p>
             <div align="left">
 
                 <!--******************-->
