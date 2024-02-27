@@ -1,0 +1,19 @@
+<?php
+$dependencies = array(
+    'vw_job_offer-DAF75B74DD6A469D',
+    'otras_habilidades_variaciones-849D717DCE0B4981',
+    'otras_habilidades-5A260966F7DD497A',
+    'nivel-F39B6ACCF1574A6E',
+    'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957',
+    'job_offer_snapshot_trg_insert_nivel-8A4EDC8BB9A44C32',
+    'job_offer_snapshot-00B5FEB6B8B84570',
+    'job_offer-9A645583F8F24B28',
+    'estudio_especializado_variaciones-2A7B37AC6E1C446E',
+    'estudio_especializado-F13DE36C34F84042',
+    'estudio_basico_variaciones-7D92A6C55A504604',
+    'estudio_basico-F821B353E42F4D79',
+    'dpto_colombia-BD672733D7AA455F',
+    'cursorseq-A8FEE4C088E5419C',
+    'activity_monitor-A170276C72D14319'
+);
+?>

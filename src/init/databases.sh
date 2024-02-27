@@ -1,15 +1,22 @@
 #!/bin/bash
 
-# check you are in repo root directory
 root_dir=/srv/git/SIMOExpress
+
 if [[ "$PWD" != $root_dir ]]
 then
   echo "This command must be executed from the root directory of the repository."
   exit
 fi
 
+# rand alphanum str to use as suffix in some directory names
+# not used at the moment
+#randir() {
+    #local res=$(cat /proc/sys/kernel/random/uuid | sed 's/[-]//g' | head -c 16 | tr '[:lower:]' '[:upper:]'; echo;)
+    #echo "$res"
+#}
+
 path=/srv/git/SIMOExpress/srv
-workdir=/tmp/schemas-B9U4319C
+workdir=/tmp/db_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
 file0=$workdir/schemas.sql
 touch $file0
