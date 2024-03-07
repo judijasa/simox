@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+/<!DOCTYPE html>
 <html>
 
 <!--
@@ -8,7 +8,7 @@ Source: www.javatpoint.com/php-pagination
 Browser address:
 http://localhost/web-projects/scraping_SIMO/index.php
 
-Author: judijasa <ciudadania.ab@gmail.com>
+Author: 20198338 <ciudadania.ab@gmail.com>
 -->
 
     <head>
@@ -102,7 +102,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
 
             // Import file where we define connection to Database
-            require_once "/srv/git/SIMOExpress/src/utils/connectivity.php";
+            require_once "/var/www/html/simo-express/connectivity.php";
 
             $conn = publicMySQLi('simo');
             $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01'";
