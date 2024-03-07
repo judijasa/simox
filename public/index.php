@@ -99,7 +99,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             // Get total pages...
             //***********************************
 
-            $today = date("Y-m-d"); // '0000-00-00';
+            $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
 
             // Import file where we define connection to Database
             require_once "/srv/git/SIMOExpress/src/utils/connectivity.php";
@@ -128,9 +128,9 @@ Author: judijasa <ciudadania.ab@gmail.com>
             $arr_length = count($row);
             if($dept !== -1){
                 $str_dept = $row[$dept][0];
-                $query = "SELECT * FROM vw_job_offer WHERE (cierre > '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE (cierre >= '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' ORDER BY cierre DESC LIMIT $start_from, $items_per_page";
             } else {
-                $query = "SELECT * FROM vw_job_offer WHERE cierre > '$today' OR cierre = '1000-01-01' LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01' ORDER BY cierre DESC LIMIT $start_from, $items_per_page";
             }
             $result_jobs = mysqli_query($conn, $query);
         ?>
@@ -147,7 +147,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             </p>
             <p style="margin-bottom:32px;">
             <!-- Sobre este sitio web:<br> -->
-            <a href="http://localhost/simo-express/about.php"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
+            <a href="http://localhost/simo-express/about.html"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
             <!-- </p> -->
             &nbsp;
             |
@@ -263,13 +263,36 @@ Author: judijasa <ciudadania.ab@gmail.com>
                     // Display each field of the records.
             ?>
             <tr>
-            <!-- <td><?php echo $row["nivel"]. ". ". $row["keywords"]; ?></td> -->
             <td><?php
+                // TODO make func with parsing below and add unit test to it
+                $estudio = '';
+                $nivel = strtolower($row["nivel"]);
                 $denom = strtolower($row["denominacion"]);
-                $denom = (strtolower($row["nivel"]) === $denom)? '' : ucfirst($denom). '. ';
-                $estudio = (str_contains($row["estudio"], "PROFESIONAL"))? 'Profesional. ' : '';
-                $keywords = $row["keywords"]? $row["keywords"]. "." : "";
-                $text = $row["nivel"]. ". ". $denom. $estudio. $keywords;
+                if($denom === 'profesional universitario'){
+                    $estudio = 'Profesional. ';
+                    $denom = '';
+                }
+                if($denom === 'profesional especializado'){
+                    $estudio = 'Profesional especializado. ';
+                    $denom = '';
+                }
+                if(!$estudio and str_contains($row["estudio"], 'PROFESIONAL') and !str_contains($nivel, 'profesional')){
+                    $estudio = 'Profesional. ';
+                }
+                if(str_contains($estudio, 'Profesional') and $nivel === 'profesional'){
+                    $nivel = '';
+                }
+                $nivel = str_contains($denom, $nivel)? '' : $row["nivel"]. '. ';
+                $denom = str_replace('tecnico','técnico', $denom);
+                $denom = $denom? ucfirst($denom). '. ' : '';
+                if(!$estudio and $row["keywords"] === 'Bachiller'){
+                    $estudio = 'Bachiller';
+                    $keywords = '';
+                } else {
+                    $keywords = $row["keywords"]? $row["keywords"]. '.' : '';
+                }
+                $text = $estudio. $nivel. $denom. $keywords;
+
                 if(isset($_GET["width"])){
                     if($_GET["width"] < 992){
                         $text = wordwrap($text, 50, "<br>", false);
