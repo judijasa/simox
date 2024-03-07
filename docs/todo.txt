@@ -1,0 +1,82 @@
+[.] Create Github repo for the simo website version hosted on raspberrypi.local
+
+[.] Init db and tables and run main.sh (without concurrency) to test
+    new 'simo' website host raspberrypi.local
+
+[x] Incorporate the topological sort utility to src/init/database.sh
+
+[x] public/index.php:
+    - Replace 'Profesional universitario' with 'Profesional' in $denom
+    - Make sure not to report Profesional in $estudio, if is in $denom
+
+[.] Make triggers to insert new values in %_variaciones tbls.
+
+[.] Sometimes `vacantes` takes the value zero.  Avoid reporting such jobs in the web site.
+
+[.] Make an indexer for
+    https://www.funcionpublica.gov.co/procesos-de-contratacion
+
+[.] Agregar `modalidad` de la oferta de trabajo (`ascenso`, `ingreso`, etc.)
+
+[x] Add sub pages `about us` and `data analysis`
+
+    - About us:  Esta página tiene el doble propósito de
+        - Ofrecer acceso rápido a las más recientes ofertas públicas
+          de empleos de carrera administrativa (OPEC).
+
+[.] Check if job_offer_snapshot is allowing duplicates which are expected not to be allowed.
+
+[x] Concurrency of crawler:
+
+    - The new approach doesn't makes page jumps during the while loop.
+      It was avoided because of difficulties implementing the click command during the while loop.
+
+[x] [SOLVED BYPASSED BY CUSTOM ALGORITHM] Find a version manager for mariaDB (keyword: `System-Versioned Schemas`).
+    It cannot be schematic because it only works with postgreSQL.
+
+    Clarification: keywords such as `System-Versioned Tables` or `temporal tables` are to
+    keep track of data versions in a table (useful to prevent malicious editing of data).
+    Not what we want at the moment.
+
+    Database versioning tools: flyway, liquibase, etc.
+
+    You may also want to check ChatGPT responose under chat `Schema versioning`
+
+    REFS:
+    https://stackoverflow.com/questions/70979471/create-system-version-table-that-tracks-schema-changes
+
+[.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
+    replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[.] Add tmux to shell nix
+
+[.] Add col convocatoria_status (abierta/cerrada)
+
+[x] src/scripts/simo-indexer/functions.php line 222: Reasses the removal of duplicates in dependencies,
+    municipios y vacantes.  As it is reporting `vacantes` wrong, e.g.,
+    the opec 190579, where the header reports 5 vacancies, but the column
+    `job_offer_snaphsot.vacantes` reports 1.  Besides it would be ideal to
+    know how many vacancies per dependency.
+    SOLUTION: use an array data type for the columns
+    - dependencia
+    - municipio
+    - vacantes
+
+    The vacancy value is fixed by adding all subvacancies.
+    Using array type is not possible in mysql/mariadb.
+
+[x] Add an extended casper class to incorporate changes to vendor library phpcasperjs.
+    Note: Not possible because it requires writing on the `script` private variable.
+    According to documentation, private vars of a parent class cannot be accessed by
+    child class, unless you edit the parent class to add `Getters` and `Setters`.
+    SOLUTION: Replace `private script` with `protected script`, in
+    `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`
+
+[x] To prevent job_offer_snapshot tbl to accept duplicates when unique key has null values,
+    I default to pseudo null values (aka simulated special marker).
+    When trasnferring data from job_offer_snapshot to job_offer, I want these pseudo null values
+    to be standard null again.  For this I added aspecial functions null_from_default_str,
+    null_from_default_num, etc., to be called in the corresponding trigger.
+
+    Test these approach by trying to insert duplicates in job_offer_snapshot where
+    the unique key contains columns with null values.
