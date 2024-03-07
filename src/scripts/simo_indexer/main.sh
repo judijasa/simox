@@ -73,15 +73,20 @@ export OPENSSL_CONF=dev/null
 ###################################################
 
 ti=`date +%s`
-php src/scripts/simo_indexer/get_jobs.php | tee src/scripts/simo_indexer/err.log # without concurrency
-#php src/scripts/simo_indexer/get_jobs.php > src/scripts/simo_indexer/err.log # test
+# without concurrency
+#php .../simo_indexer/get_jobs.php... | tee src/scripts/simo_indexer/err.log
+#php .../simo_indexer/get_jobs.php... > src/scripts/simo_indexer/err.log # test
 
-# with concurrency
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 4);" &
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 4);" &
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(2, 4);" &
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(3, 4);"
+# without concurrency 
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1)"
+
+# with concurrency (=4)
+#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 4);" &
+#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 4);" &
+#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(2, 4);" &
+#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(3, 4);"
 #exit # test
+
 tf=`date +%s`
 secs=$((tf-ti))
 exec_time=$(printf '%02d:%02d:%02d' $((secs%86400/3600)) $((secs%3600/60)) $((secs%60)))
