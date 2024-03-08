@@ -128,9 +128,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             $arr_length = count($row);
             if($dept !== -1){
                 $str_dept = $row[$dept][0];
-                $query = "SELECT * FROM vw_job_offer WHERE (cierre >= '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' ORDER BY cierre DESC LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE (cierre >= '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' ORDER BY cierre LIMIT $start_from, $items_per_page";
             } else {
-                $query = "SELECT * FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01' ORDER BY cierre DESC LIMIT $start_from, $items_per_page";
+                $query = "SELECT * FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01' ORDER BY cierre LIMIT $start_from, $items_per_page";
             }
             $result_jobs = mysqli_query($conn, $query);
         ?>
