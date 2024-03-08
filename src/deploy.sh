@@ -1,7 +1,15 @@
 #!/bin/bash
 
+# If exec not using CRON, check if you're in repo's root dir
+root_dir=$(git rev-parse --show-toplevel) # repo root directory path
+if [[ "$PWD" != $root_dir ]]
+then
+  echo "This command must be executed from the repository's root directory."
+  exit
+fi
+
 # Define variables
-SOURCE_DIR="/srv/simo-express"
+SOURCE_DIR=$root_dir
 DEST_DIR="/var/www/html/simo-express"
 FILES_TO_DEPLOY=()
 
