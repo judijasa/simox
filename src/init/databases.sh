@@ -1,7 +1,6 @@
 #!/bin/bash
 
-root_dir=/srv/git/SIMOExpress
-
+root_dir=$(git rev-parse --show-toplevel)
 if [[ "$PWD" != $root_dir ]]
 then
   echo "This command must be executed from the root directory of the repository."
