@@ -72,10 +72,42 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
     </head>
     <body>
+        <?php
+            // Import file where we define connection to Database
+            require_once "/var/www/html/simo-express/connectivity.php";
+            try {
+                $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
+                $dbname = 'simo';
+                $conn = new publicPDO($dbname);
+                $query = "SELECT COUNT(*) FROM vw_job_offer";
+                $stmt = $conn->query($query);
+                $total = ($stmt->fetch())[0];
+                $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= '$today'";
+                $stmt = $conn->query($query);
+                $with_cierre = ($stmt->fetch())[0];
+                $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre = '1000-01-01'";
+                $stmt = $conn->query($query);
+                $without_cierre = ($stmt->fetch())[0];
+                $query = "SELECT cierre FROM vw_job_offer ORDER BY cierre DESC LIMIT 1";
+                $stmt = $conn->query($query);
+                $recent_cierre = ($stmt->fetch())[0];
+            } catch (PDOException $e) {
+                echo "Error: ". $e->getMessage(). PHP_EOL;
+            } finally {
+                $conn = null;
+            }
+        ?>
         <div class="container">
             <center>
-            <h2>Análisis de los datos reportados</h2>
-            <p>[UNDER CONSTRUCTION]</p>
+            <h2>Análisis de datos reportados</h2>
+            <p><b>Dataset:</b> Ofertas de trabajo publicadas en la sección <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo">#ofertaEmpleo</a> de la plataforma <a href="https://simo-ppal.cnsc.gov.co">SIMO</a>.</p>
+            <p>Total<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
+            Con fecha de cierre menor a un año: <?php echo $with_cierre;?><br>
+            Con fecha de cierre "por definir": <?php echo $without_cierre;?><br>
+            Fecha de cierre más reciente: <?php echo $recent_cierre;?>
+<hr></hr>
+        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+        </p>
         </div>
     </body>
 </html>
