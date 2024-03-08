@@ -1,4 +1,4 @@
-[.] Create Github repo for the simo website version hosted on raspberrypi.local
+[.] Improve spacings in pagination arrows at public/index.php
 
 [.] Init db and tables and run main.sh (without concurrency) to test
     new 'simo' website host raspberrypi.local
