@@ -14,7 +14,7 @@ fi
     #echo "$res"
 #}
 
-path=/srv/git/SIMOExpress/srv
+path=$root_dir/srv
 workdir=/tmp/db_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
 file0=$workdir/schemas.sql
