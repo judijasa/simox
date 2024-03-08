@@ -18,8 +18,7 @@ In addition the programs in the composer.json file, we require
 
 1. Currently using: 10.6.11-MariaDB MariaDB Server.
 2. Currently using: jq - commandline JSON processor [version 1.6]  
-   Used in src/init/tables.sh to convert a string to an array in BASH.
-   It can easly be replaced by a subroutine that uses BASH built-in functions.
+   Used in src/init/tables.sh to convert json to array in BASH.
 
 ## PHP CASPER CLASS
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
