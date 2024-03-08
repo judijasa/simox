@@ -272,15 +272,14 @@ function last_pg_loaded(){
     try {
         $dbname="simo";
         $conn = new clientPDO($dbname);
-        // set the PDO error mode to exception
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        #$stmt = $conn->query("SELECT pagina FROM job_offer_snapshot ORDER BY id DESC LIMIT 1");
+        //$stmt = $conn->query("SELECT pagina FROM job_offer_snapshot ORDER BY id DESC LIMIT 1");
+        //$result = $stmt->fetch();
+        //if($result['pagina'] == '') {
+            //return 0;
+        //}
+        //return $result['pagina'];
         $stmt = $conn->query("SELECT value FROM cursorseq WHERE key='simo_website_page'");
-        $result = $stmt->fetch();
-        if($result['Página'] == '') {
-            return 0;
-        }
-        return $result['Página'];
+        return $result['value'];
     } catch(PDOException $e) {
         echo "Error: " . "<br>" . $e->getMessage();
     } finally {
