@@ -147,14 +147,14 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             </p>
             <p style="margin-bottom:32px;">
             <!-- Sobre este sitio web:<br> -->
-            <a href="http://localhost/simo-express/about.html"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
+            <a href="about.html"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
             <!-- </p> -->
             &nbsp;
             |
             &nbsp;
             <!-- <p style="margin-bottom:32px;"> -->
             <!-- Análisis de los datos reportados:&nbsp; -->
-            <a href="http://localhost/simo-express/insight.php"><i>Análisis de los datos reportados</i></a> <!-- Veeduría ciudadana -->
+            <a href="insight.php"><i>Análisis de los datos reportados</i></a> <!-- Veeduría ciudadana -->
             </p>
             <div align="left">
 
