@@ -5,7 +5,7 @@
 2. Guarda las ofertas de empleo en una base de datos.
 3. Ofrece un portal en linea para ofertas de empleo.
 
-This application is comprised of three components: crawler, database and website.
+This application is comprised of three components: _crawler_, _database_ and _website_.
 <!--
 [comment]: # "Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;"
 [comment]: # "      Entity: Job offer, Attributes: job title, salary, etc.;..."
@@ -14,11 +14,14 @@ This application is comprised of three components: crawler, database and website
 [comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
 -->
 ## Resources
-In addition the programs in the composer.json file, we require
+In addition to the programs in the `composer.json` file, we require
 
-1. Currently using: 10.6.11-MariaDB MariaDB Server.
-2. Currently using: jq - commandline JSON processor [version 1.6]  
-   Used in src/init/tables.sh to convert json to array in BASH.
+1. Web Server (Ngnix, Apache, etc.)
+2. PHP >=8.2
+3. MariaDB Server >=10.6
+4. PHP/MySQL support modules for the Web Server
+5. Currently using: jq - commandline JSON processor [version 1.6]  
+   Used in `src/init/tables.sh` to convert json to array in BASH.
 
 ## PHP CASPER CLASS
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
