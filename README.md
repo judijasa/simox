@@ -19,8 +19,10 @@ In addition to the programs in the `composer.json` file, we require
 1. Web Server (Ngnix, Apache, etc.)
 2. PHP >=8.2
 3. MariaDB Server >=10.6
-4. PHP/MySQL support modules for the Web Server
-5. Currently using: jq - commandline JSON processor [version 1.6]  
+4. PHP/MySQL support modules for the Web Server</br>
+   For example `libapache2-mod-php` to integrate PHP with Apache2</br>
+   and `php-mysql` to integrate PHP with MySQL/MariaDB.
+6. Currently using: jq - commandline JSON processor [version 1.6]</br>
    Used in `src/init/tables.sh` to convert json to array in BASH.
 
 ## PHP CASPER CLASS
