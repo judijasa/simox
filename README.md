@@ -53,7 +53,7 @@ In addition the programs in the composer.json file, we require
             }
     ```
 
-And define `vendor/phpcasperjs/phpcasperjs/src/Casper.php:fetchText()`
+    And define `vendor/phpcasperjs/phpcasperjs/src/Casper.php:fetchText()`
 
     Code:
 
