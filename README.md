@@ -24,7 +24,7 @@ For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` 
 #### 5. jq - commandline JSON processor [version 1.6]
 Used in `src/init/tables.sh` to convert json to array in BASH.
 
-## PHP CASPER CLASS
+## PHP Casper Class
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
     It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
     `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private script` with `protected script`.
@@ -93,6 +93,10 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
 3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
     used in casperjs method sendKeys().
+
+## Setup
+1. Build dependencies specified in `composer.lock` with the command `php composer.phar install`.
+2. Modify `src/config.sh` according to your custom values.
 
 ## Database Design
 Entities: Job Offer
