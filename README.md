@@ -95,7 +95,7 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
     used in casperjs method sendKeys().
 
 ## Setup
-1. Build dependencies specified in `composer.lock` with the command `php composer.phar install`.
+1. Build dependencies specified in `composer.lock` with the command `php composer.phar install`. Omit the suffix `.phar`, if `composer` was installed globally.
 2. Modify `src/config.sh` according to your custom values.
 
 ## Database Design
