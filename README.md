@@ -14,16 +14,15 @@ This application is comprised of three components: _crawler_, _database_ and _we
 [comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
 -->
 ## Resources
-In addition to the programs in the `composer.json` file, we require
+In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
 
-1. Web Server (Ngnix, Apache, etc.)
-2. PHP >=8.2
-3. MariaDB Server >=10.6
-4. PHP/MySQL support modules for the Web Server</br>
-   For example `libapache2-mod-php` to integrate PHP with Apache2</br>
-   and `php-mysql` to integrate PHP with MySQL/MariaDB.
-6. Currently using: jq - commandline JSON processor [version 1.6]</br>
-   Used in `src/init/tables.sh` to convert json to array in BASH.
+#### 1. Web Server (Ngnix, Apache, etc.)
+#### 2. PHP >=8.2
+#### 3. MariaDB Server >=10.6
+#### 4. PHP/MySQL support modules for the Web Server
+For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
+#### 5. jq - commandline JSON processor [version 1.6]
+Used in `src/init/tables.sh` to convert json to array in BASH.
 
 ## PHP CASPER CLASS
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
