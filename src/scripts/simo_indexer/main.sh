@@ -73,6 +73,11 @@ export OPENSSL_CONF=dev/null
 ###################################################
 
 ti=`date +%s`
+
+if [ ! -f "err.log" ]; then
+    touch err.log
+fi
+
 # without concurrency
 #php .../simo_indexer/get_jobs.php... | tee src/scripts/simo_indexer/err.log
 #php .../simo_indexer/get_jobs.php... > src/scripts/simo_indexer/err.log # test
