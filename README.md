@@ -86,13 +86,13 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
     Basic usage:<br/>
     [https://github.com/synackSA/casperjs-php](https://github.com/synackSA/casperjs-php)
 
-2.  casperjs method sendKeys() uses phantomjs method sendEvent(). Useful references about the latter:<br/>
+2.  casperjs' `sendKeys()` uses phantomjs' `sendEvent()`. Useful references about the latter:<br/>
     Documentation:
     [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)<br/>
     Code:<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
 3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
-    used in casperjs method sendKeys().
+    used in casperjs method `sendKeys()`.
 
 ## Setup
 1. Build dependencies specified in `composer.lock`.
