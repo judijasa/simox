@@ -92,7 +92,7 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
     Code:<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
 3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
-    used in casperjs method `sendKeys()`.
+    used in casperjs' `sendKeys()` method.
 
 ## Setup
 1. Build dependencies specified in `composer.lock`.
