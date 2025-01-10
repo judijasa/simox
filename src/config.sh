@@ -41,7 +41,10 @@ SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
 
 # DBMS e.g. Mariadb, MySQL, etc
 SERVER="127.0.0.1"
-ROOT_PASSWORD="kory2core3m8"
+DBMS="mariadb"
+DBNAME="simo"
+#ROOT_PASSWORD="kory2core3m8"
+ROOT_PASSWORD=""
 READER_PASSWORD="hiroXim9"
 
 # PHPMailer
