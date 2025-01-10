@@ -1,3 +1,5 @@
+[x] Define DBMS and DBNAME in src/config.sh and use them in src/init/
+
 [.] Improve spacings in pagination arrows at public/index.php
 
 [.] Init db and tables and run main.sh (without concurrency) to test
