@@ -44,4 +44,4 @@ done
 #mysql -u $USER -p $DBNAME < $temp_sql_file
 sudo $DBMS $DBNAME < $temp_sql_file
 rm -r $workdir
-sudo $DBMS "${DBNAME}"
+sudo $DBMS "${DBNAME}" -e "SHOW TABLES;"
