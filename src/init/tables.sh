@@ -14,6 +14,8 @@ fi
     #echo "$res"
 #}
 
+source src/config.sh
+
 # json with schema dependencies sorted topologically
 schemas_json=$(php -r "require 'src/utils/sort_schemas.php'; echo json_encode(build_dependency_graph('simo-C196A24801D24B16')->topological_sort());")
 
@@ -37,7 +39,9 @@ done
 #CREATE ...
 #EOF
 
-USER="root"
-DBNAME="simo"
-mysql -u $USER -p $DBNAME < $temp_sql_file
+#USER="root"
+#DBNAME="simo"
+#mysql -u $USER -p $DBNAME < $temp_sql_file
+sudo $DBMS $DBNAME < $temp_sql_file
 rm -r $workdir
+sudo $DBMS "${DBNAME}"

@@ -14,6 +14,8 @@ fi
     #echo "$res"
 #}
 
+source src/config.sh
+
 path=$root_dir/srv
 workdir=/tmp/db_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
@@ -29,6 +31,10 @@ cat "$file1" >> "$file0"
 #CREATE ...
 #EOF
 
-USER="root"
-mysql -u $USER -p < $file0
+# USER="root"
+# mysql -u $USER -p < $file0
+#sudo mariadb -u $USER < $file0
+# sudo mariadb < $file0
+sudo $DBMS < $file0
 rm -r $workdir
+sudo $DBMS "${DBNAME}"
