@@ -16,28 +16,25 @@ fi
 
 source src/config.sh
 
-path=${root_dir}/srv
 workdir=/tmp/db_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
 
+agg_upgrades_pseudo_sql_file=${workdir}/pseudo_query.sql # query with placeholders
+agg_upgrades_sql_file=${workdir}/query.sql
+
+cat "${root_dir}/srv/simo.sql" >> "$agg_upgrades_pseudo_sql_file"
+
 # Replace placeholders in the SQL file with actual values
-sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}}/${ADMIN_PASSWORD}/g; s/{{reader_password}}/${READER_PASSWORD}/g;" "${path}/simo.sql" > temp.sql
-
-file0=${workdir}/schemas.sql
-file1=temp.sql
-
-touch $file0
-cat "$file1" >> "$file0"
-rm temp.sql
+sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}}/${ADMIN_PASSWORD}/g; s/{{reader_password}}/${READER_PASSWORD}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
 
 #mysql -u "${USER}" -p"${PASSWORD}" "${DATABASE}" <<EOF
 #CREATE ...
 #EOF
 
 # USER="root"
-# mysql -u $USER -p < $file0
-#sudo mariadb -u $USER < $file0
-# sudo mariadb < $file0
-sudo $DBMS < $file0
+# mysql -u $USER -p < $agg_upgrades_pseudo_sql_file
+#sudo mariadb -u $USER < $agg_upgrades_pseudo_sql_file
+# sudo mariadb < $agg_upgrades_pseudo_sql_file
+sudo $DBMS < $agg_upgrades_sql_file
 rm -r $workdir
 sudo $DBMS "${DBNAME}"
