@@ -27,7 +27,7 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
 ## PHP Casper Class
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
     It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
-    `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private script` with `protected script`.
+    `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.
 2.  Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
     of the boolean option `reset`, which is already defined in
     `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
