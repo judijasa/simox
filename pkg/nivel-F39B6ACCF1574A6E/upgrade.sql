@@ -23,4 +23,4 @@ INSERT INTO nivel (
     ('Profesional'), ('Profesional Aeronáutico'),
     ('Técnico'), ('Técnico Aeronáutico');
 */
-GRANT SELECT ON simo.nivel TO 'public'@'127.0.0.1';
+GRANT SELECT ON {{dbname}}.nivel TO 'public'@'{{servername}}';

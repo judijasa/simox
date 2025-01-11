@@ -23,17 +23,21 @@ schemas_json=$(php -r "require 'src/utils/sort_schemas.php'; echo json_encode(bu
 schemas_array=($(echo "$schemas_json" | jq -r '.[]'))
 
 # Submit all schemas in one temp file
-workdir=/tmp/build_schemas_$(date +%Y-%m-%d_%H:%M:%S)
+workdir=/tmp/table_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
-temp_sql_file=$workdir/query.sql
-touch $temp_sql_file
+
+agg_upgrades_pseudo_sql_file=${workdir}/pseudo_query.sql # query with placeholders
+agg_upgrades_sql_file=${workdir}/query.sql
 
 # Loop through the array
 for schema in "${schemas_array[@]}"
 do
-    cat "$root_dir/pkg/$schema/upgrade.sql" >> "$temp_sql_file"
-    echo "" >> "$temp_sql_file" # line break for readability
+    cat "$root_dir/pkg/$schema/upgrade.sql" >> "$agg_upgrades_pseudo_sql_file"
+    echo "" >> "$agg_upgrades_pseudo_sql_file" # line break for readability
 done
+
+# Replace placeholders in the SQL file with actual values
+sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
 
 #mysql -u "${USER}" -p"${PASSWORD}" "${DATABASE}" <<EOF
 #CREATE ...
@@ -42,6 +46,6 @@ done
 #USER="root"
 #DBNAME="simo"
 #mysql -u $USER -p $DBNAME < $temp_sql_file
-sudo $DBMS $DBNAME < $temp_sql_file
+sudo $DBMS $DBNAME < $agg_upgrades_sql_file
 rm -r $workdir
-sudo $DBMS "${DBNAME}" -e "SHOW TABLES;" -B
+sudo $DBMS "${DBNAME}" -e "SHOW TABLES;"

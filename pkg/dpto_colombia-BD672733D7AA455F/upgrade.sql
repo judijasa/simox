@@ -27,4 +27,4 @@ INSERT INTO dpto_colombia (
     ('Tolima'), ('Valle del Cauca'),
     ('Vaupés'), ('Vichada');
 
-GRANT SELECT ON simo.dpto_colombia TO 'public'@'127.0.0.1';
+GRANT SELECT ON {{dbname}}.dpto_colombia TO 'public'@'{{servername}}';

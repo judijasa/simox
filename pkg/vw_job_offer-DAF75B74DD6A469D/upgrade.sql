@@ -32,4 +32,4 @@ ON x.departamento_id = y.id
 ON x.nivel_id = z.id;
 */
 
-GRANT SELECT ON simo.vw_job_offer TO 'public'@'127.0.0.1';
+GRANT SELECT ON {{dbname}}.vw_job_offer TO 'public'@'{{servername}}';
