@@ -13,7 +13,7 @@ class adminPDO extends PDO {
         $servername = $cnf["SERVER"];
         $username = 'admin';
         $password = $cnf["ADMIN_PASSWORD"];
-        parent::__construct("mysql:host=$servername;dbname=$dbname", $username, $password, [
+        parent::__construct("mysql:host=$servername;dbname=$dbname", "$username", "$password", [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
     }
@@ -26,7 +26,7 @@ class readerPDO extends PDO {
         $servername = $cnf["SERVER"];
         $username = 'reader';
         $password = $cnf["READER_PASSWORD"];
-        parent::__construct("mysql:host=$servername;dbname=$dbname", $username, $password, [
+        parent::__construct("mysql:host=$servername;dbname=$dbname", "$username", "$password", [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
     }
@@ -39,7 +39,7 @@ class publicPDO extends PDO {
         $servername = $cnf["SERVER"];
         $username = 'public';
         $password = '';
-        parent::__construct("mysql:host=$servername;dbname=$dbname", $username, $password, [
+        parent::__construct("mysql:host=$servername;dbname=$dbname", "$username", "$password", [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
     }
@@ -51,7 +51,7 @@ function publicMySQLi($dbname){
     $servername = $cnf["SERVER"];
     $username = 'public';
     $password = '';
-    $conn = mysqli_connect($servername, $username, $password);
+    $conn = mysqli_connect($servername, "$username", "$password");
     if (! $conn) {
         die("Connection failed: " . mysqli_connect_error());
     }
