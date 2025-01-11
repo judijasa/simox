@@ -16,16 +16,19 @@ fi
 
 source src/config.sh
 
-path=$root_dir/srv
+path=${root_dir}/srv
 workdir=/tmp/db_schemas_$(date +%Y-%m-%d_%H:%M:%S)
 mkdir $workdir
-file0=$workdir/schemas.sql
+
+# Replace placeholders in the SQL file with actual values
+sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}}/${ADMIN_PASSWORD}/g; s/{{reader_password}}/${READER_PASSWORD}/g;" "${path}/simo.sql" > temp.sql
+
+file0=${workdir}/schemas.sql
+file1=temp.sql
+
 touch $file0
-file1=$path/simo.sql
-#file2=$path/cursorseq.sql
 cat "$file1" >> "$file0"
-#echo "" >> "$file0"
-#cat "$file2" >> "$file0"
+rm temp.sql
 
 #mysql -u "${USER}" -p"${PASSWORD}" "${DATABASE}" <<EOF
 #CREATE ...
