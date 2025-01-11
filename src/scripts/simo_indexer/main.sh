@@ -7,44 +7,42 @@
 # . [filename].sh
 ####
 
-# If exec not using CRON, check if you're in repo's root dir
 root_dir=$(git rev-parse --show-toplevel) # repo root directory path
-if [[ "$PWD" != $root_dir ]]
-then
-  echo "This command must be executed from the repository's root directory."
-  exit
+
+if [ -n "$CRON" ]; then
+
+  ## Extra commands required for crontab exec of the script
+
+  #####################################################
+  # $PATH is a persistent environment variable;
+  # crontab commands have a $PATH value (/usr/bin:/bin),
+  # that sometimes is not in Terminal's $PATH value.
+  # For this reason, some programs working in Terminal
+  # may not be found when exec from crontab.
+  #echo $PATH
+  #
+  #export PHANTOMJS_EXECUTABLE=/usr/local/bin ## opt 1 (issue: requires knowing the name of env var for each program)
+  #export PATH=$PATH:/usr/local/bin           ## opt 2 (issue: repeated exec under same session creates redundancy in PATH)
+
+  ## opt 3: If necessary, UNCOMMENT this option (best so far) when using cron
+  # export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin ## opt 3 (use Terminal's)
+
+  #####################################################
+  ## By default, crontab execs the script from '/root' directory,
+  ## preveting project's locally stored dependencies to be found.
+  ## SOLUTION: Move to project's directory ($DIR)
+  ## before exec of any dependency.
+  #DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
+  DIR=$root_dir # redirect to repo's root dir
+  cd $DIR
+else
+  # If exec not using CRON, check if you're in repo's root dir
+  if [[ "$PWD" != $root_dir ]]
+  then
+    echo "This command must be executed from the repository's root directory."
+    exit
+  fi
 fi
-
-##### BEGIN BLOCK: CRON
-
-## Extra commands required for crontab exec of the script
-
-#####################################################
-# $PATH is a persistent environment variable;
-# crontab commands have a $PATH value (/usr/bin:/bin)
-# different from that of Terminal.
-# For this reason, some programs working in Terminal
-# may not be found when exec from crontab
-#echo $PATH
-#
-#export PHANTOMJS_EXECUTABLE=/usr/local/bin ## opt 1 (issue: requires knowing the name of env var for each program)
-#export PATH=$PATH:/usr/local/bin           ## opt 2 (issue: repeated exec under same session creates redundancy in PATH)
-
-# UNCOMMENT THIS OPTION (opt 3) WHEN USING CRON
-#export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin ## opt 3 (use Terminal's)
-#####################################################
-
-#####################################################
-## By default, crontab execs the script from '/root' directory,
-## preveting project's locally stored dependencies to be found.
-## SOLUTION: Move to project's directory ($DIR)
-## before exec of any dependency.
-#DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
-# DIR=$root_dir # redirect to repo's root dir
-#cd $DIR
-####################################################
-
-##### END BLOCK: CRON
 
 # fix bug related with phpcasperjs
 export OPENSSL_CONF=dev/null
@@ -75,21 +73,35 @@ export OPENSSL_CONF=dev/null
 ti=`date +%s`
 
 if [ ! -f "err.log" ]; then
-    touch err.log
+  touch err.log
 fi
 
 # without concurrency
 #php .../simo_indexer/get_jobs.php... | tee src/scripts/simo_indexer/err.log
 #php .../simo_indexer/get_jobs.php... > src/scripts/simo_indexer/err.log # test
 
-# without concurrency 
+# concurrency = 1
+echo "Starting indexer() at src/scripts/simo_indexer/get_jobs.php"
 php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1)"
 
-# with concurrency (=4)
+# concurrency = 4
+# When you separate commands with the ampersand (&) it tells the shell to execute
+# those commands in the background (except the very last one, unless it has & in front),
+# independently and simultaneously. They shared the output stream, whence you get
+# intermixed output.
+#
+# To interact with a program (send signals eg stop, kill, etc.), you can bring a
+# background command to the foreground. To do this, use command `jobs` to list
+# all background jobs. The command `fg %[ID]` (e.g. fg %3) brings a background
+# job (with process ID: [ID]) to the foreground. The commmand `bg` (no args)
+# sends it back to the background.
+
 #php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 4);" &
 #php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 4);" &
 #php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(2, 4);" &
 #php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(3, 4);"
+# jobs # list background processes
+# wait # waits for all processes to finish before proceeding
 #exit # test
 
 tf=`date +%s`
