@@ -82,7 +82,7 @@ fi
 
 # concurrency = 1
 echo "Starting indexer() at src/scripts/simo_indexer/get_jobs.php"
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1)"
+php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1);"
 
 # concurrency = 4
 # When you separate commands with the ampersand (&) it tells the shell to execute
