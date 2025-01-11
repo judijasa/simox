@@ -1,4 +1,5 @@
 SET check_constraint_checks = OFF;
+DROP DATABASE IF EXISTS simo; -- To avoid foreign key error (not sure why)
 CREATE OR REPLACE DATABASE {{dbname}}
 COMMENT 'Ofertas de trabajo de la plataforma SIMO del Gobierno de Colombia'
 CHARACTER SET = 'utf8'
