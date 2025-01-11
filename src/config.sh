@@ -40,11 +40,10 @@ SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
 #SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
 
 # DBMS e.g. Mariadb, MySQL, etc
-SERVER="127.0.0.1"
+SERVER="localhost" # or "127.0.0.1", etc.
 DBMS="mariadb"
 DBNAME="simo"
-#ROOT_PASSWORD="kory2core3m8"
-ROOT_PASSWORD=""
+ADMIN_PASSWORD="kory2core3m8"
 READER_PASSWORD="hiroXim9"
 
 # PHPMailer
