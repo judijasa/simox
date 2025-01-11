@@ -11,8 +11,8 @@ class adminPDO extends PDO {
     public function __construct($dbname) {
         $cnf = parse_ini_file("src/config.sh"); // INI format similar to SH
         $servername = $cnf["SERVER"];
-        $username = 'root'; # TODO Create admin and change this setting
-        $password = $cnf["ROOT_PASSWORD"];
+        $username = 'admin';
+        $password = $cnf["ADMIN_PASSWORD"];
         parent::__construct("mysql:host=$servername;dbname=$dbname", $username, $password, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
