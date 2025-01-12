@@ -99,7 +99,7 @@ of the boolean option `reset`, which is already defined in
     used in casperjs' `sendKeys()` method.
 
 ## Setup
-1. Build dependencies specified in `composer.lock`.
+1. Execute `composer install` to build dependencies specified in `composer.lock`.
 2. Modify `src/config.sh` according to your custom values.
 
 ## Troubleshooting
