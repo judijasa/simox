@@ -114,7 +114,7 @@ with
 ```php
 $downloadManager->download($package, $targetDir)
 ```
-To run the customized installers run `composer update` in the same directory of your `composer.json`. You may have to run this command several times, until you find the `phpcasperjs` binary in the newly created `vendor/bin/` directory.
+To run the customized installers execute `composer update` in the same directory of your `composer.json`. You may have to run the installer several times, until you find the `phpcasperjs` binary in the newly created `vendor/bin/` directory.
 
 ## Database Design
 Entities: Job Offer
