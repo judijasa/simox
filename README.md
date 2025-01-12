@@ -104,8 +104,7 @@ of the boolean option `reset`, which is already defined in
 
 ## Troubleshooting
 
-1. Conflict with recent versions of Composer
-The package jakoch/phantomjs-installer requires `composer/composer: ^1.2`. For later versions you may have to modify
+1. The package jakoch/phantomjs-installer requires `composer/composer: ^1.2`. For later versions you may have to modify
 the `Installer` class `download()` method in `jakoch/phantomjs-installer/src/PhantomInstaller/Installer.php`,
 replacing the line
 ```php
