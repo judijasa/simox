@@ -23,16 +23,16 @@ In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduc
 For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
 #### 5. jq - commandline JSON processor [version 1.6]
 Used in `src/init/tables.sh` to convert json to array in BASH.
-### 6. Python
+#### 6. Python
 Required during phpcasperjs/phpcasperjs installation.
 
 ## PHP Casper Class
-1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
-    It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
-    `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.
-2.  Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
-    of the boolean option `reset`, which is already defined in
-    `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
+`src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
+It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
+`vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.<br/>
+Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
+of the boolean option `reset`, which is already defined in
+`vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
 
     Code:
 
@@ -82,7 +82,9 @@ Required during phpcasperjs/phpcasperjs installation.
             }
     ```
 
-    There are other interesting functions.<br/>
+#### Notes
+
+1.  There are other useful functions in PHP/CasperJS. See the links below.<br/>
     Code:<br/>
     [https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php](https://github.com/synackSA/casperjs-php/blob/master/src/Casper.php)<br/>
     Basic usage:<br/>
@@ -99,6 +101,21 @@ Required during phpcasperjs/phpcasperjs installation.
 ## Setup
 1. Build dependencies specified in `composer.lock`.
 2. Modify `src/config.sh` according to your custom values.
+
+## Troubleshooting
+
+1. Conflict with recent versions of Composer
+The package jakoch/phantomjs-installer requires `composer/composer: ^1.2`. For later versions you may have to modify
+the `Installer` class `download()` method in `jakoch/phantomjs-installer/src/PhantomInstaller/Installer.php`,
+replacing the line
+```php
+$downloadManager->download($package, $targetDir, false)
+```
+with
+```php
+$downloadManager->download($package, $targetDir)
+```
+To run the customized installers run `composer update` in the same directory of your `composer.json`. You may have to run this command several times, until you find the `phpcasperjs` binary in the newly created `vendor/bin/` directory.
 
 ## Database Design
 Entities: Job Offer
