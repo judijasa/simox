@@ -13,7 +13,7 @@ This application is comprised of three components: _crawler_, _database_ and _we
 [comment]: # "Database Management System (DBMS): MySQL (or MariaDB)"
 [comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
 -->
-## Resources
+## System Requirements
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
 
 #### 1. Web Server (Ngnix, Apache, etc.)
@@ -23,6 +23,8 @@ In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduc
 For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
 #### 5. jq - commandline JSON processor [version 1.6]
 Used in `src/init/tables.sh` to convert json to array in BASH.
+### 6. Python
+Required during phpcasperjs/phpcasperjs installation.
 
 ## PHP Casper Class
 1.  `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
