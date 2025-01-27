@@ -39,8 +39,9 @@ PATH2CASPER="vendor/bin/"
 SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
 #SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
 
-# DBMS e.g. Mariadb, MySQL, etc
-SERVER="localhost" # or "127.0.0.1", etc.
+# SERVER eg 127.0.0.1, etc
+# DBMS eg mariadb, mysql, etc
+SERVER="localhost"
 DBMS="mariadb"
 DBNAME="simo"
 ADMIN_PASSWORD="kory2core3m8"
