@@ -95,6 +95,7 @@ of the boolean option `reset`, which is already defined in
     [PHANTOMJS sendEvent](https://phantomjs.org/api/webpage/method/send-event.html)<br/>
     Code:<br/>
     [https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp](https://github.com/ariya/phantomjs/blob/master/src/webpage.cpp)
+
 3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
     used in casperjs' `sendKeys()` method.
 
