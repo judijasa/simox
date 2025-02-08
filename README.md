@@ -115,6 +115,7 @@ with
 ```php
 $downloadManager->download($package, $targetDir)
 ```
+In the jerome-breton/casper-js installer this the difference between composer version is already handled within the `Installer` class `download()` method.
 To run the customized installers execute `composer update` in the same directory of your `composer.json`. You may have to run the installer several times, until you find the `phpcasperjs` binary in the newly created `vendor/bin/` directory.
 
 ## Database Design
