@@ -1,3 +1,20 @@
+[.] Contribute to github repo: jakoch/phantomjs-installer. This in order
+    to render unnecessary the modification of the installer.php file
+    where the composer version is handled.  Currently installer.php
+    is modified; I used as a reference the handler in
+    ```vendor/jerome-breton/casperjs-installer/src/CasperJsInstaller/Installer.php```
+    in the line
+    ```public function download($targetDir, $version)```
+    and in the functions thereby called.
+
+    Simply copy that in the corresponding lines in
+    ```vendor/jakoch/phantomjs-installer/src/PhantomInstaller/Installer.php```
+    But before this, make a backup copy of the file above. After you have
+    tested the modification, you can also remove the first adaptation
+    of this file, reported in SIMOExpress/README.md
+
+    Follow the steps in ChatGPT to make the contribution to the repository.
+
 [.] Find and apply method from PDO MySQL driver to prevent SQL injection,
     see example in mixrank/utils/batch_processing/scan_table_in_batches.py
     with psycopg2 Postgresql driver for Python, where the method `sql`
