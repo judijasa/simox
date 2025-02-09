@@ -18,6 +18,7 @@ In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduc
 
 #### 1. Web Server (Ngnix, Apache, etc.)
 #### 2. PHP >=8.2
+jakoch/phantomjs-installer further requires installation of the bz2 extension for PHP.
 #### 3. MariaDB Server >=10.6
 #### 4. PHP/MySQL support modules for the Web Server
 For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
