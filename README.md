@@ -106,18 +106,12 @@ of the boolean option `reset`, which is already defined in
 
 ## Troubleshooting
 
-1. The package jakoch/phantomjs-installer requires `composer/composer: ^1.2`. For later versions you may have to modify
-the `Installer` class `download()` method in `jakoch/phantomjs-installer/src/PhantomInstaller/Installer.php`,
-replacing the line
-```php
-$downloadManager->download($package, $targetDir, false)
-```
-with
-```php
-$downloadManager->download($package, $targetDir)
-```
-In the jerome-breton/casper-js installer this the difference between composer version is already handled within the `Installer` class `download()` method.
-To run the customized installers execute `composer update` in the same directory of your `composer.json`. You may have to run the installer several times, until you find the `phpcasperjs` binary in the newly created `vendor/bin/` directory.
+1. Lower versions of some packages can conflict with higher versions of Composer.
+Composer should install the most recent version of any package, under the given constratints, but sometimes one is required to remove the vendor folder and run again `composer install`.
+If for some reason you are stuck with a lower version of a package and it conflicts with Composer version 2, you may have to modify the `Installer` class `download()` method in the corresponding `Installer.php` file, to handle different versions of Composer.
+This is a generic method, so you can use any other, more recent, package as a reference.
+To run the customized installers execute `composer update` in the same directory of your `composer.json`.
+You may have to run the installer several times, until you find the `phpcasperjs` and `phantomjs` binaries in the newly created `vendor/bin/` directory.
 
 ## Database Design
 Entities: Job Offer
