@@ -134,6 +134,7 @@ function indexer($mod=0, $div=1){
     // github.com/synackSA/casperjs-php
     // github.com/alwex/php-casperjs/blob/master/src/Casper.php
     // Code here to fetch data if you want
+    $start_time = time();  // Record the start time
     $counter = 1;
     while ($counter <= $pages_per_mod) {
         if ($page > $total_pages){
@@ -251,6 +252,13 @@ function indexer($mod=0, $div=1){
 
         $dom->clear();
         unset($dom);
+
+        // Break after 1 hour
+        $current_time = time();
+        $elapsed_time = $current_time - $start_time;
+        if ($elapsed_time > 3600) {
+            break;
+        }
         // go to next page or to page 1
         // CAREFUL: statements of the typ `$casper->...` are only exec after $casper->run(),
         // but there's no such line after the statements below.
