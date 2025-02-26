@@ -1,7 +1,7 @@
 <?php
 // Test PDO children classes
 
-    require 'private/utils/connectivity.php';
+    require 'src/utils/connectivity.php';
 
     try {
         $dbname = 'simo';
