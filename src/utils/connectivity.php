@@ -47,7 +47,7 @@ class publicPDO extends PDO {
 
 function publicMySQLi($dbname){
     // Not executed from repo's root dir: Use abs path...
-    $cnf = parse_ini_file("/srv/git/SIMOExpress/src/config.sh");
+    $cnf = parse_ini_file("src/config.sh");
     $servername = $cnf["SERVER"];
     $username = 'public';
     $password = '';
