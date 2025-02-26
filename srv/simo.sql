@@ -1,5 +1,5 @@
 SET check_constraint_checks = OFF;
-DROP DATABASE IF EXISTS simo; -- To avoid foreign key error (not sure why)
+DROP DATABASE IF EXISTS {{dbname}}; -- To avoid foreign key error (not sure why)
 CREATE OR REPLACE DATABASE {{dbname}}
 COMMENT 'Ofertas de trabajo de la plataforma SIMO del Gobierno de Colombia'
 CHARACTER SET = 'utf8'
@@ -15,3 +15,4 @@ DROP USER IF EXISTS 'public'@'{{servername}}';
 CREATE USER 'public'@'{{servername}}' IDENTIFIED BY '';
 
 GRANT SELECT ON simo.* TO 'reader'@'{{servername}}';
+GRANT SELECT, INSERT, UPDATE, DELETE ON {{dbname}}.* TO 'admin'@'{{servername}}';
