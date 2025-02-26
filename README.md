@@ -107,9 +107,9 @@ of the boolean option `reset`, which is already defined in
 ## Troubleshooting
 
 1. Lower versions of some packages can conflict with higher versions of Composer.
-Composer should install the most recent version of any package, under the given constratints, but sometimes one is required to remove the vendor folder and run again `composer install`.
-If for some reason you are stuck with a lower version of a package and it conflicts with Composer version 2, you may have to modify the `Installer` class `download()` method in the corresponding `Installer.php` file, to handle different versions of Composer.
-This is a generic method, so you can use any other, more recent, package as a reference.
+Composer should install the most recent version of any package, under the given constratints. Sometimes one is required to remove the vendor folder and run again `composer install`.
+If for some reason you are stuck with a lower version of a package (e.g. `jakoch/phantomjs-installer`) and it conflicts with the Composer version 2, you may have to modify the `Installer` class `download()` method in the corresponding `Installer.php` file, to handle different versions of Composer.
+This is a generic method, so you can use any other, more recent, package as a reference (e.g. `jerome-breton/casperjs-installer`) or replace the installer file with one more recent in the source repository (e.g. `jakoch/phantomjs-installer` at Github).
 To run the customized installers execute `composer update` in the same directory of your `composer.json`.
 You may have to run the installer several times, until you find the `phpcasperjs` and `phantomjs` binaries in the newly created `vendor/bin/` directory.
 
