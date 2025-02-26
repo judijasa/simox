@@ -25,7 +25,7 @@ For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` 
 #### 5. jq - commandline JSON processor [version 1.6]
 Used in `src/init/tables.sh` to convert json to array in BASH.
 #### 6. Python
-Required during phpcasperjs/phpcasperjs installation.
+Required during phpcasperjs/phpcasperjs installation (`...install python-is-python3`).
 
 ## PHP Casper Class
 `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
