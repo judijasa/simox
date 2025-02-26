@@ -115,6 +115,13 @@ This is a generic method, so you can use any other, more recent, package as a re
 To run the customized installers execute `composer update` in the same directory of your `composer.json`.
 You may have to run the installer several times, until you find the `phpcasperjs` and `phantomjs` binaries in the newly created `vendor/bin/` directory.
 
+2. You have to properly escape the regex expression in
+   ```
+    vendor/sunra/php-simple-html-dom-parser/Src/Sunra/PhpSimple/simplehtmldom_1_5/simple_html_dom.php
+
+    ```
+at lines 696 and 1378: `[\w-:\*]` should be `[\w\-\:\*]`, `[\w-]` should be `[\w\-]`. 
+
 ## Database Design
 Entities: Job Offer
 Attributes:
