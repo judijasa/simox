@@ -1,4 +1,19 @@
-[.] Contribute to github repo: jakoch/phantomjs-installer. This in order
+[.] In src/deploy.sh make command that copies src/scripts/simo_indexer/main.sh
+    into the folder were cron schedules per day executions. Make this
+    copy only if there is no file or if diff is not null.
+
+[.] Schedule reboots (at unpopular hours) to clear RAM.
+    This can also be part of the deploy file.
+    There are other alternatives to reboot like cleaning cache (google it or
+    ask a LLM about alternatives).  You may want to refine this procedure,
+    with a script that looks at RAM status and triggers a reboot if
+    RAM usage is dangerously high. The latter is more convenient for
+    website clients.
+
+[d] (Discarded. Easier to replace the installer.php file with a more recent
+    version, found in the corresponding github repo. The link to the repo
+    is is Composer: Browse Pacakages)
+    Contribute to github repo: jakoch/phantomjs-installer. This in order
     to render unnecessary the modification of the installer.php file
     where the composer version is handled.  Currently installer.php
     is modified; I used as a reference the handler in
