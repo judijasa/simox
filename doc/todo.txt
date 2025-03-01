@@ -1,3 +1,9 @@
+[.] Report in README:
+    - sudo apt install cron
+    - Explain how to config cron appropriately
+    - Instruct to set in /etc/environment:
+      SIMO_REPO_PATH="[my path to repo]"
+
 [.] In src/deploy.sh make command that copies src/scripts/simo_indexer/main.sh
     into the folder were cron schedules per day executions. Make this
     copy only if there is no file or if diff is not null.
