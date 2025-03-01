@@ -83,12 +83,22 @@ if [ ! -f "$logFile" ]; then
 fi
 
 # without concurrency
-#php .../simo_indexer/get_jobs.php... | tee -a $logFile
-#php .../simo_indexer/get_jobs.php... > $logFile # test
+#php .../simo_indexer/get_jobs.php... | tee -a $logFile # Redirect with append and show result in terminal too
+#php .../simo_indexer/get_jobs.php... > $logFile # test: Redirect without append stdout
+#php .../simo_indexer/get_jobs.php... >> $logFile 2>&1 # test: Redirect with append stdout and stderr
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting indexer..."
 
 # concurrency = 1
-echo "Starting indexer() at src/scripts/simo_indexer/get_jobs.php"
-php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1);"
+cmd="require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1);"
+
+# Check if running in an interactive terminal
+if [ -t 1 ]; then
+  php -r $cmd 2>&1 | tee -a "$logFile"
+else
+  # Running in background: Only log (log file) output
+  php -r $cmd >> $logFile 2>&1
+fi
 
 # concurrency = 4
 # When you separate commands with the ampersand (&) it tells the shell to execute
