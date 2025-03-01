@@ -7,7 +7,8 @@
 # . [filename].sh
 ####
 
-repo_path = "/home/admin/git/SIMOExpress"
+repoPath="/home/admin/git/SIMOExpress"
+logFile="$repoPath/log/err.log"
 
 if [ -n "$CRON" ]; then
 
@@ -35,14 +36,14 @@ if [ -n "$CRON" ]; then
   #DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
   #cd $DIR
   ## Now that you are in the location of the file, redirect to the root location of the repo...
-  # repo_path=$(git rev-parse --show-toplevel) # repo root directory path
-  cd $repo_path
+  # repoPath=$(git rev-parse --show-toplevel) # repo root directory path
+  cd $repoPath
 else
   # If exec not using CRON. check if you're in repo's root dir
   # Using git rev-parse is not good because its value assumes execution is
   # somewhere within the repo.
-  # repo_dir=$(git rev-parse --show-toplevel) # repo root directory path
-  if [[ "$PWD" != $repo_path ]]
+  # repoPath=$(git rev-parse --show-toplevel) # repo root directory path
+  if [[ "$PWD" != $repoPath ]]
   then
     echo "This command must be executed from the repository's root directory."
     exit
@@ -77,13 +78,13 @@ export OPENSSL_CONF=dev/null
 
 ti=`date +%s`
 
-if [ ! -f "err.log" ]; then
-  touch err.log
+if [ ! -f "$logFile" ]; then
+  touch "$logFile"
 fi
 
 # without concurrency
-#php .../simo_indexer/get_jobs.php... | tee src/scripts/simo_indexer/err.log
-#php .../simo_indexer/get_jobs.php... > src/scripts/simo_indexer/err.log # test
+#php .../simo_indexer/get_jobs.php... | tee -a $logFile
+#php .../simo_indexer/get_jobs.php... > $logFile # test
 
 # concurrency = 1
 echo "Starting indexer() at src/scripts/simo_indexer/get_jobs.php"
