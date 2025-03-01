@@ -8,7 +8,7 @@
 ####
 
 repoPath="/home/admin/git/SIMOExpress"
-logFile="$repoPath/log/err.log"
+logFile="$repoPath/log/crawler.log"
 
 if [ -n "$CRON" ]; then
 
