@@ -257,6 +257,7 @@ function indexer($mod=0, $div=1){
         $current_time = time();
         $elapsed_time = $current_time - $start_time;
         if ($elapsed_time > 3600) {
+            echo date('Y-m-d H:i:s') . " - Timeout exit.\n";
             break;
         }
         // go to next page or to page 1
