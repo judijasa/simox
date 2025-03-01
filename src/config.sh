@@ -31,6 +31,9 @@
 #
 ##################################################
 
+# REPO ROOT DIR
+REPO_PATH="/home/john/git/SIMOExpress"
+
 # CASPER
 #PATH2CASPER="/Users/username/.anyenv/envs/nodenv/shims/"
 PATH2CASPER="vendor/bin/"
