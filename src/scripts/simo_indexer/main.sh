@@ -7,8 +7,7 @@
 # . [filename].sh
 ####
 
-repoPath="/home/admin/git/SIMOExpress"
-logFile="$repoPath/log/crawler.log"
+logFile="$SIMO_REPO_PATH/log/crawler.log"
 
 if [ -n "$CRON" ]; then
 
@@ -36,14 +35,14 @@ if [ -n "$CRON" ]; then
   #DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
   #cd $DIR
   ## Now that you are in the location of the file, redirect to the root location of the repo...
-  # repoPath=$(git rev-parse --show-toplevel) # repo root directory path
-  cd $repoPath
+  # $SIMO_REPO_PATH=$(git rev-parse --show-toplevel) # repo root directory path
+  cd $SIMO_REPO_PATH
 else
   # If exec not using CRON. check if you're in repo's root dir
   # Using git rev-parse is not good because its value assumes execution is
   # somewhere within the repo.
-  # repoPath=$(git rev-parse --show-toplevel) # repo root directory path
-  if [[ "$PWD" != $repoPath ]]
+  # $SIMO_REPO_PATH=$(git rev-parse --show-toplevel) # repo root directory path
+  if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
   then
     echo "This command must be executed from the repository's root directory."
     exit

@@ -4,8 +4,7 @@
 # Kill memory intensive processes if exceed threshold (> 90%)
 # If above threshold but no process found, reboot.
 
-repoPath="/home/admin/git/SIMOExpress"
-logFile="$repoPath/log/maintenance.log"
+logFile="$SIMO_REPO_PATH/log/maintenance.log"
 
 THRESHOLD=90
 USED_RAM=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
