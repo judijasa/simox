@@ -7,7 +7,7 @@
 # . [filename].sh
 ####
 
-root_dir=$(git rev-parse --show-toplevel) # repo root directory path
+repo_path = "/home/admin/git/SIMOExpress"
 
 if [ -n "$CRON" ]; then
 
@@ -33,11 +33,16 @@ if [ -n "$CRON" ]; then
   ## SOLUTION: Move to project's directory ($DIR)
   ## before exec of any dependency.
   #DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # redirect to file location
-  DIR=$root_dir # redirect to repo's root dir
-  cd $DIR
+  #cd $DIR
+  ## Now that you are in the location of the file, redirect to the root location of the repo...
+  # repo_path=$(git rev-parse --show-toplevel) # repo root directory path
+  cd $repo_path
 else
-  # If exec not using CRON, check if you're in repo's root dir
-  if [[ "$PWD" != $root_dir ]]
+  # If exec not using CRON. check if you're in repo's root dir
+  # Using git rev-parse is not good because its value assumes execution is
+  # somewhere within the repo.
+  # repo_dir=$(git rev-parse --show-toplevel) # repo root directory path
+  if [[ "$PWD" != $repo_path ]]
   then
     echo "This command must be executed from the repository's root directory."
     exit
