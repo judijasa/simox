@@ -3,6 +3,9 @@
 # If exec not using CRON, check if you're in repo's root dir
 # Using SIMO_REPO_PATH instead of root_dir because git rev-parse only works within repo
 # root_dir=$(git rev-parse --show-toplevel) # repo root directory path
+
+source /etc/environment  # SIMO_REPO_PATH
+
 if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
 then
   echo "This command must be executed from the repository's root directory."
@@ -58,7 +61,7 @@ deploy_cronjobs() {
   mkdir -p /etc/cron.5min
   cron_cp "$MAINTENANCE/memory_cleaning.sh" "/etc/cron.5min/simo_memory_cleaning"
   cron_cp "$MAINTENANCE/trim_log_files.sh" "/etc/cron.monthly/simo_trim_log_files"
-  cron_cp "$INDEXER/main.sh" "/etc/cron.monthly/simo_main"
+  cron_cp "$INDEXER/main.sh" "/etc/cron.daily/simo_main"
 
   sudo systemctl restart cron
 }

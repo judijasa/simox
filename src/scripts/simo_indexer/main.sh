@@ -7,6 +7,7 @@
 # . [filename].sh
 ####
 
+source /etc/environment  # SIMO_REPO_PATH
 logFile="$SIMO_REPO_PATH/log/crawler.log"
 
 if [ -n "$CRON" ]; then
@@ -89,14 +90,14 @@ fi
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting indexer..."
 
 # concurrency = 1
-cmd="require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0,1);"
+cmd="require \"src/scripts/simo_indexer/get_jobs.php\"; indexer(0,1);"
 
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
-  php -r $cmd 2>&1 | tee -a "$logFile"
+  php -r "$cmd" 2>&1 | tee -a "$logFile"
 else
   # Running in background: Only log (log file) output
-  php -r $cmd >> $logFile 2>&1
+  php -r "$cmd" >> $logFile 2>&1
 fi
 
 # concurrency = 4

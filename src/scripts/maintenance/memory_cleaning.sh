@@ -4,7 +4,8 @@
 # Kill memory intensive processes if exceed threshold (> 90%)
 # If above threshold but no process found, reboot.
 
-logFile="$SIMO_REPO_PATH/log/maintenance.log"
+source /etc/environment  # SIMO_REPO_PATH
+logFile="${SIMO_REPO_PATH}/log/maintenance.log"
 
 THRESHOLD=90
 USED_RAM=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')

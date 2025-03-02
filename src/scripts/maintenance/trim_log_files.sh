@@ -28,11 +28,12 @@ trim_log_file() {
     fi
 }
 
+source /etc/environment  # SIMO_REPO_PATH
 
-LOG_FILE="log/maintenance.log"
+LOG_FILE="${SIMO_REPO_PATH}/log/maintenance.log"
 MAX_SIZE=500000  # .5MB
 trim_log_file "$LOG_FILE" "$MAX_SIZE"
 
-LOG_FILE="log/crawler.log"
+LOG_FILE="${SIMO_REPO_PATH}log/crawler.log"
 MAX_SIZE=1000000  # 1MB
 trim_log_file "$LOG_FILE" "$MAX_SIZE"
