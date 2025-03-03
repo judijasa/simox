@@ -61,7 +61,7 @@ deploy_cronjobs() {
   mkdir -p /etc/cron.5min
   cron_cp "${MAINTENANCE}/memory_cleaning.sh" "/etc/cron.5min/simo_memory_cleaning"
   cron_cp "${MAINTENANCE}/trim_log_files.sh" "/etc/cron.monthly/simo_trim_log_files"
-  cron_cp "${INDEXER}/main.sh" "/etc/cron.daily/simo_main"
+  cron_cp "${INDEXER}/main.sh" "/etc/cron.hourly/simo_main"
 
   sudo systemctl restart cron
 }

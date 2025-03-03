@@ -253,10 +253,10 @@ function indexer($mod=0, $div=1){
         $dom->clear();
         unset($dom);
 
-        // Break after 1 hour
+        // Break after 30 min (run every hourly)
         $current_time = time();
         $elapsed_time = $current_time - $start_time;
-        if ($elapsed_time > 3600) {
+        if ($elapsed_time > 1800) {
             echo date('Y-m-d H:i:s') . " - Timeout exit.\n";
             break;
         }
