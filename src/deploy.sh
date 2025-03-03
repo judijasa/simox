@@ -59,14 +59,14 @@ deploy_cronjobs() {
   # You need to create /etc/cron.d/cron-5min and add the line
   # */5 * * * * root run-parts /etc/cron.5min
   mkdir -p /etc/cron.5min
-  cron_cp "$MAINTENANCE/memory_cleaning.sh" "/etc/cron.5min/simo_memory_cleaning"
-  cron_cp "$MAINTENANCE/trim_log_files.sh" "/etc/cron.monthly/simo_trim_log_files"
-  cron_cp "$INDEXER/main.sh" "/etc/cron.daily/simo_main"
+  cron_cp "${MAINTENANCE}/memory_cleaning.sh" "/etc/cron.5min/simo_memory_cleaning"
+  cron_cp "${MAINTENANCE}/trim_log_files.sh" "/etc/cron.monthly/simo_trim_log_files"
+  cron_cp "${INDEXER}/main.sh" "/etc/cron.daily/simo_main"
 
   sudo systemctl restart cron
 }
 
-deploy_website()
-deploy_cronjobs()
+deploy_website
+deploy_cronjobs
 
 # Optionally, you can also clear any caches or perform other post-deployment tasks
