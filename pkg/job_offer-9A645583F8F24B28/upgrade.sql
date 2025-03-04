@@ -46,10 +46,10 @@ Note: CHAR SET and COLLATE now defined at database level.
 */
 
 DELIMITER //
-CREATE OR REPLACE FUNCTION null_from_default_str(input_str VARCHAR(10000))
-RETURNS VARCHAR(10000)
+CREATE OR REPLACE FUNCTION null_from_default_str(input_str TEXT)
+RETURNS TEXT
 BEGIN
-    DECLARE output_str VARCHAR(10000);
+    DECLARE output_str TEXT;
 
     IF input_str = 'NONE' THEN
         SET output_str = NULL;
