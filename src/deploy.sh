@@ -51,7 +51,7 @@ deploy_cronjobs() {
     local SOURCE="$1"
     local TARGET="$2"
     cp "$SOURCE" "$TARGET"
-    chmod +x $TARGET
+    chmod +x "$TARGET"
   }
   # run-parts (cron way to exec all files in a directory) adhere to a specific naming convention.
   # Avoid files with extensions; use myfile instead of myfile.sh. It also must be executable,
