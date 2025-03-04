@@ -135,8 +135,8 @@ fi
 
 ## postprocessing of job_offer tbl
 
-msg1="$(date '+%Y-%m-%d %H:%M:%S') - Starting post-crawling processing..."
-msg2="$(date '+%Y-%m-%d %H:%M:%S') - Starting post-crawling processing..."
+msg1="$(date '+%Y-%m-%d %H:%M:%S') - Starting post-crawling process..."
+msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished post-crawling process."
 
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
