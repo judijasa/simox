@@ -87,17 +87,22 @@ fi
 #php .../simo_indexer/get_jobs.php... > $logFile # test: Redirect without append stdout
 #php .../simo_indexer/get_jobs.php... >> $logFile 2>&1 # test: Redirect with append stdout and stderr
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting indexer..."
 
 # concurrency = 1
 cmd="require \"src/scripts/simo_indexer/get_jobs.php\"; indexer(0,1);"
+msg1="$(date '+%Y-%m-%d %H:%M:%S') - Starting crawler..."
+msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished crawling."
 
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
+  echo "$msg1" 2>&1 | tee -a $logFile
   php -r "$cmd" 2>&1 | tee -a "$logFile"
+  echo "$msg1" 2>&1 | tee -a $logFile
 else
   # Running in background: Only log (log file) output
+  echo "$msg1" >> $logFile 2>&1
   php -r "$cmd" >> $logFile 2>&1
+  echo "$msg2" >> $logFile 2>&1
 fi
 
 # concurrency = 4
@@ -120,17 +125,30 @@ fi
 # wait # waits for all processes to finish before proceeding
 #exit # test
 
-tf=`date +%s`
-secs=$((tf-ti))
-exec_time=$(printf '%02d:%02d:%02d' $((secs%86400/3600)) $((secs%3600/60)) $((secs%60)))
-echo "Execution time: $exec_time"; # remove after test
+#tf=`date +%s`
+#secs=$((tf-ti))
+#exec_time=$(printf '%02d:%02d:%02d' $((secs%86400/3600)) $((secs%3600/60)) $((secs%60)))
+#echo "Execution time: $exec_time";
 
 ## Record download attempts in activity_monitor tbl
 # php src/activity_monitor.php -- "time=${exec_time}&run=${i}&run_max=${imax}&ex_last=${ex_last_pg}&last=${last_pg}&end=${end_pg}" # uncomment after test
 
 ## postprocessing of job_offer tbl
-php src/scripts/simo_indexer/update_job_offer.php
 
+msg1="$(date '+%Y-%m-%d %H:%M:%S') - Starting post-crawling processing..."
+msg2="$(date '+%Y-%m-%d %H:%M:%S') - Starting post-crawling processing..."
+
+# Check if running in an interactive terminal
+if [ -t 1 ]; then
+  echo "$msg1" 2>&1 | tee -a $logFile
+  php src/scripts/simo_indexer/update_job_offer.php 2>&1 | tee -a $logFile
+  echo "$msg2" 2>&1 | tee -a $logFile
+else
+  # Running in background: Only log (log file) output
+  echo "$msg1" >> $logFile 2>&1
+  php src/scripts/simo_indexer/update_job_offer.php >> $logFile 2>&1
+  echo "$msg2" >> $logFile 2>&1
+fi
 ## Email download status with summary
 #opec=$(php get_new_jobs.php)
 #php src/scripts/simo_indexer/mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"
