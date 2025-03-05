@@ -70,3 +70,5 @@ deploy_website
 deploy_cronjobs
 
 # Optionally, you can also clear any caches or perform other post-deployment tasks
+
+exit 0

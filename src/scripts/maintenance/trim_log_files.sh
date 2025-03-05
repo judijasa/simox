@@ -37,3 +37,5 @@ trim_log_file "$LOG_FILE" "$MAX_SIZE"
 LOG_FILE="${SIMO_REPO_PATH}log/crawler.log"
 MAX_SIZE=1000000  # 1MB
 trim_log_file "$LOG_FILE" "$MAX_SIZE"
+
+exit 0

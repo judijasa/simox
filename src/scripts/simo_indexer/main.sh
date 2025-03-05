@@ -152,3 +152,5 @@ fi
 ## Email download status with summary
 #opec=$(php get_new_jobs.php)
 #php src/scripts/simo_indexer/mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"
+
+exit 0

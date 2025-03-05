@@ -38,3 +38,5 @@ sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}
 sudo $DBMS < $agg_upgrades_sql_file
 rm -r $workdir
 sudo $DBMS "${DBNAME}"
+
+exit 0

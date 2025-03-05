@@ -49,3 +49,5 @@ sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pse
 sudo $DBMS $DBNAME < $agg_upgrades_sql_file
 rm -r $workdir
 sudo $DBMS "${DBNAME}" -e "SHOW TABLES;"
+
+exit 0

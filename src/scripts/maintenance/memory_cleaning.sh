@@ -25,3 +25,5 @@ if [ "$USED_RAM" -ge "$THRESHOLD" ]; then
         sudo reboot
     fi
 fi
+
+exit 0
