@@ -1,14 +1,31 @@
-[.] Report in README:
-    - sudo apt install cron
-    - Explain how to config cron appropriately
-    - Instruct to set in /etc/environment:
-      SIMO_REPO_PATH="[my path to repo]"
+[.] Find and apply method from PDO MySQL driver to prevent SQL injection,
+    see example in mixrank/utils/batch_processing/scan_table_in_batches.py
+    with psycopg2 Postgresql driver for Python, where the method `sql`
+    is imported and used.
 
-[.] In src/deploy.sh make command that copies src/scripts/simo_indexer/main.sh
-    into the folder were cron schedules per day executions. Make this
-    copy only if there is no file or if diff is not null.
+[.] Improve spacings in pagination arrows at public/index.php
 
-[.] Schedule reboots (at unpopular hours) to clear RAM.
+[.] Make triggers to insert new values in %_variaciones tbls.
+
+[.] Sometimes `vacantes` takes the value zero.  Avoid reporting such jobs in the web site.
+
+[.] Make an indexer for
+    https://www.funcionpublica.gov.co/procesos-de-contratacion
+
+[.] Agregar `modalidad` de la oferta de trabajo (`ascenso`, `ingreso`, etc.)
+
+[.] Check if job_offer_snapshot is allowing duplicates which are expected not to be allowed.
+
+[.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
+    replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[.] Add tmux to shell nix
+
+[.] Add col convocatoria_status (abierta/cerrada)
+
+
+[d] [Discarded. Replaced with src/scripts/maintenance/memory_cleaning.sh]
+    Schedule reboots (at unpopular hours) to clear RAM.
     This can also be part of the deploy file.
     There are other alternatives to reboot like cleaning cache (google it or
     ask a LLM about alternatives).  You may want to refine this procedure,
@@ -16,9 +33,9 @@
     RAM usage is dangerously high. The latter is more convenient for
     website clients.
 
-[d] (Discarded. Easier to replace the installer.php file with a more recent
+[d] [Discarded. Easier to replace the installer.php file with a more recent
     version, found in the corresponding github repo. The link to the repo
-    is is Composer: Browse Pacakages)
+    is is Composer: Browse Pacakages]
     Contribute to github repo: jakoch/phantomjs-installer. This in order
     to render unnecessary the modification of the installer.php file
     where the composer version is handled.  Currently installer.php
@@ -36,17 +53,7 @@
 
     Follow the steps in ChatGPT to make the contribution to the repository.
 
-[.] Find and apply method from PDO MySQL driver to prevent SQL injection,
-    see example in mixrank/utils/batch_processing/scan_table_in_batches.py
-    with psycopg2 Postgresql driver for Python, where the method `sql`
-    is imported and used.
-
 [x] Define DBMS and DBNAME in src/config.sh and use them in src/init/
-
-[.] Improve spacings in pagination arrows at public/index.php
-
-[.] Init db and tables and run main.sh (without concurrency) to test
-    new 'simo' website host raspberrypi.local
 
 [x] Incorporate the topological sort utility to src/init/database.sh
 
@@ -54,22 +61,11 @@
     - Replace 'Profesional universitario' with 'Profesional' in $denom
     - Make sure not to report Profesional in $estudio, if is in $denom
 
-[.] Make triggers to insert new values in %_variaciones tbls.
-
-[.] Sometimes `vacantes` takes the value zero.  Avoid reporting such jobs in the web site.
-
-[.] Make an indexer for
-    https://www.funcionpublica.gov.co/procesos-de-contratacion
-
-[.] Agregar `modalidad` de la oferta de trabajo (`ascenso`, `ingreso`, etc.)
-
 [x] Add sub pages `about us` and `data analysis`
 
     - About us:  Esta página tiene el doble propósito de
         - Ofrecer acceso rápido a las más recientes ofertas públicas
           de empleos de carrera administrativa (OPEC).
-
-[.] Check if job_offer_snapshot is allowing duplicates which are expected not to be allowed.
 
 [x] Concurrency of crawler:
 
@@ -89,13 +85,6 @@
 
     REFS:
     https://stackoverflow.com/questions/70979471/create-system-version-table-that-tracks-schema-changes
-
-[.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
-    replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
-
-[.] Add tmux to shell nix
-
-[.] Add col convocatoria_status (abierta/cerrada)
 
 [x] src/scripts/simo-indexer/functions.php line 222: Reasses the removal of duplicates in dependencies,
     municipios y vacantes.  As it is reporting `vacantes` wrong, e.g.,
