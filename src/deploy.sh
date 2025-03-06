@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# If exec not using CRON, check if you're in repo's root dir
 # Using SIMO_REPO_PATH instead of root_dir because git rev-parse only works within repo
 # root_dir=$(git rev-parse --show-toplevel) # repo root directory path
 
