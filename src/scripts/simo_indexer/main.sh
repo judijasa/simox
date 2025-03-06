@@ -10,7 +10,7 @@
 source /etc/environment  # SIMO_REPO_PATH
 logFile="$SIMO_REPO_PATH/log/crawler.log"
 
-if [ -n "$CRON" ]; then
+if [ "$IS_CRON_JOB" = "true" ]; then
 
   ## Extra commands required for crontab exec of the script
 
