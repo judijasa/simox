@@ -1,5 +1,5 @@
 [.] Find and apply method from PDO MySQL driver to prevent SQL injection,
-    see example in mixrank/utils/batch_processing/scan_table_in_batches.py
+    see example in mixrank/utils/batch_processing.py:scan_table_in_batches
     with psycopg2 Postgresql driver for Python, where the method `sql`
     is imported and used.
 
