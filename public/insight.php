@@ -81,16 +81,18 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $conn = new publicPDO($dbname);
                 $query = "SELECT COUNT(*) FROM vw_job_offer";
                 $stmt = $conn->query($query);
-                $total = ($stmt->fetch())[0];
-                $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= '$today'";
-                $stmt = $conn->query($query);
-                $with_cierre = ($stmt->fetch())[0];
+                $total = $stmt->fetchColumn();
+                $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= :today";
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':today', $today);
+                $stmt->execute();
+                $with_cierre = $stmt->fetchColumn();
                 $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre = '1000-01-01'";
                 $stmt = $conn->query($query);
-                $without_cierre = ($stmt->fetch())[0];
+                $without_cierre = $stmt->fetchColumn();
                 $query = "SELECT cierre FROM vw_job_offer ORDER BY cierre DESC LIMIT 1";
                 $stmt = $conn->query($query);
-                $recent_cierre = ($stmt->fetch())[0];
+                $recent_cierre = $stmt->fetchColumn();
             } catch (PDOException $e) {
                 echo "Error: ". $e->getMessage(). PHP_EOL;
             } finally {
@@ -101,7 +103,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <center>
             <h2>Análisis de datos reportados</h2>
             <p><b>Dataset:</b> Ofertas de trabajo publicadas en la sección <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo">#ofertaEmpleo</a> de la plataforma <a href="https://simo-ppal.cnsc.gov.co">SIMO</a>.</p>
-            <p>Total<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
+            <p>Total de ofertas:<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
             Con fecha de cierre menor a un año: <?php echo $with_cierre;?><br>
             Con fecha de cierre "por definir": <?php echo $without_cierre;?><br>
             Fecha de cierre más reciente: <?php echo $recent_cierre;?>
