@@ -38,3 +38,4 @@ SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
 #SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
 # Using inet server, localhost or 127.0.0.1, because db server in same location as web server
 SERVER="127.0.0.1"
+DBNAME="simo"
