@@ -104,11 +104,21 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             // Import file where we define connection to Database
             require_once "/var/www/html/simo-express/connectivity.php";
 
-            $conn = publicMySQLi('simo');
-            $query = "SELECT COUNT(*) FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01'";
-            $result = mysqli_query($conn, $query);
-            $row = mysqli_fetch_row($result);
-            $total_records = $row[0];
+            $dbname = 'simo';
+            try {
+                $conn = new publicPDO($dbname);
+            } catch (PDOException $e) {
+                echo 'Connection failed: ' . $e->getMessage();
+            }
+            $query = "
+                SELECT COUNT(*)
+                FROM vw_job_offer
+                WHERE cierre >= :today OR cierre = '1000-01-01'
+            ";
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':today', $today);
+            $stmt->execute();
+            $total_records = $stmt->fetchColumn();
 
             echo "</br>";
             // Number of pages required.
@@ -121,18 +131,39 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             $start_from = ($page-1) * $items_per_page;
 
             $query = "SELECT nombre FROM dpto_colombia";
-            $result_depts = mysqli_query($conn, $query);
-            $row = mysqli_fetch_all($result_depts);
-            mysqli_free_result($result_depts);
-            //print_r($row);
-            $arr_length = count($row);
+            $stmt = $conn->query($query);
+            $columnValues = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            //print_r($row); // test
+            $arr_length = count($columnValues);
             if($dept !== -1){
-                $str_dept = $row[$dept][0];
-                $query = "SELECT * FROM vw_job_offer WHERE (cierre >= '$today' OR cierre = '1000-01-01') AND departamento = '$str_dept' ORDER BY cierre LIMIT $start_from, $items_per_page";
+                $str_dept = $columnValues[$dept];
+                $query = "
+                    SELECT *
+                    FROM vw_job_offer
+                    WHERE (cierre >= :today OR cierre = '1000-01-01')
+                        AND departamento = :str_dept
+                    ORDER BY cierre
+                    LIMIT :start_from, :items_per_page
+                ";
+                $stmt = $conn->prepare($query);  // do not relocate
+                $stmt->bindParam(':str_dept', $str_dept);  // do not relocate
+                $stmt->bindParam(':today', $today); // Rebind again (otherwise raising error)
+                $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
+                $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
             } else {
-                $query = "SELECT * FROM vw_job_offer WHERE cierre >= '$today' OR cierre = '1000-01-01' ORDER BY cierre LIMIT $start_from, $items_per_page";
+                $query = "
+                    SELECT *
+                    FROM vw_job_offer
+                    WHERE cierre >= :today OR cierre = '1000-01-01'
+                    ORDER BY cierre
+                    LIMIT :start_from, :items_per_page
+                ";
+                $stmt = $conn->prepare($query);  // do not relocate
+                $stmt->bindParam(':today', $today);
+                $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
+                $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
             }
-            $result_jobs = mysqli_query($conn, $query);
+            $stmt->execute();
         ?>
 
         <div class="container">
@@ -200,9 +231,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     $i = 0;
                     for($x = 0; $x<$arr_length; $x++) {
                         if($dept == $i) {
-                            echo "<option selected value=$i>". $row[$x][0]. "</option><br>";
+                            echo "<option selected value=$i>". $columnValues[$x]. "</option><br>";
                         }else {
-                            echo "<option value=$i>". $row[$x][0]. "</option><br>";
+                            echo "<option value=$i>". $columnValues[$x]. "</option><br>";
                         }
                         $i++;
                     };
@@ -259,7 +290,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             <tbody>
             <?php
 
-                while ($row = mysqli_fetch_array($result_jobs)) {
+                while ($row = $stmt->fetch(PDO::FETCH_BOTH)) {
                     // Display each field of the records.
             ?>
             <tr>
@@ -307,7 +338,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     $text = $row["municipio"];
                     $newtext = wordwrap($text, 30, "<br>", false);
                     echo "$newtext";
-                    //echo $row["Municipio"];
+                    //echo $row["Municipio"];  // test
                     if(isset($row["departamento"])){
                         echo ", ". $row["departamento"];
                     }
@@ -319,8 +350,8 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             </tr>
             <?php
                 };
-                mysqli_free_result($result_jobs);
-                mysqli_close($conn);
+                // Close the connection
+                $conn = null;
             ?>
             </tbody>
             </table>
