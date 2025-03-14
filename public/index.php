@@ -276,7 +276,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             <!--** Jobs Data Table **-->
             <!--*********************-->
 
-            <div class="hscroll">
+        <div class="hscroll">
             <table class="table table-striped table-condensed table-bordered">
             <thead>
             <tr>
@@ -355,28 +355,28 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             ?>
             </tbody>
             </table>
-            </div>
+        </div>
 
-            <div class="pagination">
-                <?php
+        <div class="pagination">
+            <?php
+                $pagLink = "";
+                $here = basename(__FILE__); // name of current file
 
-                    $pagLink = "";
-                    $here = basename(__FILE__); // name of current file
+                if ($page > 1) {
+                    echo "<a href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "' style='margin-right: 10px;'>
+                            <i class='fas fa-angle-left' style='font-size:24px'></i>
+                          </a>";
+                }
 
-                    if($page>1){
-                        echo "<a href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "'><i class='fas fa-angle-left' style='font-size:24px'></i></a>";
-                    }
+                $pagLink .= "<a class='active' href='' style='margin: 0 10px;'>".$page."</a>";
+                echo $pagLink;
 
-                    $pagLink .= "<a class = 'active' href=''>".$page."</a>";
-
-                    echo $pagLink;
-
-                    if($page<$total_pages){
-                        echo "<a href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "'><i class='fas fa-angle-right' style='font-size:24px'></i></i></a>";
-                    }
-                ?>
-            </div>
-            </center>
+                if ($page < $total_pages) {
+                    echo "<a href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "' style='margin-left: 10px;'>
+                            <i class='fas fa-angle-right' style='font-size:24px'></i>
+                          </a>";
+                }
+            ?>
         </div>
 
         <script>
