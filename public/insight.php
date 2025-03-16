@@ -110,7 +110,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             Número de ofertas con fecha de cierre "por definir": <?php echo $por_definir;?><br>
             Número de ofertas publicadas al menos un día antes de su fecha de cierre (aprox.): <?php echo $validas;?>
 <hr></hr>
-        <sup id="fn1">1. Cadtext-decoration: nonea oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
         </p>
         </div>
     </body>
