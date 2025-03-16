@@ -18,10 +18,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
         <!-- More: http://www.webweaver.nu/html-tips/favicon.shtml -->
         <link rel="shortcut icon" href="favicon.ico">
 
-        <!-- My custom CSS-->
-        <!-- Uncommented in original config
-        <link rel="stylesheet" type="text/css" href="mystyle.css">
-        -->
 
         <!-- Bootstrap 3 HMTL Framework (plugin) -->
         <!--
@@ -68,8 +64,12 @@ Author: 20198338 <ciudadania.ab@gmail.com>
              gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
              Theme: SelectBoxIt with Twitter Bootstrap
         -->
-            <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" />
-            <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
+        <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" />
+        <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
+
+        <!-- My custom CSS-->
+        <!-- Uncommented in original config -->
+        <link rel="stylesheet" type="text/css" href="mystyle.css">
     </head>
     <body>
         <!-- <p id="demo"></p> -->
@@ -167,27 +167,29 @@ Author: 20198338 <ciudadania.ab@gmail.com>
         ?>
 
         <div class="container">
-            <center>
-            <h1>SIMO Express</h1>
-            <p style="margin-bottom:16px;">
-            <i>Ofertas de empleo público en Colombia</i>
-            </p>
-            <p style="margin-bottom:32px;">
-            Visite la página oficial:<br>
-            <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo"><i>Sistema de apoyo para la Igualdad, el Mérito y la Oportunidad</i> (SIMO)</a>
-            </p>
-            <p style="margin-bottom:32px;">
-            <!-- Sobre este sitio web:<br> -->
-            <a href="about.html"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
-            <!-- </p> -->
-            &nbsp;
-            |
-            &nbsp;
-            <!-- <p style="margin-bottom:32px;"> -->
-            <!-- Análisis de los datos reportados:&nbsp; -->
-            <a href="insight.php"><i>Análisis de los datos reportados</i></a> <!-- Veeduría ciudadana -->
-            </p>
-            <div align="left">
+            <div class="center-align">
+                <h1>SIMO Express</h1>
+                <p style="margin-bottom:16px;">
+                    <i>Ofertas de empleo público en Colombia</i>
+                </p>
+                <p style="margin-bottom:32px;">
+                    Visite la página oficial:<br>
+                    <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo"><i>Sistema de apoyo para la Igualdad, el Mérito y la Oportunidad</i> (SIMO)</a>
+                </p>
+                <p style="margin-bottom:32px;">
+                    <!-- Sobre este sitio web:<br> -->
+                    <a href="about.html"><i>Sobre este sitio web</i></a> <!-- Veeduría ciudadana -->
+                    <!-- </p> -->
+                    &nbsp;
+                    |
+                    &nbsp;
+                    <!-- <p style="margin-bottom:32px;"> -->
+                    <!-- Análisis de los datos reportados:&nbsp; -->
+                    <a href="insight.php"><i>Análisis de los datos reportados</i></a> <!-- Veeduría ciudadana -->
+                </p>
+            </div>
+
+            <div class="buscador-container">
 
                 <!--******************-->
                 <!--** Search Depto **-->
@@ -276,107 +278,108 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             <!--** Jobs Data Table **-->
             <!--*********************-->
 
-        <div class="hscroll">
-            <table class="table table-striped table-condensed table-bordered">
-            <thead>
-            <tr>
-            <th>Palabras clave</th>
-            <th>Municipio</th>
-            <th>Salario</th>
-            <th>Cierre de inscripciones</th>
-            <th>OPEC</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
+            <div class="hscroll">
+                <table class="table table-striped table-condensed table-bordered">
+                    <thead>
+                        <tr>
+                        <th>Palabras clave</th>
+                        <th>Municipio</th>
+                        <th>Salario</th>
+                        <th>Cierre de inscripciones</th>
+                        <th>OPEC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
 
-                while ($row = $stmt->fetch(PDO::FETCH_BOTH)) {
-                    // Display each field of the records.
-            ?>
-            <tr>
-            <td><?php
-                // TODO make func with parsing below and add unit test to it
-                $estudio = '';
-                $nivel = strtolower($row["nivel"]);
-                $denom = strtolower($row["denominacion"]);
-                if($denom === 'profesional universitario'){
-                    $estudio = 'Profesional. ';
-                    $denom = '';
-                }
-                if($denom === 'profesional especializado'){
-                    $estudio = 'Profesional especializado. ';
-                    $denom = '';
-                }
-                if(!$estudio and str_contains($row["estudio"], 'PROFESIONAL') and !str_contains($nivel, 'profesional')){
-                    $estudio = 'Profesional. ';
-                }
-                if(str_contains($estudio, 'Profesional') and $nivel === 'profesional'){
-                    $nivel = '';
-                }
-                $nivel = str_contains($denom, $nivel)? '' : $row["nivel"]. '. ';
-                $denom = str_replace('tecnico','técnico', $denom);
-                $denom = $denom? ucfirst($denom). '. ' : '';
-                if(!$estudio and $row["keywords"] === 'Bachiller'){
-                    $estudio = 'Bachiller';
-                    $keywords = '';
-                } else {
-                    $keywords = $row["keywords"]? $row["keywords"]. '.' : '';
-                }
-                $text = $estudio. $nivel. $denom. $keywords;
+                            while ($row = $stmt->fetch(PDO::FETCH_BOTH)) {
+                                // Display each field of the records.
+                        ?>
+                        <tr>
+                        <td><?php
+                            // TODO make func with parsing below and add unit test to it
+                            $estudio = '';
+                            $nivel = strtolower($row["nivel"]);
+                            $denom = strtolower($row["denominacion"]);
+                            if($denom === 'profesional universitario'){
+                                $estudio = 'Profesional. ';
+                                $denom = '';
+                            }
+                            if($denom === 'profesional especializado'){
+                                $estudio = 'Profesional especializado. ';
+                                $denom = '';
+                            }
+                            if(!$estudio and str_contains($row["estudio"], 'PROFESIONAL') and !str_contains($nivel, 'profesional')){
+                                $estudio = 'Profesional. ';
+                            }
+                            if(str_contains($estudio, 'Profesional') and $nivel === 'profesional'){
+                                $nivel = '';
+                            }
+                            $nivel = str_contains($denom, $nivel)? '' : $row["nivel"]. '. ';
+                            $denom = str_replace('tecnico','técnico', $denom);
+                            $denom = $denom? ucfirst($denom). '. ' : '';
+                            if(!$estudio and $row["keywords"] === 'Bachiller'){
+                                $estudio = 'Bachiller';
+                                $keywords = '';
+                            } else {
+                                $keywords = $row["keywords"]? $row["keywords"]. '.' : '';
+                            }
+                            $text = $estudio. $nivel. $denom. $keywords;
 
-                if(isset($_GET["width"])){
-                    if($_GET["width"] < 992){
-                        $text = wordwrap($text, 50, "<br>", false);
+                            if(isset($_GET["width"])){
+                                if($_GET["width"] < 992){
+                                    $text = wordwrap($text, 50, "<br>", false);
+                                }
+                            }
+                            echo "$text";
+                            ?></td>
+                        <td><?php
+                            if(stripos($row["municipio"], "Bogot") !== false){
+                                echo "Bogotá D.C.";
+                            }else{
+                                $text = $row["municipio"];
+                                $newtext = wordwrap($text, 30, "<br>", false);
+                                echo "$newtext";
+                                //echo $row["Municipio"];  // test
+                                if(isset($row["departamento"])){
+                                    echo ", ". $row["departamento"];
+                                }
+                                //echo $row["Municipio"]. ", ". $row["Departamento"];
+                            }?></td>
+                        <td><?php echo $row["salario"]; ?></td>
+                        <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
+                        <td><?php echo $row["opec"]; ?></td>
+                        </tr>
+                        <?php
+                            };
+                            // Close the connection
+                            $conn = null;
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <?php
+                    $pagLink = "";
+                    $here = basename(__FILE__); // name of current file
+
+                    if ($page > 1) {
+                        echo "<a class='arrows' href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "' style='margin-right: 10px;'>
+                                <i class='fas fa-angle-left' style='font-size:24px'></i>
+                              </a>";
                     }
-                }
-                echo "$text";
-                ?></td>
-            <td><?php
-                if(stripos($row["municipio"], "Bogot") !== false){
-                    echo "Bogotá D.C.";
-                }else{
-                    $text = $row["municipio"];
-                    $newtext = wordwrap($text, 30, "<br>", false);
-                    echo "$newtext";
-                    //echo $row["Municipio"];  // test
-                    if(isset($row["departamento"])){
-                        echo ", ". $row["departamento"];
+
+                    $pagLink .= "<span class='active' href='' style='margin: 0 10px;'>".$page."</span>";
+                    echo $pagLink;
+
+                    if ($page < $total_pages) {
+                        echo "<a class='arrows' href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "' style='margin-left: 10px;'>
+                                <i class='fas fa-angle-right' style='font-size:24px'></i>
+                              </a>";
                     }
-                    //echo $row["Municipio"]. ", ". $row["Departamento"];
-                }?></td>
-            <td><?php echo $row["salario"]; ?></td>
-            <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
-            <td><?php echo $row["opec"]; ?></td>
-            </tr>
-            <?php
-                };
-                // Close the connection
-                $conn = null;
-            ?>
-            </tbody>
-            </table>
-        </div>
-
-        <div class="pagination">
-            <?php
-                $pagLink = "";
-                $here = basename(__FILE__); // name of current file
-
-                if ($page > 1) {
-                    echo "<a href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "' style='margin-right: 10px;'>
-                            <i class='fas fa-angle-left' style='font-size:24px'></i>
-                          </a>";
-                }
-
-                $pagLink .= "<a class='active' href='' style='margin: 0 10px;'>".$page."</a>";
-                echo $pagLink;
-
-                if ($page < $total_pages) {
-                    echo "<a href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "' style='margin-left: 10px;'>
-                            <i class='fas fa-angle-right' style='font-size:24px'></i>
-                          </a>";
-                }
-            ?>
+                ?>
+            </div>
         </div>
 
         <script>

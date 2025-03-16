@@ -1,19 +1,23 @@
 table {
     border-collapse: collapse;
 }
+
 .inline{
     display: inline-block;
     margin-top: 5px;
     margin-bottom: 20px;
 }
+
 input, button{
     height: 34px;
 }
+
 .inline input, .inline button{
     height: 34px;
     margin-right: 210px;
     margin-left: 200px;
 }
+
 /* Responsive Web Design: media query
  (currently not working) */
 @media only screen and (max-width: 992px) {
@@ -23,24 +27,51 @@ input, button{
         white-space: nowrap;
     }
 }
-.pagination {
-    display: block;
+
+.center-align {
+    text-align: center;
 }
-.pagination a {
+
+.buscador-container {
+    text-align: left;
+}
+
+.pagination {
+    /*  Inserting `display: block` here introduces
+        a bug: an underscore appears after hovering on arrows */
+    display: block;
+    text-align: center;
     font-weight: bold;
     font-size: 18px;
-    color: black;
-    float: center;
     padding: 8px 16px;
     text-decoration: none;
-    /* border:1px solid black; */
     transition: 0.2s;
     border-radius: 100%;
+}
+
+.pagination a {
+    /* color: black; */
+    /* border:1px solid black; */
     /* padding-top=2px; */
+    /*  Using `display: block` in .pagination is necessary,
+        in order to center pagination controllers, but creates
+        an unwanted tiny underscore when hovering
+        over the previos/next arrows. Using `text-decoration: none`
+        removes this unwanted effect. */
+    text-decoration: none /* removes unwanted bug from hove*/
 }
-.pagination a.active {
+
+/*.pagination a.arrows {
+
+}
+*/
+
+/*.pagination span.active {*/
+.pagination span {
     background-color: white;
+    color: #08c;
 }
+
 /* .pagination a:hover:not(.active) {
         background-color: #e7e7e7; //#50C878;
         border-radius: 50%;
