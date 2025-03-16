@@ -110,9 +110,10 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             } catch (PDOException $e) {
                 echo 'Connection failed: ' . $e->getMessage();
             }
+            # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
             $query = "
-                SELECT COUNT(*)
-                FROM vw_job_offer
+                SELECT count(*)
+                FROM job_offer
                 WHERE cierre >= :today OR cierre = '1000-01-01'
             ";
             $stmt = $conn->prepare($query);
