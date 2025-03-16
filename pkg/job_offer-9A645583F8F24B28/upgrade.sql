@@ -48,6 +48,8 @@ CREATE OR REPLACE TABLE myTable(...
 Note: CHAR SET and COLLATE now defined at database level.
 */
 
+GRANT SELECT ON {{dbname}}.job_offer TO 'public'@'{{servername}}';
+
 DELIMITER //
 CREATE OR REPLACE FUNCTION null_from_default_str(input_str TEXT)
 RETURNS TEXT
