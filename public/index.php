@@ -342,9 +342,11 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                                 $newtext = wordwrap($text, 30, "<br>", false);
                                 echo "$newtext";
                                 //echo $row["Municipio"];  // test
+                                /*
                                 if(isset($row["departamento"])){
                                     echo ", ". $row["departamento"];
                                 }
+                                */
                                 //echo $row["Municipio"]. ", ". $row["Departamento"];
                             }?></td>
                         <td><?php echo $row["salario"]; ?></td>
