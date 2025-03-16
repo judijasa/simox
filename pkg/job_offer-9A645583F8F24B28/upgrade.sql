@@ -1,5 +1,7 @@
 CREATE OR REPLACE TABLE job_offer (
     id INT AUTO_INCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     nivel_id SMALLINT,
     denominacion VARCHAR(250),
     grado TINYINT,
@@ -22,6 +24,7 @@ CREATE OR REPLACE TABLE job_offer (
 
     PRIMARY KEY(id),
     UNIQUE INDEX(opec),
+    INDEX idx_job_offer_created_at(created_at),
     INDEX idx_job_offer_cierre(cierre),
     INDEX idx_job_offer_departamento_id(departamento_id),
     FOREIGN KEY fk_job_offer_departamento_id(departamento_id)
