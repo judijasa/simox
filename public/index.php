@@ -110,14 +110,24 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             } catch (PDOException $e) {
                 echo 'Connection failed: ' . $e->getMessage();
             }
+
+            $query = "SELECT nombre FROM dpto_colombia";
+            $stmt = $conn->query($query);
+            $map_dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            //print_r($row); // test
+
             # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
-            $query = "
-                SELECT count(*)
-                FROM job_offer
-                WHERE cierre >= :today OR cierre = '1000-01-01'
-            ";
+            # Careful: counting in vw_job_offer doesn't always coincides with
+            # that of job_offer because the former filters offers with vacantes = 0.
+            $query = "SELECT count(*) FROM vw_job_offer WHERE (cierre >= :today OR cierre = '1000-01-01')"; # Always returns 0 (?)
+            if($dept !== -1){
+                $query .= " AND departamento = :str_dept";
+            }
             $stmt = $conn->prepare($query);
             $stmt->bindParam(':today', $today);
+            if($dept !== -1){
+                $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);
+            }
             $stmt->execute();
             $total_records = $stmt->fetchColumn();
 
@@ -131,13 +141,8 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             $start_from = ($page-1) * $items_per_page;
 
-            $query = "SELECT nombre FROM dpto_colombia";
-            $stmt = $conn->query($query);
-            $columnValues = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            //print_r($row); // test
-            $arr_length = count($columnValues);
+            $dept_count = count($map_dept_id_to_dept_str);
             if($dept !== -1){
-                $str_dept = $columnValues[$dept];
                 $query = "
                     SELECT *
                     FROM vw_job_offer
@@ -147,7 +152,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     LIMIT :start_from, :items_per_page
                 ";
                 $stmt = $conn->prepare($query);  // do not relocate
-                $stmt->bindParam(':str_dept', $str_dept);  // do not relocate
+                $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);  // do not relocate
                 $stmt->bindParam(':today', $today); // Rebind again (otherwise raising error)
                 $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
                 $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
@@ -232,11 +237,11 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     */
 
                     $i = 0;
-                    for($x = 0; $x<$arr_length; $x++) {
+                    for($x = 0; $x<$dept_count; $x++) {
                         if($dept == $i) {
-                            echo "<option selected value=$i>". $columnValues[$x]. "</option><br>";
+                            echo "<option selected value=$i>". $map_dept_id_to_dept_str[$x]. "</option><br>";
                         }else {
-                            echo "<option value=$i>". $columnValues[$x]. "</option><br>";
+                            echo "<option value=$i>". $map_dept_id_to_dept_str[$x]. "</option><br>";
                         }
                         $i++;
                     };
@@ -292,7 +297,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     </thead>
                     <tbody>
                         <?php
-
                             while ($row = $stmt->fetch(PDO::FETCH_BOTH)) {
                                 // Display each field of the records.
                         ?>
