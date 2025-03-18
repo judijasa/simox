@@ -79,20 +79,23 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo';
                 $conn = new publicPDO($dbname);
-                $query = "SELECT count(*) FROM job_offer";
+                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre >= date(now()) OR cierre = '1000-01-01'";
                 $stmt = $conn->query($query);
                 $total = $stmt->fetchColumn();
-                $query = "SELECT count(*) FROM job_offer WHERE cierre >= date(now())";
+                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre >= date(now())";
                 $stmt = $conn->query($query);
                 $vigentes = $stmt->fetchColumn();
                 # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
-                $query = "SELECT count(*) FROM job_offer WHERE cierre = '1000-01-01'";
+                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre = '1000-01-01'";
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
+                // Using job_offer instead of vw_job_offer because the latter doesn't have created_at column
+                // Adding filter vacantes > 0 so that it is faithful to vw_job_offer data.
                 $query = "SELECT count(*)
                           FROM job_offer
                           WHERE created_at < cierre
-                              AND cierre > (SELECT min(created_at) FROM job_offer)";
+                              AND cierre > (SELECT min(created_at) FROM job_offer)
+                              AND vacantes > 0";
                 $stmt = $conn->query($query);
                 $validas = $stmt->fetchColumn();
             } catch (PDOException $e) {
@@ -104,13 +107,13 @@ Author: judijasa <ciudadania.ab@gmail.com>
         <div class="container">
             <center>
             <h2>Análisis de datos reportados</h2>
-            <p><b>Dataset:</b> Ofertas de trabajo publicadas en la sección <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo">#ofertaEmpleo</a> de la plataforma <a href="https://simo-ppal.cnsc.gov.co">SIMO</a>.</p>
+            <p><!-- <b>Datos:</b> -->Ofertas de trabajo publicadas en la sección <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo">#ofertaEmpleo</a> de la plataforma <a href="https://simo-ppal.cnsc.gov.co">SIMO</a>.</p>
             <p>Total de ofertas<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
             Número de ofertas vigentes: <?php echo $vigentes;?><br>
             Número de ofertas con fecha de cierre "por definir": <?php echo $por_definir;?><br>
             Número de ofertas publicadas al menos un día antes de su fecha de cierre (aprox.): <?php echo $validas;?>
 <hr></hr>
-        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante. Las ofertas sin número de vacantes reportado no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
         </p>
         </div>
     </body>
