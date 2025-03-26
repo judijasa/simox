@@ -8,6 +8,11 @@ SELECT
         FROM dpto_colombia y
         WHERE y.id = x.departamento_id
     ) AS departamento,
+    (
+        SELECT iso
+        FROM dpto_colombia y
+        WHERE y.id = x.departamento_id
+    ) AS departamento_iso,
     x.municipio,
     x.opec,
     x.keywords,
