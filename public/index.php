@@ -259,7 +259,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
                 <br>
                 <br>
-                <p><span style="font-size:normal;">P&aacute;gina (m&aacute;x. <?php echo $total_pages;?>):</span></p>
+                <p><span style="font-size:normal;">P&aacute;gina (m&aacute;x. <?php echo ($total_pages > 0) ? $total_pages : 1;?>):</span></p>
 
                 <table class="table table-bordered" style="width:30%;">
                 <tr>
