@@ -289,7 +289,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     <thead>
                         <tr>
                         <th>Palabras clave</th>
-                        <th>Municipio</th>
+                        <th class="no-break">Municipio</th>
                         <th>Salario</th>
                         <th>Cierre de inscripciones</th>
                         <th>OPEC</th>
@@ -338,7 +338,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             }
                             echo "$text";
                             ?></td>
-                        <td><?php
+                        <td class="no-break"><?php
                             if(stripos($row["municipio"], "Bogot") !== false){
                                 if($dept === -1){
                                     echo "Bogotá, DC";
@@ -346,7 +346,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                                     echo "Bogotá";
                                 }
                             }else{
-                                // if($dept === -1 and isset($row["departamento"])){
                                 if($dept === -1 and $row["departamento_iso"] !== null){
                                     $text = $row["municipio"]. ", ". $row["departamento_iso"];
                                 } else {
