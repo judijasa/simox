@@ -405,10 +405,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             {
                 var width = "<?php echo $_GET['width'];?>";
                 var bool = "<?php echo isset($_GET['width']);?>";
-                var page = "<?php echo $page;?>";
                 var dept = document.getElementById("dept").value;
                 var here = "<?php echo $here;?>";
-                window.location.href = here+'?width='+width+'&page='+page+'&dept='+dept;
+                window.location.href = here+'?width='+width+'&page='+1+'&dept='+dept;
             }
 
             function go2Page()
