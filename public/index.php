@@ -99,7 +99,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             // Get total pages...
             //***********************************
 
-            $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
+            // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
 
             // Import file where we define connection to Database
             require_once "/var/www/html/simo-express/connectivity.php";
@@ -119,12 +119,12 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
             # Careful: counting in vw_job_offer doesn't always coincides with
             # that of job_offer because the former filters offers with vacantes = 0.
-            $query = "SELECT count(*) FROM vw_job_offer WHERE (cierre >= :today OR cierre = '1000-01-01')"; # Always returns 0 (?)
+            $query = "SELECT count(*) FROM vw_job_offer WHERE (cierre >= date(now()) OR cierre = '1000-01-01')";
             if($dept !== -1){
                 $query .= " AND departamento = :str_dept";
             }
             $stmt = $conn->prepare($query);
-            $stmt->bindParam(':today', $today);
+            // $stmt->bindParam(':today', $today);
             if($dept !== -1){
                 $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);
             }
@@ -146,26 +146,26 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 $query = "
                     SELECT *
                     FROM vw_job_offer
-                    WHERE (cierre >= :today OR cierre = '1000-01-01')
+                    WHERE (cierre >= date(now()) OR cierre = '1000-01-01')
                         AND departamento = :str_dept
                     ORDER BY cierre
                     LIMIT :start_from, :items_per_page
                 ";
                 $stmt = $conn->prepare($query);  // do not relocate
                 $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);  // do not relocate
-                $stmt->bindParam(':today', $today); // Rebind again (otherwise raising error)
+                // $stmt->bindParam(':today', $today); // Rebind again (otherwise raising error)
                 $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
                 $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
             } else {
                 $query = "
                     SELECT *
                     FROM vw_job_offer
-                    WHERE cierre >= :today OR cierre = '1000-01-01'
+                    WHERE cierre >= date(now()) OR cierre = '1000-01-01'
                     ORDER BY cierre
                     LIMIT :start_from, :items_per_page
                 ";
                 $stmt = $conn->prepare($query);  // do not relocate
-                $stmt->bindParam(':today', $today);
+                // $stmt->bindParam(':today', $today);
                 $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
                 $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
             }
