@@ -340,18 +340,20 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             ?></td>
                         <td><?php
                             if(stripos($row["municipio"], "Bogot") !== false){
-                                echo "Bogotá D.C.";
-                            }else{
-                                $text = $row["municipio"];
-                                $newtext = wordwrap($text, 30, "<br>", false);
-                                echo "$newtext";
-                                //echo $row["Municipio"];  // test
-                                /*
-                                if(isset($row["departamento"])){
-                                    echo ", ". $row["departamento"];
+                                if($dept === -1){
+                                    echo "Bogotá, DC";
+                                } else {
+                                    echo "Bogotá";
                                 }
-                                */
-                                //echo $row["Municipio"]. ", ". $row["Departamento"];
+                            }else{
+                                // if($dept === -1 and isset($row["departamento"])){
+                                if($dept === -1 and $row["departamento_iso"] !== null){
+                                    $text = $row["municipio"]. ", ". $row["departamento_iso"];
+                                } else {
+                                    $text = $row["municipio"];
+                                }
+                                $newtext = wordwrap($text, 30, "<br>", false);  // break line if too long
+                                echo "$newtext";
                             }?></td>
                         <td><?php echo $row["salario"]; ?></td>
                         <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
