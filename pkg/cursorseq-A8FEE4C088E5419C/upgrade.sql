@@ -38,4 +38,3 @@ END; //
 DELIMITER ;
 
 INSERT INTO cursorseq (`key`, value) VALUES ('update_job_offer_id_seq', 0);
-INSERT INTO cursorseq (`key`, value) VALUES ('simo_website_page', 0);
