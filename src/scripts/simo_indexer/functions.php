@@ -268,25 +268,6 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
 
 //************************************************************
 
-function last_pg_loaded(){
-    try {
-        $dbname="simo";
-        $conn = new clientPDO($dbname);
-        //$stmt = $conn->query("SELECT pagina FROM job_offer_snapshot ORDER BY id DESC LIMIT 1");
-        //$result = $stmt->fetch();
-        //if($result['pagina'] == '') {
-            //return 0;
-        //}
-        //return $result['pagina'];
-        $stmt = $conn->query("SELECT value FROM cursorseq WHERE key='simo_website_page'");
-        return $result['value'];
-    } catch(PDOException $e) {
-        echo "Error: " . "<br>" . $e->getMessage();
-    } finally {
-        $conn = null;
-    }
-}
-
 function insert2db($conn, $arrObj_job_data){
     $stmt = $conn->prepare(
         <<<EOD
