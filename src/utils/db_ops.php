@@ -15,6 +15,12 @@ function get_cursor($conn, $key, $mod=0, $div=1) {
     $stmt->bindValue(':mod', $mod);
     $stmt->bindValue(':div', $div);
     $stmt->execute();
-    return $stmt->fetchColumn();
+    $value = $stmt->fetchColumn();
+    if($value !== false){
+        return $value
+    }else{
+        set_cursor($conn, $key, $mod, $div);
+        return; // null
+    }
 }
 ?>
