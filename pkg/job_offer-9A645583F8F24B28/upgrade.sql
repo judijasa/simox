@@ -12,7 +12,7 @@ CREATE OR REPLACE TABLE job_offer (
     convocatoria VARCHAR(250),
     entidad_codigo SMALLINT,
     cierre DATE NOT NULL,
-    vacantes SMALLINT,
+    vacantes TINYINT,
     estudio TEXT,
     dependencia VARCHAR(10000),
     municipio VARCHAR(10000),
