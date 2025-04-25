@@ -1,9 +1,58 @@
-[.] Find and apply method from PDO MySQL driver to prevent SQL injection,
-    see example in mixrank/utils/batch_processing.py:scan_table_in_batches
-    with psycopg2 Postgresql driver for Python, where the method `sql`
-    is imported and used.
+[.] Fix. The current approach (search by Depto starting from #ofertaEmpleo site)
+    doesn't offer the option of searching by No_Aplica, in contrast to search
+    by Depto starting from #homeCiudadano.
+
+[.] Fix: All departamento_id being inserted in job_offer_snapshot have value 1.
+
+[.] Handle case of value of departamento_id when value of municipio includes multiple
+    municipios (perhaps No_Aplica?) e.g. OPEC 209965. This case also requires special handling of other
+    fields such as 'vacantes' (see item below). I notice that when you combine the OPEC
+    and the departamento for this cases, you get no results if the job offer
+    doesn't have an offer in that departamento, but it show a result if it does,
+    despite it includes offers in other departamamentos as well.
+
+[.] Check OPEC 221260. The field 'vacantes' in Job Details shows an unusual format.
+    Handle these cases in the crawler.
+
+    It has several lines under Vacantes section (usually is only 1 line)
+    ```
+    Vacantes
+    Dependencia: depen1, Municipio: muni1, Total vacantes: 1
+    Dependencia: depen2, Municipio: muni2, Total vacantes: 2
+    ...
+    ```
+
+[.] Since $SITE_2 didn't work, try using $SITE again, and fill field departamento,
+    in analogy to how you fill page field.
+
+[.] Instead of fetching the departamento of a job offer from the field Convocatoria,
+    do it recrawling by departamentos (e.g. there are convocatorias citing the municipio
+    de Caldas en Antioquia, generating a misclassification in the current approach).
+    You just have to extract the OPEC in this case
+    and then insert the Departamento_id in job_offer.
+
+    But a better solution is to make just one crawler, replacing the current main
+    crawler by a crawler by departamentos, which allow us to get all shown info in
+    addition to the departamento or if it is non territorial (No_Aplica).
+
+[.] Add table with acronym of departamentos (or in the same table departamentos)
+    See
+    https://es.wikipedia.org/wiki/ISO_3166-2:CO
+
+    Add the acronym to column municipio in the table shown in index.php
+    whenever the option of departamentos is "todos los departamentos".
 
 [.] Improve spacings in pagination arrows at public/index.php
+    These arrows are for previous an next page in the table.
+    For mobile devices I'd like to have the arrows at both extremes:
+    left (previous) and right (next).
+
+[.] Agregar `modalidad` de la oferta de trabajo (`ascenso`, `ingreso`, etc.)
+    This info is sometimes shown in the field `Convocatoria`.
+
+[.] Add column convocatoria_status (abierta/cerrada).
+    This is not very meaningful seems more of than not you find
+    "abierta" while the "cierre" has already taken place.
 
 [.] Make triggers to insert new values in %_variaciones tbls.
 
@@ -12,8 +61,6 @@
 [.] Make an indexer for
     https://www.funcionpublica.gov.co/procesos-de-contratacion
 
-[.] Agregar `modalidad` de la oferta de trabajo (`ascenso`, `ingreso`, etc.)
-
 [.] Check if job_offer_snapshot is allowing duplicates which are expected not to be allowed.
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
@@ -21,7 +68,10 @@
 
 [.] Add tmux to shell nix
 
-[.] Add col convocatoria_status (abierta/cerrada)
+[x] Find and apply method from PDO MySQL driver to prevent SQL injection,
+    see example in mixrank/utils/batch_processing.py:scan_table_in_batches
+    with psycopg2 Postgresql driver for Python, where the method `sql`
+    is imported and used.
 
 
 [d] [Discarded. Replaced with src/scripts/maintenance/memory_cleaning.sh]
