@@ -14,7 +14,7 @@ INSERT INTO dpto_colombia (
 ) VALUES
     ('Amazonas', 'AMA'), ('Antioquia', 'ANT'),
     ('Arauca', 'ARA'), ('Archipiélago de San Andrés, Providencia y Santa Catalina', 'SAP'),
-    ('Atlántico', 'ATL'), ('Bogotá', 'DC'),
+    ('Atlántico', 'ATL'), ('Bogotá D.C.', 'DC'),
     ('Bolívar', 'BOL'), ('Boyacá', 'BOY'), ('Caldas', 'CAL'),
     ('Caquetá', 'CAQ'), ('Casanare', 'CAS'),
     ('Cauca', 'CAU'), ('Cesar', 'CES'),
@@ -27,6 +27,7 @@ INSERT INTO dpto_colombia (
     ('Quindío', 'QUI'), ('Risaralda', 'RIS'),
     ('Santander', 'SAN'), ('Sucre', 'SUC'),
     ('Tolima', 'TOL'), ('Valle del Cauca', 'VAC'),
-    ('Vaupés', 'VAU'), ('Vichada', 'VID');
+    ('Vaupés', 'VAU'), ('Vichada', 'VID'),
+    ('No_Aplica', 'N.A.');
 
 GRANT SELECT ON {{dbname}}.dpto_colombia TO 'public'@'{{servername}}';
