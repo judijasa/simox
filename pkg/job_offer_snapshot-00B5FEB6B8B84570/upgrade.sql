@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS job_offer;
 CREATE OR REPLACE TABLE job_offer_snapshot (
     id INT AUTO_INCREMENT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     pagina SMALLINT NOT NULL DEFAULT -1,
     nivel VARCHAR(100) NOT NULL DEFAULT 'NONE',
     denominacion VARCHAR(250) NOT NULL DEFAULT 'NONE',
@@ -14,11 +15,13 @@ CREATE OR REPLACE TABLE job_offer_snapshot (
     convocatoria VARCHAR(250) NOT NULL DEFAULT 'NONE',
     entidad_codigo SMALLINT NOT NULL DEFAULT -1,
     cierre DATE NOT NULL DEFAULT '0000-00-00',
-    vacantes SMALLINT NOT NULL DEFAULT -1,
+    vacantes TINYINT NOT NULL DEFAULT -1,
     estudio TEXT NOT NULL DEFAULT 'NONE',
     experiencia TEXT NOT NULL DEFAULT 'NONE',
     dependencia VARCHAR(10000) NOT NULL DEFAULT 'NONE',
     municipio VARCHAR(10000) NOT NULL DEFAULT 'NONE', /* e.g. `Cali`, `Buga, Cartago`, `Leticia`*/
+    -- departamento is obtained using "search by departamento"
+    departamento_id TINYINT NOT NULL DEFAULT -1,
     otros TEXT NOT NULL DEFAULT 'NONE',
 
     PRIMARY KEY(id),
@@ -38,9 +41,15 @@ CREATE OR REPLACE TABLE job_offer_snapshot (
         experiencia,
         dependencia,
         municipio,
+        departamento_id,
         otros
     )
 );
-/*  The DEFAULT values create a pseudo NULL, necessary to prevent
+/*
+
+  - Why not using NULL as default value?
+    The DEFAULT values create a pseudo NULL, necessary to prevent
     duplicates of duplicated rows due to NULL values in
-    the unique key. */
+    the unique key.
+
+*/
