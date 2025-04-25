@@ -18,6 +18,7 @@ BEGIN
             estudio,
             dependencia,
             municipio,
+            departamento_id,
             max_snap_id
         ) VALUES (
             null_from_default_str(NEW.denominacion),
@@ -33,6 +34,7 @@ BEGIN
             null_from_default_str(NEW.estudio),
             null_from_default_str(NEW.dependencia),
             null_from_default_str(NEW.municipio),
+            null_from_default_num(NEW.departamento_id),
             NEW.id
         ) ON DUPLICATE KEY
         UPDATE
@@ -48,6 +50,7 @@ BEGIN
             estudio             = null_from_default_str(NEW.estudio),
             dependencia         = null_from_default_str(NEW.dependencia),
             municipio           = null_from_default_str(NEW.municipio),
+            departamento_id     = null_from_default_num(NEW.departamento_id),
             max_snap_id         = NEW.id;
         END IF;
 END; //
