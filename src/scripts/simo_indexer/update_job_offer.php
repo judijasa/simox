@@ -261,7 +261,7 @@ try {
 
             UPDATE job_offer
             SET
-                departamento_id = (SELECT id FROM dpto_colombia WHERE nombre = :dpto_nombre),
+                -- departamento_id = (SELECT id FROM dpto_colombia WHERE nombre = :dpto_nombre), -- old
                 keywords = :keywords,
                 nivel_id = (SELECT id FROM nivel WHERE nombre = (SELECT nivel FROM job_offer_snapshot WHERE id = :max_snap_id))
             WHERE id = :id;
@@ -276,7 +276,7 @@ try {
             // Use bindValue() with prepare() instead of exec().
             $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
             $stmt->bindValue(':max_snap_id', $job_offer_obj[$k]["max_snap_id"]);
-            $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $dpto_colombia_obj));
+            // $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $dpto_colombia_obj)); // old
             $stmt->bindValue(':keywords', find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
             $stmt->execute();
         } // foreach
