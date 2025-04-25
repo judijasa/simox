@@ -3,7 +3,9 @@ require 'vendor/autoload.php'; // in case pdo class in vendor
 //use Browser\Casper; // used in get_total_job_offers (old method: editing Casper class)
 require_once 'src/utils/CasperTrio.php'; // used in get_total_job_offers (new method: child of Casper class)
 
-function get_total_job_offers($path2casper, $target_site){
+// fetch jobs per departamento from https://simo.cnsc.gov.co/#ofertaEmpleo
+// Returns all job offers (all 'departamentos', including 'No_Aplica')
+function get_total_job_offers_from_oferta_empleo($path2casper, $target_site){
     $casper = new CasperTrio($path2casper);
     $casper->setOptions(array(
                               'ignore-ssl-errors' => 'yes'
@@ -24,6 +26,25 @@ function get_total_job_offers($path2casper, $target_site){
     $casper = null;
 
     return trim(explode('de',explode('resultados', $text)[0])[1]);
+}
+
+// fetch jobs per departamento from https://simo.cnsc.gov.co/#homeCiudadano
+function get_total_job_offers_from_home_ciudadano($path2casper, $target_site, $departamento_id){
+    $casper = new CasperTrio($path2casper);
+    $casper->setOptions(array('ignore-ssl-errors' => 'yes'));
+    $casper->start($target_site);
+    $sel = '#showButtonDepartamento';
+    $casper->waitForSelector($sel, 30000); // wait for target button to show up
+    $casper->click($sel); # open tab listing departamentos and total job offers
+    $sel2 = sprintf('span.convocatoriaNumero[data-sigeca-click-oferta-empleo=\"%s: \"]', $departamento_id);
+    $casper->waitForSelector($sel, 30000); // wait for target button to show up
+    $casper->fetchText($sel2); // This enables me to skip the use of Simple HTML Parser. All I need is getOutput().
+
+    $casper->run();
+    $output = $casper->getOutput();
+    $casper = null;
+    //echo 'Hello '. PHP_EOL. var_dump($output). PHP_EOL;
+    return $output[27];
 }
 
 function TotalPages_from_TotalJobOffers($tot_res_var){
@@ -268,7 +289,7 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
 
 //************************************************************
 
-function insert2db($conn, $arrObj_job_data){
+function insert2db($conn, $arrObj_job_data, $departamento_id){
     $stmt = $conn->prepare(
         <<<EOD
         INSERT INTO job_offer_snapshot (
@@ -288,6 +309,7 @@ function insert2db($conn, $arrObj_job_data){
             experiencia,
             dependencia,
             municipio,
+            departamento_id,
             otros
         ) VALUES (
             :pagina,
@@ -306,8 +328,10 @@ function insert2db($conn, $arrObj_job_data){
             :experiencia,
             :dependencia,
             :municipio,
+            :departamento_id,
             :otros
-        ) ON DUPLICATE KEY UPDATE id = id; /* i.e. do nothing */
+        ) ON DUPLICATE KEY UPDATE updated_at = NOW(); /* i.e. do nothing */
+        /* No need to condition the INSERT since UNIQUE key takes care of it */
         EOD);
     $arr = (array) $arrObj_job_data; // old version
     //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
@@ -492,6 +516,7 @@ function insert2db($conn, $arrObj_job_data){
     } else {
         $stmt->bindValue(':otros', 'NONE');
     }
+    $stmt->bindValue(':departamento_id', $departamento_id);
     $stmt->execute();
 }
 ?>
