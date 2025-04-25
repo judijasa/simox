@@ -17,7 +17,7 @@ function get_cursor($conn, $key, $mod=0, $div=1) {
     $stmt->execute();
     $value = $stmt->fetchColumn();
     if($value !== false){
-        return $value
+        return $value;
     }else{
         set_cursor($conn, $key, $mod, $div);
         return; // null
