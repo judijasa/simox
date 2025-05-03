@@ -233,9 +233,9 @@ function indexer($mod=0, $div=1){
             // BEGIN TEST
             //$casper->waitForSelector('.dgrid-status',30000); // test: current page
             //$casper->fetchText('.dgrid-status'); // test: current page
-            $casper->run(); // test: current page
-            print_r(array_slice($casper->getOutput(), 0, 46, true)); // test: current page
-            exit(); // test: current page
+            //$casper->run(); // test: current page
+            //print_r(array_slice($casper->getOutput(), 0, 46, true)); // test: current page
+            //exit(); // test: current page
             // END TEST
         }
 
