@@ -15,7 +15,7 @@ CREATE OR REPLACE TABLE job_offer_snapshot (
     convocatoria VARCHAR(250) NOT NULL DEFAULT 'NONE',
     entidad_codigo SMALLINT NOT NULL DEFAULT -1,
     cierre DATE NOT NULL DEFAULT '0000-00-00',
-    vacantes TINYINT NOT NULL DEFAULT -1,
+    vacantes SMALLINT NOT NULL DEFAULT -1,
     estudio TEXT NOT NULL DEFAULT 'NONE',
     experiencia TEXT NOT NULL DEFAULT 'NONE',
     dependencia VARCHAR(10000) NOT NULL DEFAULT 'NONE',
