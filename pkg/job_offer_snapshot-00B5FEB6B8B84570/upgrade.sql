@@ -46,10 +46,9 @@ CREATE OR REPLACE TABLE job_offer_snapshot (
     )
 );
 /*
-
-  - Why not using NULL as default value?
-    The DEFAULT values create a pseudo NULL, necessary to prevent
-    duplicates of duplicated rows due to NULL values in
-    the unique key.
+    Note:
+    We use pseudo-NULL values as default values
+    because unique keys are unable to prevent
+    duplicates in the presence of NULL values.
 
 */
