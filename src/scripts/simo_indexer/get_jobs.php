@@ -361,37 +361,38 @@ function indexer($mod=0, $div=1){
             //if ($arr) { // old version
             // If $arrObj_elems is not empty...
             $arr = $arrObj_elems->getArrayCopy();
-            if ($arr) {
+            if (!empty($arr)) {
                 $arrObj_chunk->append($arrObj_elems);
             }
 
             $arr = $arrObj_chunk->getArrayCopy(); // do you really need this line?
-            # Save progress after batch load is complete...
-            //if (($counter % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
-            if(true){
-                try{
-                    $conn = new adminPDO($dbname);
-                    foreach($arrObj_chunk as $arrObj_elems){
-                        foreach($arrObj_elems as $arrObj_items){
-                            //$pagina = ((array) $arrObj_items)[0]; // test
-                            //$pagina = trim(explode(':', $pagina)[1]); // test
-                            insert2db($conn, $arrObj_items, $departamento_cursor);
+            // Save progress after batch load is complete...
+            if (($counter % $pages_per_load === 0 or $page === $total_pages)){
+            //if(true){ // test
+                if(empty($arr)){
+                    echo date('Y-m-d H:i:s') . " - Nothing to save. Skip db insertion (this shouldn't be happening, revise pre-emptive checks)...\n";
+                }else{
+                    try{
+                        $conn = new adminPDO($dbname);
+                        foreach($arrObj_chunk as $jobsPerPage_arrObj){
+                            foreach($jobsPerPage_arrObj as $jobInfo_arrObj){
+                                //$pagina = ((array) $jobInfo_arrObj)[0]; // test
+                                //$pagina = trim(explode(':', $pagina)[1]); // test
+                                insert2db($conn, $jobInfo_arrObj, $departamento_cursor);
+                            }
                         }
+                        $cursor = cantorPair($departamento_cursor, $page);
+                        set_cursor($conn, 'simo_website_cursor', $cursor, $mod, $div);
+                    } catch (PDOException $e) {
+                        echo "Error: " . $e->getMessage();
+                    } finally {
+                        $conn = null;
                     }
-                    $cursor = cantorPair($departamento_cursor, $page);
-                    set_cursor($conn, 'simo_website_cursor', $cursor, $mod, $div);
-                } catch (PDOException $e) {
-                    echo "Error: " . $e->getMessage();
-                } finally {
-                    $conn = null;
-                }
-                $arrObj_chunk = new ArrayObject(array());
-                $total_job_offers_n = get_total_job_offers_from_home_ciudadano($path2casper, $target_site, $departamento_cursor);
-                $total_pages = TotalPages_from_TotalJobOffers($total_job_offers_n);
-            } else {
-                echo date('Y-m-d H:i:s') . " - Nothing to save. Skip db insertion (this shouldn't be happening, revise pre-emptive checks)...\n";
-            }# else ... here do something if $arr is empty, perhaps jump to next dpt
-
+                    $arrObj_chunk = new ArrayObject(array());
+                    $total_job_offers_n = get_total_job_offers_from_home_ciudadano($path2casper, $target_site, $departamento_cursor);
+                    $total_pages = TotalPages_from_TotalJobOffers($total_job_offers_n);
+                } // if
+            } // if
             $dom->clear();
             unset($dom);
 
