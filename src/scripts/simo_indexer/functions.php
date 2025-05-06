@@ -289,7 +289,22 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
 
 //************************************************************
 
-function insert2db($conn, $arrObj_job_data, $departamento_id){
+function insert2db($conn, $jobInfo_arrObj, $departamento_id){
+    /*
+      By $jobInfo_arrObj is expected a value like
+
+      object(stdClass)#7153 (18) {
+          ["0"]=>string(10) "Página: 1"
+          ["1"]=>string(18) "Nivel: Asistencial"                                    ["2"]=>string(38) "Denominación: AUXILIAR ADMINISTRATIVO"
+          ["3"]=>string(9) "Grado: 13"
+          ...
+      }
+    */
+    $arr = (array) $jobInfo_arrObj; // old version
+    //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
+    if(emtpy($arr)){
+        return;
+    }
     $stmt = $conn->prepare(
         <<<EOD
         INSERT INTO job_offer_snapshot (
@@ -333,9 +348,7 @@ function insert2db($conn, $arrObj_job_data, $departamento_id){
         ) ON DUPLICATE KEY UPDATE updated_at = NOW(); /* i.e. do nothing */
         /* No need to condition the INSERT since UNIQUE key takes care of it */
         EOD);
-    $arr = (array) $arrObj_job_data; // old version
-    //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
-    foreach($arr as $item){
+    foreach($jobInfo_arrObj as $item){
         if(str_contains($item, 'Página:')){ // 0
             $pagina = trim(explode(': ',$item)[1]);
             //$stmt->bindValue(':pagina', $pagina);
@@ -430,7 +443,7 @@ function insert2db($conn, $arrObj_job_data, $departamento_id){
             $otros = trim(str_replace($find, $replace, $otros));
             //$stmt->bindValue(':otros', $otros);
         }
-    }
+    } // if
     if(isset($pagina)){
         $stmt->bindValue(':pagina', $pagina);
     } else {
