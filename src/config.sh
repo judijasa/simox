@@ -36,16 +36,19 @@
 PATH2CASPER="vendor/bin/"
 #SITE="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo"
 #https://simo.cnsc.gov.co/#homeCiudadano # Sometimes #ofertaEmpleo redirects to #homeCiudadano
-SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
-#SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
+# Base URL to use when crawling by API
+SITE="https://simo.cnsc.gov.co"
+# SITE="https://simo.cnsc.gov.co/#ofertaEmpleo"
+# SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
+#SITE_2="https://simo.cnsc.gov.co"
 
 # SERVER eg 127.0.0.1, etc
 # DBMS eg mariadb, mysql, etc
 SERVER="localhost"
 DBMS="mariadb"
 DBNAME="simo"
-ADMIN_PASSWORD="kory2core3m8"
-READER_PASSWORD="hiroXim9"
+ADMIN_PASSWORD="xxxxxxxxxxxx"
+READER_PASSWORD="xxxxxxxxxxxx"
 
 # PHPMailer
 SMTP_PASS="xxxx xxxx xxxx xxxx"
