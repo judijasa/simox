@@ -93,9 +93,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 // Adding filter vacantes > 0 so that it is faithful to vw_job_offer data.
                 $query = "SELECT count(*)
                           FROM job_offer
-                          WHERE created_at < cierre
-                              AND cierre > (SELECT min(created_at) FROM job_offer)
-                              AND vacantes > 0";
+                          WHERE created_at < cierre AND vacantes > 0";
                 $stmt = $conn->query($query);
                 $validas = $stmt->fetchColumn();
             } catch (PDOException $e) {
@@ -113,7 +111,8 @@ Author: judijasa <ciudadania.ab@gmail.com>
             Número de ofertas con fecha de cierre "por definir": <?php echo $por_definir;?><br>
             Número de ofertas publicadas al menos un día antes de su fecha de cierre (aprox.): <?php echo $validas;?>
 <hr></hr>
-        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante. Las ofertas sin número de vacantes reportado no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.  Las ofertas con fechas de inscripción vencidas o con cero número de vacantes no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+<!-- Las ofertas sin número de vacantes reportado no son incluidas en el análisis. -->
         </p>
         </div>
     </body>

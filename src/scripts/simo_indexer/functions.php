@@ -43,13 +43,12 @@ function get_total_job_offers_from_home_ciudadano($path2casper, $target_site, $d
     $casper->run();
     $output = $casper->getOutput();
     $casper = null;
-    //echo 'Hello '. PHP_EOL. var_dump($output). PHP_EOL;
     return $output[27];
 }
 
 function TotalPages_from_TotalJobOffers($tot_res_var){
     // They use 10 job items per page.  Extract the total
-    // Nr of pages from the total # of results:
+    // num of pages from the total num of results:
     $tot_pgs = 1;  // default
     if (strlen($tot_res_var) > 1) {
         if (substr($tot_res_var,-1) > 0) {
@@ -90,6 +89,7 @@ function polish($debris_var){
  The array data $debris, $var_debris store single job items
  The str data $d, $e_item store a single job item
  ----------------------------------*/
+
 function prepare_jobprofile($e_var) {
     // remove comments from the html `<!-- comment -->` -> ``
     foreach($e_var->find('comment') as $i){
@@ -112,7 +112,7 @@ function prepare_jobprofile($e_var) {
     // 1st element is empty. Remove it:
     array_shift($debris);
     // Get the first 10 items of job offer profile after index 0:
-    $debris = array_slice($debris,0,10);
+    $debris = array_slice($debris, 0, 10);
     $arrObj_jobitems = polish($debris);
     return $arrObj_jobitems;
 } // function
@@ -137,9 +137,9 @@ function prepare_jobdetails($arrObj_elems2_var) {
         $e = implode(" ",$e->find('ul.sinVignetas'));
         //echo gettype($e);
         /* implode() converts array-object type (input) to string type (output), preventing the call of find() afterwards...*/
-        $find = array("<ul class=\"sinVignetas\">","</ul>","<span class=\"requLabel\">","</span>");
-        $replace = array("","","","","","");
-        $e = trim(str_replace($find,$replace,$e));
+        $find = array("<ul class=\"sinVignetas\">", "</ul>", "<span class=\"requLabel\">", "</span>");
+        $replace = array("", "", "", "", "", "");
+        $e = trim(str_replace($find, $replace, $e));
         $e = explode('|',$e);
         array_shift($e); // removes unwanted first component
 
@@ -289,7 +289,251 @@ function post_process_1($arrObj_elems_var, $curr_pg_var) {
 
 //************************************************************
 
-function insert2db($conn, $arrObj_job_data, $departamento_id){
+function parse_jobOffer_html($jobInfo_arrObj){
+    //$arr = (array) $arrObj_elems; // old version
+    //$arr = $arrObj_elems->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
+    $res = new ArrayObject(array());
+    foreach($jobInfo_arrObj as $item){
+        if(str_contains($item, 'Página:')){ // 0
+            $res['pagina'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'Nivel:')){ // 1
+            $res['nivel'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'Denominación:')){ // 2
+            $res['denominacion'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'Grado:')){ // 3
+            $res['grado'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'Código:')){ // 4
+            $res['codigo'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'OPEC:')){ // 5
+            $res['opec'] = trim(explode(': ', $item)[1]);
+        }
+        if(str_contains($item, 'ID único entidad:')){ // 6
+            $res['entidad_codigo'] = trim(explode(': ',$item)[1]); // small int
+        }
+        if(str_contains($item, 'Asignación salarial:')){ // 7
+            $res['salario'] = explode(': ', $item)[1];
+            $res['salario'] = trim(str_replace('$', '', $res['salario']));
+            $res['salario'] = substr_replace($res['salario'], ".", -3, 0);
+            $res['salario'] = substr_replace($res['salario'], "'", -7, 0);
+        }
+        if(str_contains($item, 'Vigencia salarial:')){ // 8
+            $res['vigencia_salarial'] = trim(explode(': ',$item)[1]); // year
+        }
+        if(str_contains($item, 'CONVOCATORIA')){ // 9
+            $res['convocatoria'] = trim($item);
+        }
+        if(str_contains($item, 'Cierre de inscripciones')){ // 10
+            $res['cierre'] = trim(explode(': ', $item)[1]); // fecha del cierre de la convocatoria
+            if($res['cierre'] == 'por definir'){ $res['cierre'] = '1000-01-01'; }
+            $arr_date = explode('-', $res['cierre']);
+            $year = $arr_date;
+            if(count($arr_date) === 1 AND strlen($year) === 4 AND strlen((int) $year) === 4){
+                $res['cierre'] = $year. '-01-01';
+            }
+        }
+        if(str_contains($item, 'Estudio:')){ // 11
+            $res['estudio'] = trim(explode(': ', $item, 2)[1]);
+        }
+        if(str_contains($item, 'Experiencia:')){ // 12
+            $res['experiencia'] = trim(explode(': ',$item)[1]); // string
+            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
+            $replace = '';
+            $res['experiencia'] = trim(str_replace($find, $replace, $res['experiencia']));
+        }
+        if(str_contains($item, 'Dependencia:')){ // 16
+            if (count(explode(': ', $item, 2)) > 1){
+                $res['dependencia'] = trim(explode(': ', $item,2)[1]);
+            }
+        }
+        if(str_contains($item, 'Municipio:')){ // 17
+            if (count(explode(': ', $item)) > 1){
+                $res['municipio'] = trim(explode(': ', $item)[1]);
+                if(stripos($res['municipio'], "Bogot") !== false) {
+                    $res['municipio'] = "Bogotá D.C.";
+                }
+            }
+        }
+        if(str_contains($item, 'Vacantes:')){ // 18
+        //if(str_contains($item, 'Total de vacantes del Empleo:')){ // 18 // alt approach
+            $aux = explode(',', $item, 2)[0];
+            if (count(explode(': ', $aux)) > 1){
+                $res['vacantes'] = trim(explode(': ',$aux)[1]);
+            }
+        }
+        if(str_contains($item, 'Otros:')){ // 19
+            $res['otros'] = trim(explode(': ',$item)[1]); // string
+            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
+            $replace = '';
+            $res['otros'] = trim(str_replace($find, $replace, $res['otros']));
+        }
+    }
+    return res;
+}
+
+function parse_jobOffer_api($jobInfo_arrObj){
+    // TODO: Write down the data type of each field below.
+    // Make sure both approaches have fields with the same data type.
+    $res = new ArrayObject(array());
+    $res['pagina'] = $jobInfo_arrObj['pagina']; // int
+    $res['nivel'] = $jobInfo_arrObj['empleo']['gradoNivel']['nivelNombre']; // str
+    $res['denominacion'] = $jobInfo_arrObj['empleo']['denominacion']['nombre']; // str
+    $res['grado'] = $jobInfo_arrObj['empleo']['gradoDenominacion']['grado']; // int
+    $res['codigo'] = $jobInfo_arrObj['empleo']['codigoEmpleo']; // str
+    $res['opec'] = $jobInfo_arrObj['empleo']['id']; // int
+    // $res['...'] = $jobInfo_arrObj['empleo']['convocatoria']['entidad']['id'];
+    $res['entidad_codigo'] = $jobInfo_arrObj['empleo']['identificador']; // int
+    $res['salario'] = $jobInfo_arrObj['empleo']['asignacionSalarial']; // str
+    $res['vigencia_salarial'] = $jobInfo_arrObj['empleo']['vigenciaSalarial']; // int
+    $res['convocatoria'] = $jobInfo_arrObj['empleo']['convocatoria']['nombre']; // str
+    $res['cierre'] = $jobInfo_arrObj['fechaInscripcion']; // date
+    // Here append to $res['estudio'] all the values of $jobInfo_arrObj['empleo']['requisitosMinimos'][i]['estudio'];
+    // Update: I suspect that almost always if not always,  $jobInfo_arrObj['empleo']['requisitosMinimos'] is a single element
+    // array, hence I will simply take the first element.
+    // In principle, you could make the field 'estudio' an str array and then in job_offer it could be an int array.
+    // Perhaps to implement in the future.
+    $res['estudio'] = $jobInfo_arrObj['empleo']['requisitosMinimos'][0]['estudio']; // str
+    $res['experiencia'] = $jobInfo_arrObj['empleo']['requisitosMinimos'][0]['experiencia']; // str
+    // Often there're many vacantes per opec
+    //$res['dependencia'] = $jobInfo_arrObj['empleo']['vacantes'][index]['dependencia']; // new
+    $res['dependencia'] = $jobInfo_arrObj['empleo']['vacantes'][0]['dependencia']['nombre']; // compatible with non api approaches
+    // The muncipio api field includes departamento. The municipio api field info can be a stored as int array
+    // and a separate table can map that id to municipio y su departamento. But this works only
+    // for the api approach.
+    // $res['municipio'] = $jobInfo_arrObj['empleo']['vacantes'][index]['municipio']['nombre']; // new
+    // $res['departamento'] = $jobInfo_arrObj['empleo']['vacantes'][index]['municipio']['departamento']['nombre']; // new
+    // Below is the version of muncipio field compatible with the existing schema which supports non api approaches
+    $res['municipio'] = '';
+    $res['departamento'] = '';
+    foreach($jobInfo_arrObj['empleo']['vacantes'] as $d){
+      // $res['dependencia'] .= $d['dependencia']. ', '; // discarded (often is just repetition)
+      $res['municipio'] .= $d['municipio']['nombre']. ', ';
+      // TODO: Conciliate with non-api approaches.
+      // Non-api approaches is encoding departamento_id
+      // Non-api approaches lead to integrity failure
+      // because it stores as many duplicates of a given
+      // opec num as num of different departmentos in
+      // the list of territorial vacantes. All these
+      // duplicates will have the same value of municipio
+      // which will be a string listing all the different
+      // municipios in the list of territorial vacacantes.
+      // The generation of the list of municipios is probably
+      // in post_process_1() which goes before insert2db()
+      // in the get_jobs.php workflow.
+      // To be compatible with non-api approaches, don't
+      // fetch departamento from the api response but as
+      // an external parameter.
+      // $res['departamento'] .= $d['municipio']['departamento']['nombre']. ', '; // str
+    }
+    // $res['dependencia'] = substr($res['dependencia'], 0, -2);
+    $res['municipio'] = substr($res['municipio'], 0, -2);
+    // $res['departamento'] = substr($res['departamento'], 0, -2);
+    // The cantidad de vacantes below is the num of vacantes per location. The non api approaches and the vacantes tbl col
+    // records the total num of vacantes, which aggregates on all locations. Find out where the api reports total vacantes.
+    //$res['vacantes'] = $arr_job_data['empleo']['vacantes'][index]['cantidad']; // new, TODO: set int array
+    $res['vacantes'] = 0;
+    foreach($jobInfo_arrObj['empleo']['vacantes'] as $d){
+        $res['vacantes'] += $d['cantidad'];
+    }
+    //$res['vacantes'] = $jobInfo_arrObj['empleo']['vacantes'][index]['disponible']; // new? TODO: Find out wich one is
+    $res['otros'] = $jobInfo_arrObj['empleo']['requisitosMinimos'][0]['otros']; // str
+    //$res['estadoInscripcion'] = $jobInfo_arrObj['estadoInscripcion']; // new
+    //$res['InscripcionId'] = $jobInfo_arrObj['inscripcionId']; // new
+    // $res['is_ascenso'] = $jobInfo_arrObj['empleo']['concursoAscenso']; // new field: bool
+    // $res['gradoNivel'] = $jobInfo_arrObj['empleo']['gradoNivel']; // new field
+    // QUESTION: What is the difference between ['gradoDenominacion']['grado'] and ['gradoNivel']['grado']
+    // $res['entidad'] = $jobInfo_arrObj['empleo']['entidad']; // new field: bool
+    // $res['is_discapacidad'] = $jobInfo_arrObj['empleo']['condicionDiscapacidad']; // new field: bool
+    // $res['simo_created_at'] = $arr_job_data['empleo']['createdDate']; // new field
+    // $res['descripcion'] = $jobInfo_arrObj['empleo']['descripcion']; // new field
+    // $res['funciones'] = $jobInfo_arrObj['empleo']['funciones']; // new field
+    // The api field alternativas is a dict array. We could use JSON type or use int array and another table to map to str
+    // $res['alternativas'] = $jobInfo_arrObj['empleo']['requisitosMinimos'][0]['alternativas']; // TODO: add new col
+    // with keys: 'estudio', 'experiencia' and 'otros'
+    // $res['equivalencias'] = $jobInfo_arrObj['empleo']['alternativas']; // new field
+    return $res;
+}
+
+/*
+function get_api_data($url){ // not working
+    $options = [
+        'http' => [
+            'header' => "Accept: application/json\r\n",
+            'method' => 'GET'
+        ]
+    ];
+
+    $context = stream_context_create($options);
+    $response = file_get_contents($url, false, $context);
+    $data = json_decode($response, true);
+}
+*/
+
+function get_api_data($url){
+    $url = 'https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10';
+
+    // Parse the URL to get the query part
+    $query_string = parse_url($url, PHP_URL_QUERY);
+
+    // Parse the query string into an array
+    parse_str($query_string, $query_params);
+
+    // Now you can access the page parameter
+    $page_value = isset($query_params['page']) ? $query_params['page'] : null;
+
+    // Initialize cURL session
+    $ch = curl_init();
+
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/json',
+        'Content-Type: application/json'
+    ]);
+
+    // Execute cURL session and get the response
+    $response = curl_exec($ch);
+
+    // Check for errors
+    if (curl_errno($ch)) {
+        $error = curl_error($ch);
+        curl_close($ch);
+        throw new Exception("cURL Error: $error");
+    }
+
+    // Get HTTP status code
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    // Close cURL session
+    curl_close($ch);
+
+    // Check if request was successful
+    if ($httpCode >= 400) {
+        throw new Exception("HTTP Error: $httpCode");
+    }
+
+    // Parse JSON response
+    // true: returns assoc array
+    // false: returns stdClass
+    $data = new ArrayObject(json_decode($response, true));
+
+    // Check for JSON parsing errors
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("JSON Error: " . json_last_error_msg());
+    }
+    foreach($data as &$j){ // Use &, otherwise $j is a copy
+        $j['pagina'] = $page_value;
+    }
+    return $data;
+}
+
+function insert2db($conn, $data, $departamento_id){
     $stmt = $conn->prepare(
         <<<EOD
         INSERT INTO job_offer_snapshot (
@@ -309,7 +553,7 @@ function insert2db($conn, $arrObj_job_data, $departamento_id){
             experiencia,
             dependencia,
             municipio,
-            departamento_id,
+            departamento_ids,
             otros
         ) VALUES (
             :pagina,
@@ -330,193 +574,124 @@ function insert2db($conn, $arrObj_job_data, $departamento_id){
             :municipio,
             :departamento_id,
             :otros
-        ) ON DUPLICATE KEY UPDATE updated_at = NOW(); /* i.e. do nothing */
-        /* No need to condition the INSERT since UNIQUE key takes care of it */
+        /*  No need to condition the INSERT since
+            UNIQUE key takes care of it */
+        ) ON DUPLICATE KEY
+        UPDATE
+            updated_at = NOW(),
+            departamento_ids = departamento_ids | :departamento_id;
         EOD);
-    $arr = (array) $arrObj_job_data; // old version
-    //$arr = $arrObj_job_data->getArrayCopy(); // getArrayCopy is not recognizing the input data type (?)
-    foreach($arr as $item){
-        if(str_contains($item, 'Página:')){ // 0
-            $pagina = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':pagina', $pagina);
-        }
-        if(str_contains($item, 'Nivel:')){ // 1
-            $nivel = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':nivel', $nivel);
-        }
-        if(str_contains($item, 'Denominación:')){ // 2
-            $denominacion = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':denominacion', $denominacion);
-        }
-        if(str_contains($item, 'Grado:')){ // 3
-            $grado = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':grado', $grado);
-        }
-        if(str_contains($item, 'Código:')){ // 4
-            $codigo = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':codigo', $codigo);
-        }
-        if(str_contains($item, 'OPEC:')){ // 5
-            $opec = trim(explode(': ',$item)[1]);
-            //$stmt->bindValue(':opec', $opec);
-        }
-        if(str_contains($item, 'ID único entidad:')){ // 6
-            $entidad_codigo = trim(explode(': ',$item)[1]); // small int
-            //$stmt->bindValue(':entidad_codigo', $entidad_codigo);
-        }
-        if(str_contains($item, 'Asignación salarial:')){ // 7
-            $salario = explode(': ',$item)[1];
-            $salario = trim(str_replace('$', '', $salario));
-            $salario = substr_replace($salario, ".", -3, 0);
-            $salario = substr_replace($salario, "'", -7, 0);
-            //$stmt->bindValue(':salario', $salario);
-        }
-        if(str_contains($item, 'Vigencia salarial:')){ // 8
-            $vigencia_salarial = trim(explode(': ',$item)[1]); // year
-            //$stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
-        }
-        if(str_contains($item, 'CONVOCATORIA')){ // 9
-            $convocatoria = trim($item);
-            //$stmt->bindValue(':convocatoria', $convocatoria, 2);
-        }
-        if(str_contains($item, 'Cierre de inscripciones')){ // 10
-            $cierre = trim(explode(': ',$item)[1]); // fecha del cierre de la convocatoria
-            if($cierre == 'por definir'){ $cierre = '1000-01-01';}
-            $arr_date = explode('-',$cierre);
-            $year = $arr_date;
-            if(count($arr_date) === 1 AND strlen($year) === 4 AND strlen((int) $year) === 4){
-                $cierre = $year. '-01-01';
-            }
-            //$stmt->bindValue(':cierre', $cierre);
-        }
-        if(str_contains($item, 'Estudio:')){ // 11
-            $estudio = trim(explode(': ', $item,2)[1]);
-            //$stmt->bindValue(':estudio', $estudio);
-        }
-        if(str_contains($item, 'Experiencia:')){ // 12
-            $experiencia = trim(explode(': ',$item)[1]); // string
-            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
-            $replace = '';
-            $experiencia = trim(str_replace($find, $replace, $experiencia));
-            //$stmt->bindValue(':experiencia', $experiencia);
-        }
-        if(str_contains($item, 'Dependencia:')){ // 16
-            if (count(explode(': ', $item, 2)) > 1){
-                $dependencia = trim(explode(': ', $item,2)[1]);
-                //$stmt->bindValue(':dependencia', $dependencia);
-            }
-        }
-        if(str_contains($item, 'Municipio:')){ // 17
-            if (count(explode(': ', $item)) > 1){
-                $municipio = trim(explode(': ', $item)[1]);
-                if(stripos($municipio, "Bogot") !== false) {
-                    $municipio = "Bogotá D.C.";
-                }
-                //$stmt->bindValue(':municipio', $municipio);
-            }
-        }
-        if(str_contains($item, 'Vacantes:')){ // 18
-        //if(str_contains($item, 'Total de vacantes del Empleo:')){ // 18 // alt approach
-            $aux = explode(',', $item, 2)[0];
-            if (count(explode(': ', $aux)) > 1){
-                $vacantes = trim(explode(': ',$aux)[1]);
-                //$stmt->bindValue(':vacantes', $vacantes);
-            }
-        }
-        if(str_contains($item, 'Otros:')){ // 17
-            $otros = trim(explode(': ',$item)[1]); // string
-            $find = array('<br>', '<p>', '</p>', '<li>', '</li>');
-            $replace = '';
-            $otros = trim(str_replace($find, $replace, $otros));
-            //$stmt->bindValue(':otros', $otros);
-        }
-    }
-    if(isset($pagina)){
-        $stmt->bindValue(':pagina', $pagina);
+    if(isset($data['pagina'])){ // 1
+        $stmt->bindValue(':pagina', trim($data['pagina']));
     } else {
         $stmt->bindValue(':pagina', -1);
     }
-    if(isset($nivel)){
-        $stmt->bindValue(':nivel', $nivel);
+    if(isset($data['nivel'])){ // 2
+        $stmt->bindValue(':nivel', trim($data['nivel']));
     } else {
         $stmt->bindValue(':nivel', 'NONE');
     }
-    if(isset($denominacion)){
-        $stmt->bindValue(':denominacion', $denominacion);
+    if(isset($data['denominacion'])){ // 3
+        $stmt->bindValue(':denominacion', trim($data['denominacion']));
     } else {
         $stmt->bindValue(':denominacion', 'NONE');
     }
-    if(isset($grado)){
-        $stmt->bindValue(':grado', $grado);
+    if(isset($data['grado'])){ // 4
+        $stmt->bindValue(':grado', trim($data['grado']));
     } else {
         $stmt->bindValue(':grado', -1);
     }
-    if(isset($codigo)){
-        $stmt->bindValue(':codigo', $codigo);
+    if(isset($data['codigo'])){ // 5
+        $stmt->bindValue(':codigo', trim($data['codigo']));
     } else {
         $stmt->bindValue(':codigo', 'NONE');
     }
-    if(isset($opec)){
-        $stmt->bindValue(':opec', $opec);
+    if(isset($data['opec'])){ // 6
+        $stmt->bindValue(':opec', trim($data['opec']));
     } else {
         $stmt->bindValue(':opec', -1);
     }
-    if(isset($entidad_codigo)){
-        $stmt->bindValue(':entidad_codigo', $entidad_codigo);
+    if(isset($data['entidad_codigo'])){ // 7
+        $stmt->bindValue(':entidad_codigo', trim($data['entidad_codigo']));
     } else {
         $stmt->bindValue(':entidad_codigo', -1);
     }
-    if(isset($salario)){
-        $stmt->bindValue(':salario', $salario);
+    if(isset($data['salario'])){ // 8
+        $stmt->bindValue(':salario', trim($data['salario']));
     } else {
         $stmt->bindValue(':salario', 'NONE');
     }
-    if(isset($vigencia_salarial)){
-        $stmt->bindValue(':vigencia_salarial', $vigencia_salarial);
+    if(isset($data['vigencia_salarial'])){ // 9
+        $stmt->bindValue(':vigencia_salarial', trim($data['vigencia_salarial']));
     } else {
         $stmt->bindValue(':vigencia_salarial', 0000);
     }
-    if(isset($convocatoria)){
-        $stmt->bindValue(':convocatoria', $convocatoria, 2);
+    if(isset($data['convocatoria'])){ // 10
+        $stmt->bindValue(':convocatoria', trim($data['convocatoria']), 2);
     } else {
         $stmt->bindValue(':convocatoria', 'NONE', 2);
     }
-    if(isset($cierre)){
-        $stmt->bindValue(':cierre', $cierre);
+    if(isset($data['cierre'])){ // 11
+        $stmt->bindValue(':cierre', trim($data['cierre']));
     } else {
         $stmt->bindValue(':cierre', '0000-00-00');
     }
-    if(isset($estudio)){
-        $stmt->bindValue(':estudio', $estudio);
+    if(isset($data['estudio'])){ // 12
+        $stmt->bindValue(':estudio', trim($data['estudio']));
     } else {
         $stmt->bindValue(':estudio', 'NONE');
     }
-    if(isset($experiencia)){
-        $stmt->bindValue(':experiencia', $experiencia);
+    if(isset($data['experiencia'])){ // 13
+        $stmt->bindValue(':experiencia', trim($data['experiencia']));
     } else {
         $stmt->bindValue(':experiencia', 'NONE');
     }
-    if(isset($dependencia)){
-        $stmt->bindValue(':dependencia', $dependencia);
+    if(isset($data['dependencia'])){ // 14
+        $stmt->bindValue(':dependencia', trim($data['dependencia']));
     } else {
         $stmt->bindValue(':dependencia', 'NONE');
     }
-    if(isset($municipio)){
-        $stmt->bindValue(':municipio', $municipio);
+    if(isset($data['municipio'])){ // 15
+        $stmt->bindValue(':municipio', trim($data['municipio']));
     } else {
         $stmt->bindValue(':municipio', 'NONE');
     }
-    if(isset($vacantes)){
-        $stmt->bindValue(':vacantes', $vacantes);
+    if(isset($data['vacantes'])){ // 16
+        $stmt->bindValue(':vacantes', trim($data['vacantes']));
     } else {
         $stmt->bindValue(':vacantes', -1);
     }
-    if(isset($otros)){
-        $stmt->bindValue(':otros', $otros);
+    if(isset($data['otros'])){ // 17
+        $stmt->bindValue(':otros', trim($data['otros']));
     } else {
         $stmt->bindValue(':otros', 'NONE');
     }
+    $stmt->bindValue(':departamento_id', $departamento_id); // 18
+    $stmt->execute();
+    /*
+    $stmt = $conn->prepare(
+        <<<EOD
+        INSERT INTO job_offer_location (
+            opec,
+            -- municipio_id,
+            -- TODO: Handle municipio_id with BEFORE/AFTER
+            -- triggers as you do with job_offer.nivel_id
+            -- instead of using this query
+            dpto_colombia_id
+        ) VALUES (
+            :opec,
+            :departamento_id
+        ) ON DUPLICATE KEY
+        UPDATE
+            updated_at = NOW()
+        EOD);
+    if(isset($data['opec'])){
+        $stmt->bindValue(':opec', $data['opec']);
+    } else {
+        $stmt->bindValue(':opec', -1);
+    }
     $stmt->bindValue(':departamento_id', $departamento_id);
     $stmt->execute();
+    */
 }
 ?>

@@ -6,6 +6,7 @@ $dependencies = array(
     'nivel-F39B6ACCF1574A6E',
     'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957',
     'job_offer_snapshot_trg_insert_nivel-8A4EDC8BB9A44C32',
+    'job_offer_snapshot_trg_insert_job_offer_location-8P2ZDC31BXA46C3G',
     'job_offer_snapshot-00B5FEB6B8B84570',
     'job_offer-9A645583F8F24B28',
     'estudio_especializado_variaciones-2A7B37AC6E1C446E',
@@ -14,6 +15,8 @@ $dependencies = array(
     'estudio_basico-F821B353E42F4D79',
     'dpto_colombia-BD672733D7AA455F',
     'cursorseq-A8FEE4C088E5419C',
+    'job_offer_location-ABF75B82LD6U469H',
+    'municipio-WK095781S7NA146R',
     'activity_monitor-A170276C72D14319'
 );
 ?>

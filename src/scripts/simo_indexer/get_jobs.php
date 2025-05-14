@@ -28,7 +28,6 @@ function indexer($mod=0, $div=1){
     $cnf = parse_ini_file("src/config.sh");
     $path2casper = $cnf["PATH2CASPER"];
     $target_site = $cnf["SITE"];  # Uncomment after test
-    #$target_site = 'https://simo.cnsc.gov.co/#homeCiudadano';  # remove after site2 test
     $dbname = 'simo';
     /* // Remove this once you test the db query approach
     $departamentos = ['Amazonas', 'Antioquia', 'Arauca', 'Archipiélago de San Andrés, Providencia y Santa Catalina',
@@ -74,24 +73,22 @@ function indexer($mod=0, $div=1){
                               ));
 
     // Old Name: 'simo.cnsc.gov.co/#ofertaEmpleo'
-    $casper->start($target_site);
-    #$casper->waitForSelector('.itemEmpleo',30000); # test
-    #$casper->run(); # test
-    #var_dump($casper->getOutput()); #test
-    #exit(); # test
+    // BEGIN non-API approaches
+    // $casper->start($target_site);
+    // END non-API approaches
+
+    // BEGIN Test
+    //$casper->waitForSelector('.itemEmpleo',30000);
+    //$casper->run();
+    //var_dump($casper->getOutput());
+    //exit();
+    // END Test
+
     //*******************************************
     // No need to close popup window; discard the following commands...
     //$casper->waitForSelector('span.dijitDialogCloseIcon',3000);
     //$casper->click('span.dijitDialogCloseIcon'); // close popup window
     //*******************************************
-
-    // Catch ext args: myfile.php -- arg (not myfile.php --arg)
-    // [0]=>'myfile.php' [1]=>'--' [2]=>'arg'
-    // parse_str($argv[2],$page_number); // old
-    // $end_pg = $page_number['end']; // old
-    // $last_pg_loaded = $page_number['last']; // old
-
-    // new method: stop if (pg == null), insted of stop at if (pg == pg_end)
 
     // How to set a value of an input tag in casperJS:
     // stackoverflow.com/questions/18172040/how-to-set-value-of-an-input-tag-in-casperjs
@@ -132,35 +129,44 @@ function indexer($mod=0, $div=1){
             } finally {
                 $conn = null;
             }
-            continue; // restart loop
+            continue; // go to loop start
         }
+
+        // Go to first page of job offers for the corresponding departamento
+        // -  If you need to resume in a page other than the first, don't worry, there another code block for that.
+        // -  You need to choose only one approach to the ones below. The crawl by dpto
+        //    is because it provides a reliable way to identify the dpto(s) for each job offer.
+
         // BEGIN Approach that starts from https://simo.cnsc.gov.co/#homeCiudadano
-        // Note: Discarded because it is not redirecting to page with jobs filtered by 'departamento'
-        // Re-trying this approach because it provides a way to access non-territorial job offers ('No_Aplica')
+        // Pros: It provides a way to access non-territorial job offers ('No_Aplica')
+        // Cons: It is not redirecting to page with jobs filtered by 'departamento'
+        //      (possibly cause of the 'event' icon along the tag to be clicked shown under browser's Inspector)
         // Step 1: Open tab with list of 'departamentos'
         // $sel = '#showButtonDepartamento';
         // $casper->waitForSelector($sel, 30000);  // wait for target button to show up
         // $casper->click($sel);
 
         // $sel = sprintf('.enlaceOver[data-sigeca-click-oferta-empleo=\"%s\"]', $departamento_cursor);
-        // In my last try, not even my manual click in the browser worked to redirect to new page ...?
-        // $sel below is an alternative tag (same result, though)
-        // $sel = sprintf('i.fuenteCNSC.material-icons.mr-5.va-s.azulAccesible2.desplegar.puntero[data-sigeca-click-oferta-empleo=\"%s\"]', $departamento_cursor);
-        // sometimes the selector is found but click doesn't work. this happens because
-        // you are in the wrong site, even if for some reason the crawler finds the selector.
+        //    In my last try, not even my manual click in the browser worked to redirect to new page ...?
+        //    $sel below is an alternative tag (same result, though)
+        //    $sel = sprintf('i.fuenteCNSC.material-icons.mr-5.va-s.azulAccesible2.desplegar.puntero[data-sigeca-click-oferta-empleo=\"%s\"]', $departamento_cursor);
+        //    Sometimes the selector is found but click doesn't work. this happens because
+        //    you are in the wrong site, even if for some reason the crawler finds the selector.
         // $casper->waitForSelector($sel, 30000);  // wait for target button to show up
         // $casper->click($sel);
         // END Approach that starts from https://simo.cnsc.gov.co/#homeCiudadano
 
         // BEGIN Approach that starts from https://simo.cnsc.gov.co/#ofertaEmpleo
-        $sel = 'input#dijit_form_FilteringSelect_1.dijitReset.dijitInputInner';
-        $casper->waitForSelector($sel, 30000);  // wait for target button to show up
-        $casper->click($sel);
-        $casper->sendKeys($sel, (string) $departamentos[$departamento_cursor - 1], $reset=true); // type new target page
-        $sel ='span.b_buscarEmpleo.botonMediano.amarillo';
-        $casper->waitForSelector($sel, 30000);  // wait for 'Buscar' button
-        $casper->click($sel);
+        // $sel = 'input#dijit_form_FilteringSelect_1.dijitReset.dijitInputInner';
+        // $casper->waitForSelector($sel, 30000);  // wait for target button to show up
+        // $casper->click($sel);
+        // $casper->sendKeys($sel, (string) $departamentos[$departamento_cursor - 1], $reset=true); // type new target page
+        // $sel ='span.b_buscarEmpleo.botonMediano.amarillo';
+        // $casper->waitForSelector($sel, 30000);  // wait for 'Buscar' button
+        // $casper->click($sel);
         // END Approach that starts from https://simo.cnsc.gov.co/#ofertaEmpleo
+
+
 
         //***************************
         //******** BEGIN TEST *******
@@ -184,8 +190,8 @@ function indexer($mod=0, $div=1){
           6. After crawling the last job offer of that Departamento, go back to item 2.
         */
 
-        $total_pages_per_thread = ceil($total_pages / $div); // scan all pages after each exec
-        $pages_per_load = 5;
+        $total_pages_per_thread = ceil($total_pages / $div); // scan all pages after each exec (check if this var is still useful)
+        $pages_per_load = 5; // batch size or chunk size or number of jobs to insert in db per commit
         // $loads_per_mod = ceil($total_pages_per_thread / $pages_per_load); // not necessary
         // $total_pages_per_thread = $pages_per_load * $loads_per_mod; // in case $loads_per_mod is hard typed
         //
@@ -221,26 +227,44 @@ function indexer($mod=0, $div=1){
         $arrObj_chunk = new ArrayObject();
 
         // Go to page...
-        if($page > 1 and $page <= $total_pages){
 
-            $sel = 'input.dgrid-page-input';
-            $casper->waitForSelector($sel, 30000); // wait for page field selector
-            $casper->sendKeys($sel, (string) $page, $reset=true); // type new target page
-            $sel = 'span.dgrid-next.dgrid-page-link';
-            $casper->waitForSelector($sel, 30000); // wait for next page button
-            $casper->click($sel); // click next page button to go to target page
+        // BEGIN non-API approaches
+        //if($page > 1 and $page <= $total_pages){
+
+            //$sel = 'input.dgrid-page-input';
+            //$casper->waitForSelector($sel, 30000); // wait for page field selector
+            //$casper->sendKeys($sel, (string) $page, $reset=true); // type new target page
+            //$sel = 'span.dgrid-next.dgrid-page-link';
+            //$casper->waitForSelector($sel, 30000); // wait for next page button
+            //$casper->click($sel); // click next page button to go to target page
 
             // BEGIN TEST
             //$casper->waitForSelector('.dgrid-status',30000); // test: current page
             //$casper->fetchText('.dgrid-status'); // test: current page
-            $casper->run(); // test: current page
-            print_r(array_slice($casper->getOutput(), 0, 46, true)); // test: current page
-            exit(); // test: current page
+            //$casper->run(); // test: current page
+            //print_r(array_slice($casper->getOutput(), 0, 46, true)); // test: current page
+            //exit(); // test: current page
             // END TEST
-        }
+        //}
+        // END non-API approaches
+
+        // BEGIN API approach
+        // Example: https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
+        $jobs_per_page = 10;
+        $api_path = 'empleos/ofertaPublica';
+        $api_req = 'search_departamento='. "$departamento_cursor". '&page='. "$page". '&size='. "$jobs_per_page";
+        $api_url = $target_site. '/'. $api_path. '/?'. $api_req;
+        $arrObj_elems = get_api_data($api_url);
+        // BEGIN TEST
+        //var_dump($arrObj_elems);
+        //var_dump($arrObj_elems[0]);
+        // echo $api_url;
+        //exit();
+        // END TEST
+      // END API approach
 
         //********************************
-        // DEBUGGING...
+        // BEGIN TEST
         //********************************
         //$casper->run();
         //$casper->getOutput();
@@ -252,22 +276,17 @@ function indexer($mod=0, $div=1){
         // Mismatch identified in clientutils.js.  See DEBUG notes.
         //exit;
         //********************************
+        // END TEST
+        //********************************
 
         // fetch data...
         // github.com/synackSA/casperjs-php
         // github.com/alwex/php-casperjs/blob/master/src/Casper.php
         // Code here to fetch data if you want
-        $counter = 1;
-        while ($counter <= $total_pages_per_thread) {
+
+        $counter = 1;  // Necessary for db insertion by batches
+        while (true) {
             if ($page > $total_pages){
-                /* // go to mod's min page
-                $page = 1 + $pages_per_load * $mod;
-                $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
-                $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
-                // Even at the last page, there is a next page button...
-                $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
-                $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
-                */
                 $departamento_cursor = ($departamento_cursor === $departamentos_count)? 1 : $departamento_cursor++;
                 $cursor = cantorPair($departamento_cursor, 0); // jump to next dpto and set page to 0
                 try {
@@ -281,24 +300,20 @@ function indexer($mod=0, $div=1){
                 break;
             }
 
-            // Wait for 3 secs:
-            //$casper->wait(3000);
+            // How to wait for 3 secs?
+            // If you want to wait but not necessarily for a selector use $casper->wait(3000);
 
-            //$casper->fetchText('input.dgrid-page-input'); // test
-            //$casper->fetchText('.dgrid-status'); // test
-
+            // BEGIN non-API approaches
             // Wait for Selector (max 30 secs):
-            $casper->waitForSelector('.itemEmpleo', 30000);
-
-            //$casper->fetchText('input.dgrid-page-input'); // test
-            //$casper->fetchText('.dgrid-status'); // test
+            //$casper->waitForSelector('.itemEmpleo', 30000);
 
             // Open Jobs Details...
-            $casper->click('i.fuenteCNSC.material-icons.t-24.puntero.expandir_mas');
-            $casper->waitForSelector('.detalleEmpleo', 30000);
+            //$casper->click('i.fuenteCNSC.material-icons.t-24.puntero.expandir_mas');
+            //$casper->waitForSelector('.detalleEmpleo', 30000);
+            // END non-API approaches
 
             //*****************************
-            // DEBUGGING...
+            // BEGIN Test
             //*****************************
             //if($page == 1){
             //Display 15 steps starting from step 10:
@@ -308,17 +323,25 @@ function indexer($mod=0, $div=1){
             //}
             //exit;
             //*****************************
-            $casper->run();  # execute casper commands stated above
+            // END Test
+            //*****************************
 
-            // getHtml([Selector]):
-            // webdriver.io/docs/api/element/getHTML/
 
-            $html = $casper->getHtml();
-            $dom = HtmlDomParser::str_get_html($html);
+            // BEGIN non-API approaches
+            //$casper->run();  # execute casper commands stated above
+
+            //$html = $casper->getHtml();
+            //$dom = HtmlDomParser::str_get_html($html);
+            // END non-API approaches
+
+            // Template: getHtml([Selector]):
+            // Source: webdriver.io/docs/api/element/getHTML/
+
 
             //***************************************
-            // 2save $html in local folder
+            // BEGIN Test
             //***************************************
+            // Test description: How to save $html in local folder
             // __DIR__ = current directory (best practices)
             // To exec this file while using file_put_contents() use:
             // $ sudo php index.php
@@ -328,54 +351,97 @@ function indexer($mod=0, $div=1){
             //$html = file_get_contents('tmp/simo-page-2.html');
             //$dom = HtmlDomParser::str_get_html( $html );
             //***************************************
+            // END Test
+            //***************************************
 
+            // BEGIN non-API approaches
             // Capture current page:
             // As object, otherwise memory overaload
-            $curr_pg = new ArrayObject(array());
-            // I AM HERE: Line below shows error because $dom returns false.
-            $curr_pg = $dom->find('input.dgrid-page-input', 0)->value;
+            //$curr_pg = new ArrayObject(array());
+            //$curr_pg = $dom->find('input.dgrid-page-input', 0)->value;
+            // END non-API approaches
 
+
+            //************************************
+            // BEGIN Test
             //************************************
             // Check if $curr_pg matches par $page:
-            //************************************
             //echo "<br>Current page = ". $curr_pg. ", Loop param = ". $page. ". <br><br>";
             //************************************
+            // END Test
+            //************************************
 
-            // Capture Job Profiles...
-            $arrObj_elems1 = new ArrayObject(array());
-            $arrObj_elems1 = $dom->find('.itemEmpleo');
-            // Capture Job Details...
-            $arrObj_elems2 = new ArrayObject(array());
-            $arrObj_elems2 = $dom->find('.detalleEmpleo');
+            // BEGIN non-API approaches
+            // get job headers...
+            //$arrObj_elems1 = new ArrayObject(array());
+            //$arrObj_elems1 = $dom->find('.itemEmpleo');
+            // get job details...
+            //$arrObj_elems2 = new ArrayObject(array());
+            //$arrObj_elems2 = $dom->find('.detalleEmpleo');
             // TODO: Make sure $arrObj_elems1 and $arrObj_elems2 have something to process otherwise break or continue
             // Merge data...
-            $arrObj_elems = prepare_and_merge($arrObj_elems1, $arrObj_elems2);
+            // I think that one the functions below
+            // converts list of values of a job property into
+            // obj['salario'] = [50 , 100]
+            // obj['vacantes'] = [3, 1]
+            // is converted to
+            // job[0]['salario'] = 50, job[0]['vacantes'] = 3,
+            // job[1]['salario'] = 100, job[1]['vacantes'] = 1
+            // and so on, for as many jobs as there are in a page.
+            //$arrObj_elems = prepare_and_merge($arrObj_elems1, $arrObj_elems2);
             // Remove unwanted items (and add page item)...
-            $arrObj_elems = post_process_1($arrObj_elems, $curr_pg);
-            // TODO: Fix. According to print_r below, you are not filtering by dpto (expecting 'Amazonas')
+            //$arrObj_elems = post_process_1($arrObj_elems, $curr_pg);
+            // $arrObj_elems = parse_html_data($arrObj_elems);
+            // END non-API approaches
+
+            // BEGIN Test
             //print_r($arrObj_elems[0]); // test
             //echo "<br><br>"; // test
             //print_r($arrObj_elems[8]); // test
+            // END Test
 
-            //$arr = (array)$arrObj_elems; old version
-            //if ($arr) { // old version
-            // If $arrObj_elems is not empty...
+            // BEGIN API approach
+            $arrObj_elems = get_api_data($api_url);
+            // BEGIN TEST
+            //var_dump($arrObj_elems);
+            //var_dump($arrObj_elems[0]);
+            // echo $api_url;
+            //exit();
+            // END TEST
+            // END API approach
+
+            // Check if $arrObj_elems is not empty...
+            // (arrObj is always non-empty, hence you need to make an array copy of the arrObj and check if the array is empty)
+            // TODO: I AM HERE... commenting "non-API approaches" blocks of code
+            // In claude is the way to use in PHP a cURL like command to get JSON response from the SIMO API;
+            // it most be implemented in current API approach, no need for casper in this file (pending to comment all casper commands and instances in this file).
+
             $arr = $arrObj_elems->getArrayCopy();
             if ($arr) {
                 $arrObj_chunk->append($arrObj_elems);
             }
 
-            $arr = $arrObj_chunk->getArrayCopy(); // do you really need this line?
-            # Save progress after batch load is complete...
-            //if (($counter % $pages_per_load === 0 or $page === $total_pages) and !empty($arr)){
-            if(true){
+            # Save progress after reaching batch size...
+            $arr = $arrObj_chunk->getArrayCopy();
+            //if (($counter % $pages_per_load === 0) and !empty($arr)){
+            if($arr){ // test
                 try{
                     $conn = new adminPDO($dbname);
-                    foreach($arrObj_chunk as $arrObj_elems){
-                        foreach($arrObj_elems as $arrObj_items){
-                            //$pagina = ((array) $arrObj_items)[0]; // test
+                    foreach($arrObj_chunk as $jobsPerPage_arrObj){
+                        foreach($jobsPerPage_arrObj as $jobInfo_arrObj){
+                            // BEGIN Test
+                            //$pagina = ((array) $jobInfo_arrObj)[0]; // test
                             //$pagina = trim(explode(':', $pagina)[1]); // test
-                            insert2db($conn, $arrObj_items, $departamento_cursor);
+                            // END Test
+
+                            // BEGIN non-API approaches
+                            //$parsed_jobInfo_arrObj = parse_jobOffer_html($jobInfo_arrObj);
+                            // END non-API approaches
+
+                            // BEGIN API approach
+                            $parsed_jobInfo_arrObj = parse_jobOffer_api($jobInfo_arrObj);
+                            // END API approach
+                            insert2db($conn, $parsed_jobInfo_arrObj, $departamento_cursor);
                         }
                     }
                     $cursor = cantorPair($departamento_cursor, $page);
@@ -392,8 +458,10 @@ function indexer($mod=0, $div=1){
                 echo date('Y-m-d H:i:s') . " - Nothing to save. Skip db insertion (this shouldn't be happening, revise pre-emptive checks)...\n";
             }# else ... here do something if $arr is empty, perhaps jump to next dpt
 
-            $dom->clear();
-            unset($dom);
+            // BEGIN non-api approaches
+            //$dom->clear();
+            //unset($dom);
+            // END non-api approaches
 
             if (time() - $start_time > $timeout) {
                 echo date('Y-m-d H:i:s') . " - Timeout exit.\n";
@@ -405,13 +473,32 @@ function indexer($mod=0, $div=1){
             // but there's no such line after the statements below.
             $page = $page + $div;
             if($page < $total_pages){
+                // BEGIN non-api approaches
+                // BEGIN non-concurrent approach
                 //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button selector
                 // $casper->click('span.dgrid-next.dgrid-page-link'); // go to next page
+                // END non-concurrent approach
+
+                // BEGIN concurrent approach
                 // Go to next mod page:
-                $casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
-                $casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
-                $casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
-                $casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
+                //$casper->waitForSelector('input.dgrid-page-input',30000); // wait for page field selector
+                //$casper->sendKeys('input.dgrid-page-input', (string) $page, $reset=true); // type new target page
+                //$casper->waitForSelector('span.dgrid-next.dgrid-page-link',30000); // wait for next page button
+                //$casper->click('span.dgrid-next.dgrid-page-link'); // click next page button to go to target page
+                // END concurrent approach
+                // END non-api approaches
+
+              // BEGIN API approach
+              $api_req = 'search_departamento='. "$departamento_cursor". '&page='. "$page". '&size='. "$jobs_per_page";
+        $api_url = $target_site. '/'. $api_path. '/?'. $api_req;
+              $arrObj_elems = get_api_data($api_url);
+              // BEGIN TEST
+              //var_dump($arrObj_elems);
+              //var_dump($arrObj_elems[0]);
+              // echo $api_url;
+              //exit();
+              // END TEST
+              // END API approach
             }
             $counter++;
             // set a break every n chunks processed (resumes in 1 hour using cron)

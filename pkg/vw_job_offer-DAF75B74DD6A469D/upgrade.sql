@@ -3,15 +3,24 @@ SELECT
     (SELECT nombre FROM nivel z WHERE z.id = x.nivel_id) AS nivel,
     x.cierre,
     x.salario,
+    /*
     (
-        SELECT nombre
+        SELECT GROUP_CONCAT(nombre SEPARATOR ', ')
         FROM dpto_colombia y
-        WHERE y.id = x.departamento_id
+        WHERE y.id IN (
+            SELECT jol.dpto_colombia_id
+            FROM job_offer_location AS jol
+            WHERE jol.opec = x.opec
     ) AS departamento,
+    */
     (
-        SELECT iso
+        SELECT GROUP_CONCAT(iso SEPARATOR ', ')
         FROM dpto_colombia y
-        WHERE y.id = x.departamento_id
+        WHERE y.id IN (
+            SELECT jol.dpto_colombia_id
+            FROM job_offer_location AS jol
+            WHERE jol.opec = x.opec
+        )
     ) AS departamento_iso,
     x.municipio,
     x.opec,

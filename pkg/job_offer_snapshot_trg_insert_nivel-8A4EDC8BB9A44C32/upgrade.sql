@@ -1,14 +1,14 @@
 DELIMITER //
-CREATE OR REPLACE TRIGGER after_job_offer_snapshot_insert_nivel
-AFTER INSERT ON job_offer_snapshot
+CREATE OR REPLACE TRIGGER job_offer_snapshot_trg_insert_nivel
+BEFORE INSERT ON job_offer_snapshot
 FOR EACH ROW
 BEGIN
-    INSERT INTO nivel (
-        nombre
-    ) VALUES (
-        NEW.nivel
-    ) ON DUPLICATE KEY
-    UPDATE
-        id = id;
+    IF NEW.nivel != 'NONE' THEN
+        INSERT INTO nivel(nombre)
+        VALUES (NEW.nivel)
+        ON DUPLICATE KEY
+        UPDATE
+            id = id;
+    END IF;
 END; //
 DELIMITER ;

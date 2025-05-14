@@ -1,0 +1,55 @@
+
+Example 1: Scan all job offers.
+
+  If the number of job offers is 6194,
+  then you would expect a total of 620 pages of with a max
+  of 10 jobs per page. Indeed
+
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?page=0&size=10
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?page=1&size=10
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?page=2&size=10
+  ...
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?page=619&size=10
+
+  this amounts to 620 pages. If you look at page=620 you will get
+  no job offers because it amounts to page 621.
+
+  When crawling by API, you don't have to crawl by departamento
+  because the API response carries the departamento info.
+
+Example 2: Search by departamento.
+
+  Amazonas:
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=2&size=10
+
+  Antioquia:
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=2&page=2&size=10
+
+  ...
+
+  The departamento id, used to search by departamento, follows an alphabetical order.
+  PENDING is to find out how to search for non-territorial job offers (aka No_Aplica);
+  there are 33 deptos. The first guess is to try departamento id values 34 or 0, but
+  they are not returning any data.
+
+Example 3: Search by OPEC number. You may want to try...
+
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_opec=219090&page=0&size=10  (it doesn't work)
+  https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_id=219090&page=0&size=10  (it doesn't work)
+
+API Response
+  All this API URLs is found using browser Inspector, under the "Storage" tab and on the Cookies option on the LHS menu.
+
+  - The api response is an array. The first element of this array is the first job offer
+    in the corresponding page.  This element is itself a dictionary (it has keys and values),
+    call it the job_offer dictionary. The value of job_offer['id'] is the OPEC.
+    The OPEC number can also be found under job_offer['empleo']['id'].
+
+  - The total number of job offers can be requested via API
+      https://simo.cnsc.gov.co/empleos/opecvisible/
+
+  - To request the list of departamentos via API
+      https://simo.cnsc.gov.co/departamento/
+
+  - Request further info about a Convocatoria from its id. Example:
+      https://simo.cnsc.gov.co/convocatorias/708122970

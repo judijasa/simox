@@ -18,7 +18,6 @@ CREATE OR REPLACE TABLE job_offer (
     municipio VARCHAR(10000),
     /* Using `municipio_id SMALLINT`, after creating `municipio` norm tbl
     not possible because municipio can be more than one e.g. `Cali, Buga`*/
-    departamento_id TINYINT,
     max_snap_id INT NOT NULL,
     keywords TEXT,
 
@@ -26,10 +25,6 @@ CREATE OR REPLACE TABLE job_offer (
     UNIQUE INDEX(opec),
     INDEX idx_job_offer_created_at(created_at),
     INDEX idx_job_offer_cierre(cierre),
-    INDEX idx_job_offer_departamento_id(departamento_id),
-    FOREIGN KEY fk_job_offer_departamento_id(departamento_id)
-        REFERENCES dpto_colombia(id)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
     FOREIGN KEY fk_job_offer_nivel_id(nivel_id)
         REFERENCES nivel(id)
         ON UPDATE CASCADE ON DELETE RESTRICT,

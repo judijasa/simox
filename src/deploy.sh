@@ -66,7 +66,7 @@ deploy_cronjobs() {
 }
 
 deploy_website
-deploy_cronjobs
+#deploy_cronjobs
 
 # Optionally, you can also clear any caches or perform other post-deployment tasks
 

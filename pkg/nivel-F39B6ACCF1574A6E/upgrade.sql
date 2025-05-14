@@ -8,7 +8,7 @@ CREATE OR REPLACE TABLE nivel (
     UNIQUE KEY unique_nivel_nombre (nombre)
 );
 
-/*
+/* -- Currently inserting via BEFORE trigger on job_offer_snapshot
 INSERT INTO nivel (
     nombre
 ) VALUES

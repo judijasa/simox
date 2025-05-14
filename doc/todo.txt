@@ -1,6 +1,40 @@
+
+[.] After making work as expected a version that has the two non api approaches
+    properly commented and the api approach active, while compatible with
+    the non api approaches, do the following:
+    1.  Make feature branch named: [date]-compatible-non-api-and-api-approaches
+        This branch is meant to never be merged. In a way it is redundant since
+        we could access the same version via git checkout but it allows
+        further refinements to this triple approach.
+    2.  Make feature branch named: [date]-api-approach
+        This branch is meant to be merged.
+
+[.] Compare value of 'estudio' in three approaches with non-api approaches.
+
+[.] One-to-many and/or many-to-one:
+    There are job offers with a single OPEC but with many vacantes, each
+    with a different muncipio and departamento.  Currently, we have a
+    municipio column that is of string type.  Multiple municipios are simply
+    separated by a comma. The departamento is being encoded by a single id,
+    which it doesn't give an opportunity to encode the multiple departamento ids
+    of the multiple vacantes. Solve this problem. Possible solutions:
+    1.  Use ordered array int types to store the id of  municipios (challenging
+        for non-api approaches), id of departamentos and number of vacantes per
+        location, for each OPEC number. Do this for the job_offer_snapshot table.
+    2.  Use a table where OPEC is not UNIQUE, to store the locations (municipio
+        and departamento) and number of vacantes per location.
+
+    Both solutions can be used. Solution 1 is good because it is the correct
+    way to keep all info about a given job offer in the snapshot table which
+    is meant to be a historical record of the simo website/api. It has the
+    drawback that array types are not good to be used to search for rows in a db.
+    This is solved by solution 2, which stores the same data but in multiple rows
+    rather than a single array.
+
 [.] Fix. The current approach (search by Depto starting from #ofertaEmpleo site)
     doesn't offer the option of searching by No_Aplica, in contrast to search
     by Depto starting from #homeCiudadano.
+    SOLUTION: Scan the api not searching by depto.
 
 [.] Fix: All departamento_id being inserted in job_offer_snapshot have value 1.
 
