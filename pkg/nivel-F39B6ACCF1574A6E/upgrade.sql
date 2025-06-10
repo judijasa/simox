@@ -1,11 +1,15 @@
-/* To DROP a parent tbl, first you need to DROP its child tbls */
-DROP TABLE IF EXISTS job_offer;
+/*
+To DROP a parent tbl, first you need to DROP its child tbls,
+that is why we make sure job_offer is dropped before
+replacing the nivel table.
+*/
 CREATE OR REPLACE TABLE nivel (
-    id SMALLINT AUTO_INCREMENT,
+    id SMALLINT UNSIGNED AUTO_INCREMENT,
+    grado SMALLINT UNSIGNED,
     nombre VARCHAR(100) UNIQUE NOT NULL,
 
     PRIMARY KEY(id),
-    UNIQUE KEY unique_nivel_nombre (nombre)
+    UNIQUE KEY uk_nivel_nombre (nombre)
 );
 
 /* -- Currently inserting via BEFORE trigger on job_offer_snapshot

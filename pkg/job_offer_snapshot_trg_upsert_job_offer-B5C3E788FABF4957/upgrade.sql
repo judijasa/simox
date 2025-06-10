@@ -5,63 +5,102 @@ FOR EACH ROW
 BEGIN
     -- IF NEW.cierre IS NOT NULL OR NEW.cierre != '0000-00-00' THEN
     INSERT INTO job_offer (
-        nivel_id,
-        denominacion,
-        grado,
-        codigo,
-        opec,
-        salario,
-        vigencia_salarial,
-        convocatoria,
-        entidad_codigo,
-        cierre,
-        vacantes,
-        estudio,
-        dependencia,
-        municipio,
-        max_snap_id
+        nivel_id
+        , denominacion_id
+        , grado
+        , codigo
+        , opec
+        , salario
+        , vigencia_salarial
+        , convocatoria_id
+        , entidad_codigo
+        , cierre
+        , max_snap_id
     ) VALUES (
-        IF(
-            NEW.nivel = 'NONE',
-            NULL,
-            (SELECT id FROM nivel WHERE nombre = NEW.nivel)
-        ),
-        null_from_default_str(NEW.denominacion),
-        null_from_default_num(NEW.grado),
-        null_from_default_str(NEW.codigo),
-        NEW.opec,
-        null_from_default_str(NEW.salario),
-        null_from_default_year(NEW.vigencia_salarial),
-        null_from_default_str(NEW.convocatoria),
-        null_from_default_num(NEW.entidad_codigo),
-        null_from_default_date(NEW.cierre),
-        null_from_default_num(NEW.vacantes),
-        null_from_default_str(NEW.estudio),
-        null_from_default_str(NEW.dependencia),
-        null_from_default_str(NEW.municipio),
-        NEW.id
+        /*
+            fill new tbls with
+            BEFORE triggers to INSERT ON job_offer_snapshot
+        */
+        (
+            SELECT n.id
+            FROM nivel n
+            WHERE n.grado = JSON_VALUE(NEW.empleo, '$.gradoNivel.grado')
+        ) -- nivel_id
+        , (
+            SELECT d.id
+            FROM denominacion d
+            WHERE d.simo_id = JSON_VALUE(NEW.empleo, '$.denominacion.id')
+        ) -- denominacion_id
+        , JSON_VALUE(NEW.empleo, '$.gradoDenominacion.grado') -- grado
+        , JSON_VALUE(NEW.empleo, '$.codigoEmpleo') -- codigo
+        , JSON_VALUE(NEW.empleo, '$.id') -- opec
+        , JSON_VALUE(NEW.empleo, '$.asignacionSalarial')
+        , JSON_VALUE(NEW.empleo, '$.vigenciaSalarial')
+        , (
+            SELECT c.id
+            FROM convocatoria c
+            WHERE c.simo_id = JSON_VALUE(NEW.empleo, '$.convocatoria.id')
+        ) -- convocatoria_id
+        , JSON_VALUE(NEW.empleo, '$.identificador') -- entidad codigo
+        , JSON_VALUE(NEW.empleo, '$.fechaInscripcion') -- cierre
+        , NEW.id -- max_snapshot_id
     ) ON DUPLICATE KEY
     UPDATE
         nivel_id = IF(
-            NEW.nivel = 'NONE',
-            NULL,
-            (SELECT id FROM nivel WHERE nombre = NEW.nivel)
-        ),
-        denominacion        = null_from_default_str(NEW.denominacion),
-        grado               = null_from_default_num(NEW.grado),
-        codigo              = null_from_default_str(NEW.codigo),
-        opec                = null_from_default_str(NEW.opec),
-        salario             = null_from_default_str(NEW.salario),
-        vigencia_salarial   = null_from_default_year(NEW.vigencia_salarial),
-        convocatoria        = null_from_default_str(NEW.convocatoria),
-        entidad_codigo      = null_from_default_num(NEW.entidad_codigo),
-        cierre              = null_from_default_date(NEW.cierre),
-        vacantes            = null_from_default_num(NEW.vacantes),
-        estudio             = null_from_default_str(NEW.estudio),
-        dependencia         = null_from_default_str(NEW.dependencia),
-        municipio           = null_from_default_str(NEW.municipio),
-        max_snap_id         = NEW.id;
-        -- TODO: Condition UPDATE to at least one change
-        -- END IF;
+            nivel_id != (
+                SELECT n.id
+                FROM nivel n
+                WHERE n.grado = JSON_VALUE(NEW.empleo, '$.gradoNivel.grado')
+            ), (
+                SELECT n.id
+                FROM nivel n
+                WHERE n.grado = JSON_VALUE(NEW.empleo, '$.gradoNivel.grado')
+            ), nivel_id
+        ), denominacion_id = IF(
+            denominacion_id != (
+                SELECT d.id
+                FROM denominacion d
+                WHERE d.simo_id = JSON_VALUE(NEW.empleo, '$.denominacion.id')
+            ), (
+                SELECT d.id
+                FROM denominacion d
+                WHERE d.simo_id = JSON_VALUE(NEW.empleo, '$.denominacion.id')
+            ), denominacion_id
+        ), grado = IF(
+            grado != JSON_VALUE(NEW.empleo, '$.gradoDenominacion.grado'),
+            JSON_VALUE(NEW.empleo, '$.gradoDenominacion.grado'),
+            grado
+        ), codigo = IF(
+            codigo != JSON_VALUE(NEW.empleo, '$.codigoEmpleo'),
+            JSON_VALUE(NEW.empleo, '$.codigoEmpleo'),
+            codigo
+        ), opec = IF(
+            opec != JSON_VALUE(NEW.empleo, '$.id'),
+            JSON_VALUE(NEW.empleo, '$.id'),
+            opec
+        ), salario = IF(
+            salario != JSON_VALUE(NEW.empleo, '$.asignacionSalarial'),
+            JSON_VALUE(NEW.empleo, '$.asignacionSalarial'),
+            salario
+        ), vigencia_salarial = JSON_VALUE(NEW.empleo, '$.vigenciaSalarial')
+        , convocatoria_id = IF(
+            convocatoria_id != (
+                SELECT c.id
+                FROM convocatoria c
+                WHERE c.simo_id = JSON_VALUE(NEW.empleo, '$.convocatoria.id')
+            ), (
+                SELECT c.id
+                FROM convocatoria c
+                WHERE c.simo_id = JSON_VALUE(NEW.empleo, '$.convocatoria.id')
+            ), convocatoria_id
+        ), entidad_codigo = IF(
+            entidad_codigo != JSON_VALUE(NEW.empleo, '$.identificador'),
+            JSON_VALUE(NEW.empleo, '$.identificador'),
+            entidad_codigo
+        ), cierre = IF(
+            cierre != JSON_VALUE(NEW.empleo, '$.fechaInscripcion'),
+            JSON_VALUE(NEW.empleo, '$.fechaInscripcion'),
+            cierre
+        ), max_snap_id = NEW.id;
 END; //
 DELIMITER ;

@@ -1,9 +1,13 @@
 <?php
 $dependencies = array(
     'vw_job_offer-DAF75B74DD6A469D',
+    'vacante-WZ0T87MRR815E49Y',
+    'requisito-7SACLUK8T6IU4BP3',
     'otras_habilidades_variaciones-849D717DCE0B4981',
     'otras_habilidades-5A260966F7DD497A',
     'nivel-F39B6ACCF1574A6E',
+    'location-WK095781S7NA146R',
+    'job_offer_location-ABF75B82LD6U469H',
     'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957',
     'job_offer_snapshot_trg_insert_nivel-8A4EDC8BB9A44C32',
     'job_offer_snapshot_trg_insert_job_offer_location-8P2ZDC31BXA46C3G',
@@ -13,10 +17,11 @@ $dependencies = array(
     'estudio_especializado-F13DE36C34F84042',
     'estudio_basico_variaciones-7D92A6C55A504604',
     'estudio_basico-F821B353E42F4D79',
-    'dpto_colombia-BD672733D7AA455F',
+    'departamento-BD672733D7AA455F',
+    'denominacion-5R9BK7DS01O7A23G',
+    'departamento-BD672733D7AA455F',
+    'dependencia-J31Y7UXN1J2K9W4L',
     'cursorseq-A8FEE4C088E5419C',
-    'job_offer_location-ABF75B82LD6U469H',
-    'municipio-WK095781S7NA146R',
     'activity_monitor-A170276C72D14319'
 );
 ?>
