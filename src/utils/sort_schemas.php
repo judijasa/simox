@@ -78,9 +78,6 @@ function build_dependency_graph($root_schema) {
 }
 
 if (!count(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS))) {
-    //$root_schema = 'job_offer-9A645583F8F24B28';
-    //$root_schema = 'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957';
-    //$root_schema = 'vw_job_offer-DAF75B74DD6A469D';
     $root_schema = 'simo-C196A24801D24B16';
 
     $dependency_graph = build_dependency_graph($root_schema);
