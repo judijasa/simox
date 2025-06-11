@@ -4,7 +4,7 @@ CREATE OR REPLACE TABLE cursorseq (
     `mod` TINYINT DEFAULT 0,
     `div` TINYINT DEFAULT 1,
 
-    PRIMARY KEY(`key`),
+    PRIMARY KEY(`key`, `mod`, `div`),
     CONSTRAINT chk_cursorseq_key CHECK (`key` REGEXP '^[a-zA-Z0-9_]+$')
 );
 
