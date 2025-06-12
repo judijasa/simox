@@ -8,10 +8,10 @@ function set_cursor($conn, $key, $value, $mod=0, $div=1) {
         UPDATE value = :value;
     EOD;
     $stmt = $conn->prepare($query);
-    $stmt->bindValue(':key', $key);
-    $stmt->bindValue(':value', $value);
-    $stmt->bindValue(':mod', $mod);
-    $stmt->bindValue(':div', $div);
+    $stmt->bindValue(':key', $key, PDO::PARAM_STR);
+    $stmt->bindValue(':value', $value, PDO::PARAM_INT);
+    $stmt->bindValue(':mod', $mod, PDO::PARAM_INT);
+    $stmt->bindValue(':div', $div, PDO::PARAM_INT);
     $stmt->execute();
 }
 
