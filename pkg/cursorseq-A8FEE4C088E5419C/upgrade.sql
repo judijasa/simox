@@ -36,5 +36,3 @@ BEGIN
     END IF;
 END; //
 DELIMITER ;
-
-INSERT INTO cursorseq (`key`, value) VALUES ('update_job_offer_id_seq', 0);
