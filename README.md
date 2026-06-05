@@ -31,7 +31,7 @@ Required by the `phantomjs` binary (`... install libfontconfig1`).
 
 ## PHP Casper Class
 `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
-It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
+It overrides existing methods and defines new ones.  To use this subclass, after downloading the vendor libraries, edit
 `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.<br/>
 Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
 of the boolean option `reset`, which is already defined in
