@@ -8,7 +8,7 @@
 
 class publicPDO extends PDO {
     public function __construct($dbname) {
-	      $cnf = parse_ini_file("/var/www/html/simo-express/config.sh");
+	$cnf = parse_ini_file("/var/www/html/simo-express/config.sh");
         $servername = $cnf["SERVER"];
         $username = 'public';
         $password = '';
