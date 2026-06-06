@@ -37,8 +37,8 @@ sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}
 # mysql -u $USER -p < $agg_upgrades_pseudo_sql_file
 #sudo mariadb -u $USER < $agg_upgrades_pseudo_sql_file
 # sudo mariadb < $agg_upgrades_pseudo_sql_file
-sudo $DBMS < $agg_upgrades_sql_file
+sudo "$DBMS" < $agg_upgrades_sql_file 2>/dev/null || "$DBMS" -u root < "$agg_upgrades_sql_file"
 rm -r $workdir
-sudo $DBMS "${DBNAME}"
+sudo "$DBMS" "${DBNAME}" 2>/dev/null || "$DBMS" -u root "${DBNAME}"
 
 exit 0
