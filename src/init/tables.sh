@@ -1,6 +1,8 @@
 #!/bin/bash
 
-root_dir=$(git rev-parse --show-toplevel)
+source /etc/environment
+root_dir=$SIMO_REPO_PATH
+
 if [[ "$PWD" != $root_dir ]]
 then
   echo "This command must be executed from the root directory of the repository."
