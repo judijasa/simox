@@ -4,6 +4,7 @@
 
 # Ignore directories
 /vendor/
+.mariadb/
 
 # Ignore files
 src/config.sh
