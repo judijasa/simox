@@ -7,6 +7,12 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
+    # Create local log directory
+    export SIMOX_LOG=$PWD/log
+    if [ ! -d "$SIMOX_LOG" ]; then
+        mkdir -p "$SIMOX_LOG"
+    fi
+
     # 1. Setup localized directory paths so data stays in your project folder
     export MYSQL_BASE_DIR=$PWD/.mariadb
     export MYSQL_DATA_DIR=$MYSQL_BASE_DIR/data
