@@ -48,8 +48,8 @@ sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pse
 #USER="root"
 #DBNAME="simo"
 #mysql -u $USER -p $DBNAME < $temp_sql_file
-sudo $DBMS $DBNAME < $agg_upgrades_sql_file
+sudo "$DBMS" "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file || "$DBMS" -u root "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file
 rm -r $workdir
-sudo $DBMS "${DBNAME}" -e "SHOW TABLES;"
+sudo "$DBMS" "$DBNAME" -e "SHOW TABLES;" 2>/dev/null || "$DBMS" -u root "$DBNAME" -e "SHOW TABLES;"
 
 exit 0
