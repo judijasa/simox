@@ -1,3 +1,19 @@
+[.] 
+    [.] Merge estudio_basico_variaciones into estudio_basico.
+    [.] Merge estudio_especializado_variaciones into estudio_especializado
+
+    Example:
+
+    CREATE TABLE estudio_basico (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        parent_id INT REFERENCES job_titles(id) ON DELETE SET NULL,
+        -- is_primitive BOOLEAN GENERATED ALWAYS AS (parent_id IS NULL) STORED
+        is_primitive BOOLEAN
+    );
+
+    Make is_primitive an index.
+   
 
 [.] After making work as expected a version that has the two non api approaches
     properly commented and the api approach active, while compatible with
@@ -100,7 +116,7 @@
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
 
-[.] Add tmux to shell nix
+[d] Add tmux to shell nix
 
 [x] Find and apply method from PDO MySQL driver to prevent SQL injection,
     see example in mixrank/utils/batch_processing.py:scan_table_in_batches
