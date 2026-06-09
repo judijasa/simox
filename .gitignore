@@ -3,7 +3,8 @@
 *.swp
 
 # Ignore directories
-/vendor/
+vendor/
+log/
 .mariadb/
 
 # Ignore files
