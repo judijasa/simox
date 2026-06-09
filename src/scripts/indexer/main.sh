@@ -83,13 +83,13 @@ if [ ! -f "$logFile" ]; then
 fi
 
 # without concurrency
-#php .../simo_indexer/get_jobs.php... | tee -a $logFile # Redirect with append and show result in terminal too
-#php .../simo_indexer/get_jobs.php... > $logFile # test: Redirect without append stdout
-#php .../simo_indexer/get_jobs.php... >> $logFile 2>&1 # test: Redirect with append stdout and stderr
+#php .../indexer/get_jobs.php... | tee -a $logFile # Redirect with append and show result in terminal too
+#php .../indexer/get_jobs.php... > $logFile # test: Redirect without append stdout
+#php .../indexer/get_jobs.php... >> $logFile 2>&1 # test: Redirect with append stdout and stderr
 
 
 # concurrency = 1
-cmd="require \"src/scripts/simo_indexer/get_jobs.php\"; indexer(0,1);"
+cmd="require \"src/scripts/indexer/get_jobs.php\"; indexer(0,1);"
 msg1="$(date '+%Y-%m-%d %H:%M:%S') - Starting crawler..."
 msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished crawling."
 
@@ -117,10 +117,10 @@ fi
 # job (with process ID: [ID]) to the foreground. The commmand `bg` (no args)
 # sends it back to the background.
 
-#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(0, 4);" &
-#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(1, 4);" &
-#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(2, 4);" &
-#php -r "require 'src/scripts/simo_indexer/get_jobs.php'; indexer(3, 4);"
+#php -r "require 'src/scripts/indexer/get_jobs.php'; indexer(0, 4);" &
+#php -r "require 'src/scripts/indexer/get_jobs.php'; indexer(1, 4);" &
+#php -r "require 'src/scripts/indexer/get_jobs.php'; indexer(2, 4);" &
+#php -r "require 'src/scripts/indexer/get_jobs.php'; indexer(3, 4);"
 # jobs # list background processes
 # wait # waits for all processes to finish before proceeding
 #exit # test
@@ -141,16 +141,16 @@ msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished post-crawling process."
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
   echo "$msg1" 2>&1 | tee -a $logFile
-  php src/scripts/simo_indexer/update_job_offer.php 2>&1 | tee -a $logFile
+  php src/scripts/indexer/update_job_offer.php 2>&1 | tee -a $logFile
   echo "$msg2" 2>&1 | tee -a $logFile
 else
   # Running in background: Only log (log file) output
   echo "$msg1" >> $logFile 2>&1
-  php src/scripts/simo_indexer/update_job_offer.php >> $logFile 2>&1
+  php src/scripts/indexer/update_job_offer.php >> $logFile 2>&1
   echo "$msg2" >> $logFile 2>&1
 fi
 ## Email download status with summary
 #opec=$(php get_new_jobs.php)
-#php src/scripts/simo_indexer/mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"
+#php src/scripts/indexer/mail.php -- "opec=${opec}&run=${i}&run_max=${imax}&init=${init_pg}&last=${last_pg}&end=${end_pg}"
 
 exit 0

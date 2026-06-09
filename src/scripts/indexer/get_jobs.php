@@ -1,7 +1,7 @@
 <?php
 // vendor/autoload: stackoverflow.com/questions/41209349/requirevendor-autoload-php-failed-to-open-stream
 require 'vendor/autoload.php';
-require 'src/scripts/simo_indexer/functions.php';
+require 'src/scripts/indexer/functions.php';
 require 'src/utils/connectivity.php';
 require 'src/utils/db_ops.php';
 require 'src/utils/indexing.php';

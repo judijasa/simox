@@ -44,7 +44,7 @@ deploy_website() {
 
 deploy_cronjobs() {
   local MAINTENANCE="src/scripts/maintenance"
-  local INDEXER="src/scripts/simo_indexer"
+  local INDEXER="src/scripts/indexer"
 
   cron_cp() {
     local SOURCE="$1"
