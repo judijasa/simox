@@ -3,7 +3,8 @@
 *.swp
 
 # Ignore directories
-/vendor/
+vendor/
+var/
 
 # Ignore files
 src/config.sh
