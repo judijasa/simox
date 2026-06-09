@@ -7,9 +7,8 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    
-    # Create local var directory
-    export VAR_BASE_DIR=$PWD/var
+    # Create dedicated repo var directory if missing
+    export VAR_BASE_DIR=~/var/simox
     if [ ! -d "$VAR_BASE_DIR" ]; then
         mkdir -p "$VAR_BASE_DIR"
         mkdir -p $VAR_BASE_DIR/log
