@@ -7,8 +7,13 @@
 # . [filename].sh
 ####
 
-source /etc/environment  # SIMO_REPO_PATH
-logFile="$SIMO_REPO_PATH/log/crawler.log"
+source /etc/environment  # source SIMO_REPO_PATH
+
+# Generate LOG_FILE from script path
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_BASE="${SCRIPT_NAME%.*}"
+DIR_PREFIX=$(dirname "$0" | tr '/' '_')
+LOG_FILE=~/var/simox/log/"${DIR_PREFIX}_${SCRIPT_BASE}.log"
 
 if [ "$IS_CRON_JOB" = "true" ]; then
 
@@ -78,14 +83,14 @@ export OPENSSL_CONF=dev/null
 
 ti=`date +%s`
 
-if [ ! -f "$logFile" ]; then
-  touch "$logFile"
+if [ ! -f "$LOG_FILE" ]; then
+  touch "$LOG_FILE"
 fi
 
 # without concurrency
-#php .../indexer/get_jobs.php... | tee -a $logFile # Redirect with append and show result in terminal too
-#php .../indexer/get_jobs.php... > $logFile # test: Redirect without append stdout
-#php .../indexer/get_jobs.php... >> $logFile 2>&1 # test: Redirect with append stdout and stderr
+#php .../indexer/get_jobs.php... | tee -a $LOG_FILE # Redirect with append and show result in terminal too
+#php .../indexer/get_jobs.php... > $LOG_FILE # test: Redirect without append stdout
+#php .../indexer/get_jobs.php... >> $LOG_FILE 2>&1 # test: Redirect with append stdout and stderr
 
 
 # concurrency = 1
@@ -95,14 +100,14 @@ msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished crawling."
 
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
-  echo "$msg1" 2>&1 | tee -a $logFile
-  php -r "$cmd" 2>&1 | tee -a "$logFile"
-  echo "$msg1" 2>&1 | tee -a $logFile
+  echo "$msg1" 2>&1 | tee -a $LOG_FILE
+  php -r "$cmd" 2>&1 | tee -a "$LOG_FILE"
+  echo "$msg1" 2>&1 | tee -a $LOG_FILE
 else
   # Running in background: Only log (log file) output
-  echo "$msg1" >> $logFile 2>&1
-  php -r "$cmd" >> $logFile 2>&1
-  echo "$msg2" >> $logFile 2>&1
+  echo "$msg1" >> $LOG_FILE 2>&1
+  php -r "$cmd" >> $LOG_FILE 2>&1
+  echo "$msg2" >> $LOG_FILE 2>&1
 fi
 
 # concurrency = 4
@@ -140,14 +145,14 @@ msg2="$(date '+%Y-%m-%d %H:%M:%S') - Finished post-crawling process."
 
 # Check if running in an interactive terminal
 if [ -t 1 ]; then
-  echo "$msg1" 2>&1 | tee -a $logFile
-  php src/scripts/indexer/update_job_offer.php 2>&1 | tee -a $logFile
-  echo "$msg2" 2>&1 | tee -a $logFile
+  echo "$msg1" 2>&1 | tee -a $LOG_FILE
+  php src/scripts/indexer/update_job_offer.php 2>&1 | tee -a $LOG_FILE
+  echo "$msg2" 2>&1 | tee -a $LOG_FILE
 else
   # Running in background: Only log (log file) output
-  echo "$msg1" >> $logFile 2>&1
-  php src/scripts/indexer/update_job_offer.php >> $logFile 2>&1
-  echo "$msg2" >> $logFile 2>&1
+  echo "$msg1" >> $LOG_FILE 2>&1
+  php src/scripts/indexer/update_job_offer.php >> $LOG_FILE 2>&1
+  echo "$msg2" >> $LOG_FILE 2>&1
 fi
 ## Email download status with summary
 #opec=$(php get_new_jobs.php)
