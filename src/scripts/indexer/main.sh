@@ -11,9 +11,8 @@ source /etc/environment  # source SIMO_REPO_PATH
 
 # Generate LOG_FILE from script path
 SCRIPT_NAME=$(basename "$0")
-SCRIPT_BASE="${SCRIPT_NAME%.*}"
 DIR_PREFIX=$(dirname "$0" | tr '/' '_')
-LOG_FILE=~/var/simox/log/"${DIR_PREFIX}_${SCRIPT_BASE}.log"
+LOG_FILE=~/var/simox/log/"${DIR_PREFIX}_${SCRIPT_NAME}.log"
 
 if [ "$IS_CRON_JOB" = "true" ]; then
 
