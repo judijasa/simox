@@ -6,9 +6,12 @@
     // PDO-MYSQL
     // https://www.php.net/manual/en/ref.pdo-mysql.php
 
+declare(strict_types=1);
+
+namespace Utils\Connectivity;
 
 class adminPDO extends PDO {
-    public function __construct($dbname) {
+    public function __construct(string $dbname) {
         $cnf = parse_ini_file("src/config.sh"); // INI format similar to SH
         $servername = $cnf["SERVER"];
         $username = 'admin';
@@ -21,7 +24,7 @@ class adminPDO extends PDO {
 
 
 class readerPDO extends PDO {
-    public function __construct($dbname) {
+    public function __construct(string $dbname) {
         $cnf = parse_ini_file("src/config.sh"); // INI format similar to SH
         $servername = $cnf["SERVER"];
         $username = 'reader';
@@ -34,7 +37,7 @@ class readerPDO extends PDO {
 
 
 class publicPDO extends PDO {
-    public function __construct($dbname) {
+    public function __construct(string $dbname) {
         $cnf = parse_ini_file("src/config.sh"); // INI format similar to SH
         $servername = $cnf["SERVER"];
         $username = 'public';
@@ -45,7 +48,7 @@ class publicPDO extends PDO {
     }
 }
 
-function publicMySQLi($dbname){
+function publicMySQLi(string $dbname){
     // Not executed from repo's root dir: Use abs path...
     $cnf = parse_ini_file("src/config.sh");
     $servername = $cnf["SERVER"];
@@ -61,3 +64,4 @@ function publicMySQLi($dbname){
     }
 }
 ?>
+
