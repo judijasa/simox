@@ -1,6 +1,8 @@
 #!/bin/bash
 
-root_dir=$(git rev-parse --show-toplevel)
+source /etc/environment
+root_dir=$SIMO_REPO_PATH
+
 if [[ "$PWD" != $root_dir ]]
 then
   echo "This command must be executed from the root directory of the repository."
@@ -39,15 +41,8 @@ done
 # Replace placeholders in the SQL file with actual values
 sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
 
-#mysql -u "${USER}" -p"${PASSWORD}" "${DATABASE}" <<EOF
-#CREATE ...
-#EOF
-
-#USER="root"
-#DBNAME="simo"
-#mysql -u $USER -p $DBNAME < $temp_sql_file
-sudo $DBMS $DBNAME < $agg_upgrades_sql_file
+sudo "$DBMS" "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file || "$DBMS" -u root "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file
 rm -r $workdir
-sudo $DBMS "${DBNAME}" -e "SHOW TABLES;"
+sudo "$DBMS" "$DBNAME" -e "SHOW TABLES;" 2>/dev/null || "$DBMS" -u root "$DBNAME" -e "SHOW TABLES;"
 
 exit 0
