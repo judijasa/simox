@@ -28,6 +28,8 @@ Used in `src/init/tables.sh` to convert json to array in BASH.
 Required during phpcasperjs/phpcasperjs installation (`...install python-is-python3`).
 #### 7. libfontconfig.so.1
 Required by the `phantomjs` binary (`... install libfontconfig1`).
+#### 8. Nix (optional)
+There is a shell.nix providing a Nix dev environment for local tests.
 
 ## PHP Casper Class
 `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
