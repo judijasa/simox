@@ -9,6 +9,11 @@ then
   exit
 fi
 
+if [[ $EUID -eq 0 ]]; then
+    echo "Execute without sudo."
+    exit 1
+fi
+
 # rand alphanum str to use as suffix in some directory names
 # not used at the moment
 #randir() {

@@ -10,7 +10,7 @@ then
 fi
 
 if [[ $EUID -eq 0 ]]; then
-    echo "Execute without sudo. Sudo privileges not "
+    echo "Execute without sudo."
     exit 1
 fi
 
