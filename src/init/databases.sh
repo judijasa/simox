@@ -9,6 +9,11 @@ then
   exit
 fi
 
+if [[ $EUID -eq 0 ]]; then
+    echo "Execute without sudo. Sudo privileges not "
+    exit 1
+fi
+
 # rand alphanum str to use as suffix in some directory names
 # not used at the moment
 #randir() {
@@ -29,8 +34,12 @@ cat "${root_dir}/srv/simo.sql" >> "$agg_upgrades_pseudo_sql_file"
 # Replace placeholders in the SQL file with actual values
 sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}}/${ADMIN_PASSWORD}/g; s/{{reader_password}}/${READER_PASSWORD}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
 
-sudo "$DBMS" < $agg_upgrades_sql_file 2>/dev/null || "$DBMS" -u root < "$agg_upgrades_sql_file"
+# Execute SQL
+"$DBMS" -u root < "$agg_upgrades_sql_file" 2>/dev/null || \
+sudo "$DBMS" < $agg_upgrades_sql_file 
+
 rm -r $workdir
-sudo "$DBMS" "${DBNAME}" 2>/dev/null || "$DBMS" -u root "${DBNAME}"
+
+"$DBMS" -u root "${DBNAME}" 2>/dev/null || sudo "$DBMS" "${DBNAME}" 
 
 exit 0

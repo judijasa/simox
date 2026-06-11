@@ -41,8 +41,12 @@ done
 # Replace placeholders in the SQL file with actual values
 sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
 
-sudo "$DBMS" "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file || "$DBMS" -u root "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file
+"$DBMS" -u root "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file || \
+sudo "$DBMS" "$DBNAME" < $agg_upgrades_sql_file
+
 rm -r $workdir
-sudo "$DBMS" "$DBNAME" -e "SHOW TABLES;" 2>/dev/null || "$DBMS" -u root "$DBNAME" -e "SHOW TABLES;"
+
+"$DBMS" -u root "$DBNAME" -e "SHOW TABLES;" 2>/dev/null || \
+sudo "$DBMS" "$DBNAME" -e "SHOW TABLES;"
 
 exit 0
