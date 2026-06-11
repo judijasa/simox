@@ -3,9 +3,8 @@ require 'vendor/autoload.php'; // in case pdo class in vendor
 //use Browser\Casper; // used in get_total_job_offers (old method: editing Casper class)
 require_once 'src/utils/CasperTrio.php'; // used in get_total_job_offers (new method: child of Casper class)
 
-// fetch jobs per departamento from https://simo.cnsc.gov.co/#ofertaEmpleo
-// Returns all job offers (all 'departamentos', including 'No_Aplica')
-function get_total_job_offers_from_oferta_empleo($path2casper, $target_site){
+function get_total_pages($path2casper, $target_site){
+    // TODO: Modify this function, currently fetching total jobs
     $casper = new CasperTrio($path2casper);
     $casper->setOptions(array(
                               'ignore-ssl-errors' => 'yes'
@@ -26,38 +25,6 @@ function get_total_job_offers_from_oferta_empleo($path2casper, $target_site){
     $casper = null;
 
     return trim(explode('de',explode('resultados', $text)[0])[1]);
-}
-
-// fetch jobs per departamento from https://simo.cnsc.gov.co/#homeCiudadano
-function get_total_job_offers_from_home_ciudadano($path2casper, $target_site, $departamento_id){
-    $casper = new CasperTrio($path2casper);
-    $casper->setOptions(array('ignore-ssl-errors' => 'yes'));
-    $casper->start($target_site);
-    $sel = '#showButtonDepartamento';
-    $casper->waitForSelector($sel, 30000); // wait for target button to show up
-    $casper->click($sel); # open tab listing departamentos and total job offers
-    $sel2 = sprintf('span.convocatoriaNumero[data-sigeca-click-oferta-empleo=\"%s: \"]', $departamento_id);
-    $casper->waitForSelector($sel, 30000); // wait for target button to show up
-    $casper->fetchText($sel2); // This enables me to skip the use of Simple HTML Parser. All I need is getOutput().
-
-    $casper->run();
-    $output = $casper->getOutput();
-    $casper = null;
-    return $output[27];
-}
-
-function TotalPages_from_TotalJobOffers($tot_res_var){
-    // They use 10 job items per page.  Extract the total
-    // num of pages from the total num of results:
-    $tot_pgs = 1;  // default
-    if (strlen($tot_res_var) > 1) {
-        if (substr($tot_res_var,-1) > 0) {
-            $tot_pgs = ((int) substr($tot_res_var,0,-1)) + 1;
-        } else {
-            $tot_pgs = (int) substr($tot_res_var,0,-1);
-        }
-    }
-    return $tot_pgs;
 }
 
 function polish($debris_var){
@@ -474,7 +441,8 @@ function get_api_data($url){ // not working
 */
 
 function get_api_data($url){
-    $url = 'https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10';
+    // Example: search by departamento
+    // https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
 
     // Parse the URL to get the query part
     $query_string = parse_url($url, PHP_URL_QUERY);
@@ -533,11 +501,10 @@ function get_api_data($url){
     return $data;
 }
 
-function insert2db($conn, $data, $departamento_id){
+function job_snapshot_insert($conn, $data){
     $stmt = $conn->prepare(
         <<<EOD
         INSERT INTO job_offer_snapshot (
-            pagina,
             nivel,
             denominacion,
             grado,
@@ -553,10 +520,8 @@ function insert2db($conn, $data, $departamento_id){
             experiencia,
             dependencia,
             municipio,
-            departamento_ids,
             otros
         ) VALUES (
-            :pagina,
             :nivel,
             :denominacion,
             :grado,
@@ -572,7 +537,6 @@ function insert2db($conn, $data, $departamento_id){
             :experiencia,
             :dependencia,
             :municipio,
-            :departamento_id,
             :otros
         /*  No need to condition the INSERT since
             UNIQUE key takes care of it */
@@ -581,117 +545,123 @@ function insert2db($conn, $data, $departamento_id){
             updated_at = NOW(),
             departamento_ids = departamento_ids | :departamento_id;
         EOD);
-    if(isset($data['pagina'])){ // 1
-        $stmt->bindValue(':pagina', trim($data['pagina']));
-    } else {
-        $stmt->bindValue(':pagina', -1);
-    }
-    if(isset($data['nivel'])){ // 2
+    if(isset($data['nivel'])){ // 1
         $stmt->bindValue(':nivel', trim($data['nivel']));
     } else {
         $stmt->bindValue(':nivel', 'NONE');
     }
-    if(isset($data['denominacion'])){ // 3
+    if(isset($data['denominacion'])){ // 2
         $stmt->bindValue(':denominacion', trim($data['denominacion']));
     } else {
         $stmt->bindValue(':denominacion', 'NONE');
     }
-    if(isset($data['grado'])){ // 4
+    if(isset($data['grado'])){ // 3
         $stmt->bindValue(':grado', trim($data['grado']));
     } else {
         $stmt->bindValue(':grado', -1);
     }
-    if(isset($data['codigo'])){ // 5
+    if(isset($data['codigo'])){ // 4
         $stmt->bindValue(':codigo', trim($data['codigo']));
     } else {
         $stmt->bindValue(':codigo', 'NONE');
     }
-    if(isset($data['opec'])){ // 6
+    if(isset($data['opec'])){ // 5
         $stmt->bindValue(':opec', trim($data['opec']));
     } else {
         $stmt->bindValue(':opec', -1);
     }
-    if(isset($data['entidad_codigo'])){ // 7
+    if(isset($data['entidad_codigo'])){ // 6
         $stmt->bindValue(':entidad_codigo', trim($data['entidad_codigo']));
     } else {
         $stmt->bindValue(':entidad_codigo', -1);
     }
-    if(isset($data['salario'])){ // 8
+    if(isset($data['salario'])){ // 7
         $stmt->bindValue(':salario', trim($data['salario']));
     } else {
         $stmt->bindValue(':salario', 'NONE');
     }
-    if(isset($data['vigencia_salarial'])){ // 9
+    if(isset($data['vigencia_salarial'])){ // 8
         $stmt->bindValue(':vigencia_salarial', trim($data['vigencia_salarial']));
     } else {
         $stmt->bindValue(':vigencia_salarial', 0000);
     }
-    if(isset($data['convocatoria'])){ // 10
+    if(isset($data['convocatoria'])){ // 9
         $stmt->bindValue(':convocatoria', trim($data['convocatoria']), 2);
     } else {
         $stmt->bindValue(':convocatoria', 'NONE', 2);
     }
-    if(isset($data['cierre'])){ // 11
+    if(isset($data['cierre'])){ // 10
         $stmt->bindValue(':cierre', trim($data['cierre']));
     } else {
         $stmt->bindValue(':cierre', '0000-00-00');
     }
-    if(isset($data['estudio'])){ // 12
+    if(isset($data['estudio'])){ // 11
         $stmt->bindValue(':estudio', trim($data['estudio']));
     } else {
         $stmt->bindValue(':estudio', 'NONE');
     }
-    if(isset($data['experiencia'])){ // 13
+    if(isset($data['experiencia'])){ // 12
         $stmt->bindValue(':experiencia', trim($data['experiencia']));
     } else {
         $stmt->bindValue(':experiencia', 'NONE');
     }
-    if(isset($data['dependencia'])){ // 14
+    if(isset($data['dependencia'])){ // 13
         $stmt->bindValue(':dependencia', trim($data['dependencia']));
     } else {
         $stmt->bindValue(':dependencia', 'NONE');
     }
-    if(isset($data['municipio'])){ // 15
+    if(isset($data['municipio'])){ // 14
         $stmt->bindValue(':municipio', trim($data['municipio']));
     } else {
         $stmt->bindValue(':municipio', 'NONE');
     }
-    if(isset($data['vacantes'])){ // 16
+    if(isset($data['vacantes'])){ // 15
         $stmt->bindValue(':vacantes', trim($data['vacantes']));
     } else {
         $stmt->bindValue(':vacantes', -1);
     }
-    if(isset($data['otros'])){ // 17
+    if(isset($data['otros'])){ // 16
         $stmt->bindValue(':otros', trim($data['otros']));
     } else {
         $stmt->bindValue(':otros', 'NONE');
     }
-    $stmt->bindValue(':departamento_id', $departamento_id); // 18
     $stmt->execute();
-    /*
-    $stmt = $conn->prepare(
-        <<<EOD
-        INSERT INTO job_offer_location (
-            opec,
-            -- municipio_id,
-            -- TODO: Handle municipio_id with BEFORE/AFTER
-            -- triggers as you do with job_offer.nivel_id
-            -- instead of using this query
-            dpto_colombia_id
-        ) VALUES (
-            :opec,
-            :departamento_id
-        ) ON DUPLICATE KEY
-        UPDATE
-            updated_at = NOW()
-        EOD);
-    if(isset($data['opec'])){
-        $stmt->bindValue(':opec', $data['opec']);
-    } else {
-        $stmt->bindValue(':opec', -1);
+
+}
+
+function insert2db($conn, $data){
+    job_snapshot_insert($conn, $data);
+}
+
+function persist($conn, $db, $pages_batch){
+    try{
+        $conn = new adminPDO($db);
+        foreach($pages_batch as $jobsPerPage){
+            $arr = $jobsPerPage->getArrayCopy();
+            if ($arr) {
+            }
+            foreach($jobsPerPage as $jobInfo){
+                // BEGIN Test
+                //$pagina = ((array) $jobInfo_arrObj)[0]; // test
+                //$pagina = trim(explode(':', $pagina)[1]); // test
+                // END Test
+
+                // BEGIN non-API approaches
+                //$parsed_jobInfo_arrObj = parse_jobOffer_html($jobInfo_arrObj);
+                // END non-API approaches
+
+                // BEGIN API approach
+                $parsed_jobInfo = parse_jobOffer_api($jobInfo);
+                // END API approach
+                insert2db($conn, $parsed_jobInfo);
+            }
+        }
+        set_cursor($conn, 'simo_website_cursor', $page);
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    } finally {
+        $conn = null;
     }
-    $stmt->bindValue(':departamento_id', $departamento_id);
-    $stmt->execute();
-    */
 }
 ?>
+
