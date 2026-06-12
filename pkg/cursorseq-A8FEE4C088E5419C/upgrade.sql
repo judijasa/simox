@@ -1,6 +1,6 @@
 CREATE OR REPLACE TABLE cursorseq (
     `key` VARCHAR(255),
-    value BIGINT DEFAULT 0,
+    `value` BIGINT DEFAULT 0,
     `mod` TINYINT DEFAULT 0,
     `div` TINYINT DEFAULT 1,
 
