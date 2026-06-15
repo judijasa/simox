@@ -29,7 +29,8 @@
           enabled ++ [
             all.mysqli 
             all.pdo_mysql 
-          ];
+          ]
+        );
         phpLinter = pkgs.phpstan; # PHPStan chosen as our development linter
         mariadbPkg = pkgs.mariadb_118;
         tmuxPkg = pkgs.tmux;
