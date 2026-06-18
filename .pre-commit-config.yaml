@@ -1,13 +1,15 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: trailing-whitespace
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  # Discarded as it requires manually re-staging auto fixed files
+  # Instead use editor configuration
+    # rev: v6.0.0
+    # hooks:
+      # - id: trailing-whitespace
         # Handle horizontal triling whitespaces
-        files: \.(php|js|ts|css|html|md|json)$
-      - id: end-of-file-fixer
+        # files: \.(php|js|ts|css|html|md|json)$
+      # - id: end-of-file-fixer
         # Handle EOF whitespace issues
-        files: \.(php|js|ts|css|html|md|json)$
+        # files: \.(php|js|ts|css|html|md|json)$
 
   - repo: local
     hooks:
