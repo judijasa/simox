@@ -1,3 +1,10 @@
+[.] Add zerotier to flake.nix for secure deployment ops (do we need to assign static ip to each network memeber?).
+
+[.] Rename src/scripts/indexer/update_job_offer.php -> .../estudio_update.php and modify accordingly
+
+[.] Create tables: vacante, estudio
+
+[.] job_snapshot --trigger--> job, job_snapshot --cron-agent--> vacante (vacante.sec is job.sec fk, so use job.id as cursor and link to job_snapshot via job.max_snap_id)
 
 [.] After making work as expected a version that has the two non api approaches
     properly commented and the api approach active, while compatible with
