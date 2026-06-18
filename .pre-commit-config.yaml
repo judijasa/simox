@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        # Targets only these extensions, ignoring files that require trailing spaces
+        files: \.(php|js|ts|css|html|md|json)$
+
   - repo: local
     hooks:
       # 1. Your Custom Shell Script
