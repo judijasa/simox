@@ -47,7 +47,3 @@ fi
 
 # If there are whitespace errors, print the offending file names and fail.
 exec git diff-index --check --cached $against --
-
-# Run phpstan on staged files
-# superseded by .pre-commit-config.yaml
-# phpstan analyse --configuration=phpstan.neon
