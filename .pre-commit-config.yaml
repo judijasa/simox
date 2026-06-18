@@ -3,7 +3,10 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        # Targets only these extensions, ignoring files that require trailing spaces
+        # Handle horizontal triling whitespaces
+        files: \.(php|js|ts|css|html|md|json)$
+      - id: end-of-file-fixer
+        # Handle EOF whitespace issues
         files: \.(php|js|ts|css|html|md|json)$
 
   - repo: local
