@@ -1,5 +1,5 @@
 {
-  description = "PHP and MariaDB reproducible development environment";
+  description = "A Nix flake for the simox project";
 
   inputs = {
     # Tracking the unstable channel for the latest packages
@@ -13,7 +13,7 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, utils }:
+  outputs = { self, nixpkgs, nixpkgs-pinned-jq, utils }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
