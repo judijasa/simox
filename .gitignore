@@ -7,3 +7,4 @@ vendor/
 
 # Ignore files
 src/config.sh
+.aider*
