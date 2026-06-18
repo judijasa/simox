@@ -1,8 +1,16 @@
 repos:
   - repo: local
     hooks:
+      # 1. Your Custom Shell Script
+      - id: general-pre-commit
+        name: My Custom Generic Format Pre-Commit Logic
+        entry: ./hooks/custom-generic-format-pre-commit.sh
+        language: script
+        files: .* ```
+      
+      # 2. Your Standard Linter
       - id: phpstan
         name: phpstan
         entry: phpstan analyse
         language: system
-        files: \.(php)$
+        files: \.php$

@@ -24,6 +24,7 @@
         # Explicitly pinning our chosen package versions
         # Pulling jq from the pinned input instead of the main one
         jqPkg = pkgsJq.jq;
+        mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
         phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
           enabled ++ [
@@ -32,7 +33,7 @@
           ]
         );
         phpLinter = pkgs.phpstan; # PHPStan chosen as our development linter
-        mariadbPkg = pkgs.mariadb_118;
+        pre-commit_framework = pkgs.pre-commit;
         tmuxPkg = pkgs.tmux;
       in
       {
@@ -56,6 +57,7 @@
             mariadbPkg
             phpWithExtensions
             phpLinter   # Development ONLY tool
+            pre-commit_framework
             tmuxPkg
           ];
 
@@ -93,9 +95,7 @@
             trap "echo 'Stopping local MariaDB server...'; kill $MARIADB_PID; wait $MARIADB_PID 2>/dev/null" EXIT
 
             # Local alias ensuring connections point to the workspace socket
-            alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT"
-            
-            echo "Environment ready! Linter available: \$(phpstan --version)"
+            alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT" 
           '';
         };
       }
