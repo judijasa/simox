@@ -1,14 +1,5 @@
 <?php
 
-// PHP Connect to MySQL
-// https://www.w3schools.com/php/php_mysql_connect.asp
-
-// PDO-MYSQL
-// https://www.php.net/manual/en/ref.pdo-mysql.php
-//
-// keywords: static factory methods, etc
-
-
 declare(strict_types=1);
 
 namespace Utils\Connectivity;
