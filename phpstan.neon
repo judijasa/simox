@@ -6,5 +6,5 @@ parameters:
 
     excludePaths:
         - doc/*
-	- vendor/*
-	- var/*
+        - vendor/*
+        - var/*
