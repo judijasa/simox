@@ -1,5 +1,7 @@
 <?php
 
+namespace Utils\Crawler;
+
 // vendor/autoload: stackoverflow.com/questions/41209349/requirevendor-autoload-php-failed-to-open-stream
 require 'vendor/autoload.php';
 
@@ -48,4 +50,4 @@ class CasperTrio extends Casper {
             return $this;
         }
 }
-?>
+
