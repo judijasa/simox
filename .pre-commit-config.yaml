@@ -25,4 +25,5 @@ repos:
         name: phpstan
         entry: phpstan analyse
         language: system
+        pass_filenames: false
         files: \.php$
