@@ -8,7 +8,7 @@
 
     # A specific historical commit chosen because it contains the exact version you need
     # Not all packages have an explicit version attribute like php84 or mariadb_118
-    nixpkgs-pinned-jq.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
+    nixpkgs-pinned.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
 
     utils.url = "github:numtide/flake-utils";
   };
@@ -18,12 +18,13 @@
       let
         pkgs = import nixpkgs { inherit system; };
         # Pinned packages evaluated strictly from our historical commit input
-        pkgsJq = import nixpkgs-pinned-jq { inherit system; };
+        pkgsPinned = import nixpkgs-pinned { inherit system; };
         
+        bashPkg = pkgsPinned.bash;
         gitPkg = pkgs.git;
         # Explicitly pinning our chosen package versions
         # Pulling jq from the pinned input instead of the main one
-        jqPkg = pkgsJq.jq;
+        jqPkg = pkgsPinned.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
         phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
@@ -33,7 +34,7 @@
           ]
         );
         phpLinter = pkgs.phpstan; # PHPStan chosen as our development linter
-        pre-commit_framework = pkgs.pre-commit;
+        pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
       in
       {
@@ -42,6 +43,7 @@
         packages.default = pkgs.symlinkJoin {
           name = "prod-dependencies";
           paths = [
+            bashPkg
             jqPkg
             mariadbPkg
             phpWithExtensions
@@ -52,12 +54,13 @@
         # 2. DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
           buildInputs = [
+            bashPkg
             gitPkg
             jqPkg
             mariadbPkg
             phpWithExtensions
-            phpLinter   # Development ONLY tool
-            pre-commit_framework
+            phpLinter  # Dev ONLY tool
+            pre-commit  # Dev ONLY tool
             tmuxPkg
           ];
 
