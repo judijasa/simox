@@ -1,3 +1,9 @@
+[.] Improve deployment 
+  [.] Add etc/ to root dir. Place files that need to be deployed in prod server.
+  [.] You need to `make init` like commands (init installation commands): one for dev and one for prod.
+      For dev, you need an installation, for example, in order to setup pre-commit;
+      for prod, you need an installation to deploy system level configurations (eg Apache configuration).
+
 [.] Add zerotier to flake.nix for secure deployment ops (do we need to assign static ip to each network memeber?).
 
 [.] Rename src/scripts/indexer/update_job_offer.php -> .../estudio_update.php and modify accordingly
