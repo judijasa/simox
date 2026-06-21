@@ -27,13 +27,14 @@
         jqPkg = pkgsPinned.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
+        phpComposer = pkgs.php84Packages.composer;
+        phpLinter = pkgs.phpstan; # Your choice for dev php linter
         phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
           enabled ++ [
             all.mysqli 
             all.pdo_mysql 
           ]
         );
-        phpLinter = pkgs.phpstan; # PHPStan chosen as our development linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
       in
@@ -58,8 +59,9 @@
             gitPkg
             jqPkg
             mariadbPkg
-            phpWithExtensions
+            phpComposer
             phpLinter  # Dev ONLY tool
+            phpWithExtensions
             pre-commit  # Dev ONLY tool
             tmuxPkg
           ];
