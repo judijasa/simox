@@ -13,7 +13,7 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-pinned-jq, utils }:
+  outputs = { self, nixpkgs, nixpkgs-pinned, utils }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
