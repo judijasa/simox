@@ -5,6 +5,7 @@ parameters:
         - .
 
     excludePaths:
+        - .aider.*
         - doc/*
         - vendor/*
         - var/*
