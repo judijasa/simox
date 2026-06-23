@@ -1,11 +1,14 @@
 #!/bin/bash
 
 # This is meant to be executed every 5min
-# Kill memory intensive processes if exceed threshold (> 90%)
-# If above threshold but no process found, reboot.
+# Kill memory intensive processes if exceed threshold (> 90%).
+# If above threshold, but no process found: reboot.
 
-source /etc/environment  # SIMO_REPO_PATH
-logFile="${SIMO_REPO_PATH}/log/maintenance.log"
+if [[ ! -n $IN_NIX_SHELL ]]; then
+  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+fi
+
+logFile="${SIMO_LOG_PATH}/maintenance.log"
 
 THRESHOLD=90
 USED_RAM=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')

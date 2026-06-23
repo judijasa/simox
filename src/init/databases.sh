@@ -1,6 +1,9 @@
 #!/bin/bash
 
-source /etc/environment
+if [[ ! -n $IN_NIX_SHELL ]]; then
+  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+fi
+
 root_dir=$SIMO_REPO_PATH
 
 if [[ "$PWD" != $root_dir ]]

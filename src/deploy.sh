@@ -3,7 +3,9 @@
 # Using SIMO_REPO_PATH instead of root_dir because git rev-parse only works within repo
 # root_dir=$(git rev-parse --show-toplevel) # repo root directory path
 
-source /etc/environment  # SIMO_REPO_PATH
+if [[ ! -n $IN_NIX_SHELL ]]; then
+  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+fi
 
 if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
 then
