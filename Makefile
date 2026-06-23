@@ -10,6 +10,9 @@ prod-init: PROD_DB_DATA_DIR = $(PROD_DB_DIR)/data
 prod-init: PROD_DB_UNIX_PORT = $(PROD_DB_DIR)/mysql.sock
 prod-init: PROD_DB_PID_FILE = $(PROD_DB_DIR)/mysql.pid
 prod-init: PROD_LOG_DIR = /var/log/simox
+prod-init: PROD_USER = 'deploy'
+prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
+prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
 .PHONY: help dev-init prod-init _dev-init _assert-nix-dev _init-git-hooks _dev-create_dirs \
 	_dev_init_cluster _prod_create_dirs _prod_init_cluster
@@ -66,13 +69,14 @@ _prod-create-dirs:
 	id -u deploy >/dev/null 2>&1 || sudo useradd -m -s /bin/bash deploy
 	@echo "Creating permanent system logging and storage directories..."
 	# These require host-level permissions, run outside of Nix build sandboxes
-	sudo mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR)
-	sudo chown -R deploy:deploy $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR)
+	sudo mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR)
+	sudo chown -R $(PROD_USER):$(PROD_USER) $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR)
+	cp -n .bashrc $(PROD_BASHRC_FILE)
 
 _prod-init-cluster:
 	@echo "Initializing raw MariaDB cluster structures..."
 	@if [ ! -d "$(PROD_DB_DATA_DIR)"]; then \
-		mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=deploy; \
+		mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=$(PROD_USER); \
 	else \
 		echo "	MariaDB cluster already initialized. Skipping."; \
 	fi
