@@ -69,10 +69,10 @@
           shellHook = ''
             # Dynamic path: binds variables natively to your local repository directory
             export SIMO_REPO_PATH="$PWD"
-            mkdir -p "$SIMO_REPO_PATH/var/"
-            export SIMO_VAR_PATH="$SIMO_REPO_PATH/var/"
+            mkdir -p "$SIMO_REPO_PATH/var"
+            export SIMO_VAR_PATH="$SIMO_REPO_PATH/var"
             mkdir -p "$SIMO_VAR_PATH/log"
-            export SIMO_LOG_PATH="$IMO_VAR_PATH/log"
+            export SIMO_LOG_PATH="$SIMO_VAR_PATH/log"
 
             # Localizing paths securely to avoid any Production server interference
             export MYSQL_BASE_DIR="$SIMO_VAR_PATH/mariadb"
