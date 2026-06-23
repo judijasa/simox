@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [[ ! -n $IN_NIX_SHELL ]]; then
+  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+fi
+
 if [ "$IS_CRON_JOB" = "true" ]; then
   cd $SIMO_REPO_PATH
 else
@@ -8,10 +12,6 @@ else
     echo "This command must be executed from the repository's root directory."
     exit
   fi
-fi
-
-if [[ ! -n $IN_NIX_SHELL ]]; then
-  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
 fi
 
 # fix phpcasperjs bug
