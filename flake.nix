@@ -69,9 +69,7 @@
           shellHook = ''
             # Dynamic path: binds variables natively to your local repository directory
             export SIMO_REPO_PATH="$PWD"
-            mkdir -p "$SIMO_REPO_PATH/var"
             export SIMO_VAR_PATH="$SIMO_REPO_PATH/var"
-            mkdir -p "$SIMO_VAR_PATH/log"
             export SIMO_LOG_PATH="$SIMO_VAR_PATH/log"
 
             # Localizing paths securely to avoid any Production server interference
@@ -81,28 +79,22 @@
             export MYSQL_PID_FILE="$MYSQL_BASE_DIR/mysql.pid"
 
             # Initialize the database if missing
-            if [ ! -d "$MYSQL_DATA_DIR" ]; then
-              echo "Initializing persistent local MariaDB data directory..."
-              mysql_install_db --auth-root-authentication-method=normal \
-                               --datadir="$MYSQL_DATA_DIR" \
-                               --basedir="${mariadbPkg}" \
-                               --pid-file="$MYSQL_PID_FILE" > /dev/null 2>&1
-            fi
+            if [ -d "$MYSQL_DATA_DIR" ]; then
+              # Start the daemon in the background safely
+              echo "Starting isolated MariaDB server..."
+              mysqld --datadir="$MYSQL_DATA_DIR" \
+                     --pid-file="$MYSQL_PID_FILE" \
+                     --socket="$MYSQL_UNIX_PORT" \
+                     --skip-networking > /dev/null 2>&1 &
+              
+              MARIADB_PID=$!
 
-            # Start the daemon in the background safely
-            echo "Starting isolated MariaDB server..."
-            mysqld --datadir="$MYSQL_DATA_DIR" \
-                   --pid-file="$MYSQL_PID_FILE" \
-                   --socket="$MYSQL_UNIX_PORT" \
-                   --skip-networking > /dev/null 2>&1 &
-            
-            MARIADB_PID=$!
+              # Clean up background execution seamlessly upon exiting the shell
+              trap "echo 'Stopping local MariaDB server...'; kill $MARIADB_PID; wait $MARIADB_PID 2>/dev/null" EXIT
 
-            # Clean up background execution seamlessly upon exiting the shell
-            trap "echo 'Stopping local MariaDB server...'; kill $MARIADB_PID; wait $MARIADB_PID 2>/dev/null" EXIT
-
-            # Local alias ensuring connections point to the workspace socket
-            alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT" 
+              # Local alias ensuring connections point to the workspace socket
+              alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT"
+            if
           '';
         };
       }
