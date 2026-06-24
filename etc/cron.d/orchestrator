@@ -1,4 +1,4 @@
-# etc/cron.d/simo-orchestrator
+# etc/cron.d/orchestrator
 # To be deployed at /etc/cron.d/simo-orchestrator
 NIX_BIN=/usr/local/simox/result/bin
 
