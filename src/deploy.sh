@@ -14,7 +14,8 @@ then
 fi
 
 deploy_repo_remotely() {
-  REMOTE_TARGET="/home/${PROD_USER}/apps/simox"
+  REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
+  REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
   REMOTE_HOST="server"
 
   # Preflight checks (local)
@@ -56,7 +57,7 @@ deploy_repo_remotely() {
     echo 'Unpacking to temp...'
     tar -x -C \"\$TMP_DIR\"
 
-    mkdir -p /home/\"\$PROD_USER\"/apps
+    mkdir -p \"\$REMOTE_BASE_DIR\"
 
     if [ -d \"\$FINAL_DIR\" ]; then
       echo 'Creating backup...'
