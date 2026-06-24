@@ -5,6 +5,7 @@
 # Ignore directories
 vendor/
 var/
+result/
 
 # Ignore files
 src/config.sh
