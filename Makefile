@@ -26,7 +26,7 @@ help:
 
 dev-init: _assert-nix-dev _dev-init
 
-_dev-init: _assert-nix-dev _init-git-hooks _prod-init-cluster
+_dev-init: _assert-nix-dev _init-git-hooks _dev-create-dirs _dev-init-cluster
 	@echo "Developer environment successfully initialized."
 
 _assert-nix-dev:
@@ -61,7 +61,7 @@ _dev-init-cluster:
 	fi
 
 # PRODUCTION INITIALIZATION (run once in prod server)
-prod-init: _prod-create-dirs _prod-init-cluster
+prod-init: _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
 	@echo "Deploying simox..."
 
 _prod-create-dirs:
