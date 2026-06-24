@@ -72,6 +72,16 @@ deploy_repo_remotely() {
 }
 
 deploy_repo_remotely
+
+echo "Building packages locally and pushing the pre-compiled closures to the server..."
+nix build
+nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
+
+# Ship Nix store folder structure (i.e. the symlinks to nix/store)
+# Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
+REMOTE_STORE_PATH=$(readlink -f ./result)
+ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH /usr/local/simox/result"
+
 echo "Running system level updates..."
 ssh "$PROD_USER"@"$REMOTE_HOST" "cd \"\$REMOTE_TARGET\" && make prod-init"
 
