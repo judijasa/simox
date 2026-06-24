@@ -71,6 +71,7 @@
             export SIMO_REPO_PATH="$PWD"
             export SIMO_VAR_PATH="$SIMO_REPO_PATH/var"
             export SIMO_LOG_PATH="$SIMO_VAR_PATH/log"
+            export PROD_USER="deploy"
 
             # Localizing paths securely to avoid any Production server interference
             export MYSQL_BASE_DIR="$SIMO_VAR_PATH/mariadb"
