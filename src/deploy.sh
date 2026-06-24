@@ -17,9 +17,9 @@ deploy_repo_remotely() {
 
   REMOTE_USER="$PROD_USER"
   REMOTE_HOST="server"
-  REMOTE_TARGET="/home/deploy/git/simox"   # <-- set this on server
+  REMOTE_TARGET="/home/${REMOTE_USER}/apps/simox"
 
-  # 1. Preflight checks (local)
+  # Preflight checks (local)
 
   if [ "$(git branch --show-current)" != "main" ]; then
     echo "ERROR: not on main branch"
@@ -47,17 +47,18 @@ deploy_repo_remotely() {
   REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV"
 
-  # 2. Deploy (atomic on remote)
+  # Deploy (atomic on remote)
 
   git archive "$REV" | ssh "$REMOTE_USER@$REMOTE_HOST" "
     set -e
-
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
     BACKUP_DIR=\${FINAL_DIR}_backup_\$(date +%s)
 
     echo 'Unpacking to temp...'
     tar -x -C \"\$TMP_DIR\"
+
+    mkdir -p /home/\"\$REMOTE_USER\"/apps
 
     if [ -d \"\$FINAL_DIR\" ]; then
       echo 'Creating backup...'
@@ -71,71 +72,10 @@ deploy_repo_remotely() {
   "
 }
 
-deploy_website() {
-  local SOURCE_DIR="./public/"
-  local DEST_DIR="/var/www/html/simox"
-
-  if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: Source directory '$SOURCE_DIR' not found." >&2
-    return 1 # Use return instead of exit inside a function to avoid killing the whole script
-  fi
-
-  if [ ! -d "$DEST_DIR" ]; then
-    sudo mkdir -p "$DEST_DIR"
-    sudo chown -R "$PROD_USER":"$PROD_USER" "$DEST_DIR"
-  fi
-
-  echo "Checking for changes and deploying..."
-
-  # Run rsync itemized changes mode
-  # -a: archive mode (preserves symlinks, modification times, permissions, etc.)
-  # -v: verbose (needed to parse if changes occurred)
-  # --delete: drops files in DEST_DIR that no longer exist in SOURCE_DIR (optional, but recommended for clean deployments)
-  # --out-format="%i %n": prints exactly what changed per file
-  local RSYNC_OUT
-  RSYNC_OUT=$(rsync -av --delete --out-format="%i %n" "$SOURCE_DIR" "$DEST_DIR")
-
-  # Check if rsync actually transferred or modified anything
-  # If the output contains itemized change flags, a deployment happened.
-  # (An empty or purely structural output means zero file changes).
-  if echo "$RSYNC_OUT" | grep -E '^([><+\*cstmd]).*' > /dev/null; then
-    echo "Changes detected and applied."
-    # echo "$RSYNC_OUT" | grep -E '^([><+\*cstmd]).*' # Optional: print exactly what changed
-    
-    # Only restart if changes exist
-    echo "Restarting web server..."
-    sudo systemctl restart apache2
-  else
-    echo "Destination is up to date. Skipping server restart."
-  fi
-}
-
-deploy_cronjobs() {
-  local MAINTENANCE="src/scripts/maintenance"
-  local INDEXER="src/scripts/indexer"
-
-  cron_cp() {
-    local SOURCE="$1"
-    local TARGET="$2"
-    cp "$SOURCE" "$TARGET"
-    chmod +x "$TARGET"
-  }
-  # run-parts (cron way to exec all files in a directory) adhere to a specific naming convention.
-  # Avoid files with extensions; use myfile instead of myfile.sh. It also must be executable,
-  # hence chmod + x myfile
-  # You need to create /etc/cron.d/cron-5min and add the line
-  # */5 * * * * root run-parts /etc/cron.5min
-  mkdir -p /etc/cron.5min
-  cron_cp "${MAINTENANCE}/memory_cleaning.sh" "/etc/cron.5min/simo_memory_cleaning"
-  cron_cp "${MAINTENANCE}/trim_log_files.sh" "/etc/cron.monthly/simo_trim_log_files"
-  cron_cp "${INDEXER}/main.sh" "/etc/cron.hourly/simo_main"
-
-  sudo systemctl restart cron
-}
-
-# deploy_repo_remotely # conditioned this. make sure not executed in Makefile.
-deploy_website
-#deploy_cronjobs
+echo "Updating server..."
+deploy_repo_remotely
+echo "Running production deployment via make prod-init"
+ssh user@remote-server "cd \"\$REMOTE_TARGET\" && make prod-init"
 
 # Optionally, you can also clear any caches or perform other post-deployment tasks
 
