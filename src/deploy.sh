@@ -3,7 +3,8 @@
 set -euo pipefail
 
 if [[ ! -n $IN_NIX_SHELL ]]; then
-  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+		echo "ERROR: This script must be run inside 'nix develop'";
+		exit 1;
 fi
 
 if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
@@ -13,11 +14,8 @@ then
 fi
 
 deploy_repo_remotely() {
-  # WARNING: This function is to be executed in a dev machine.
-
-  REMOTE_USER="$PROD_USER"
+  REMOTE_TARGET="/home/${PROD_USER}/apps/simox"
   REMOTE_HOST="server"
-  REMOTE_TARGET="/home/${REMOTE_USER}/apps/simox"
 
   # Preflight checks (local)
 
@@ -49,7 +47,7 @@ deploy_repo_remotely() {
 
   # Deploy (atomic on remote)
 
-  git archive "$REV" | ssh "$REMOTE_USER@$REMOTE_HOST" "
+  git archive "$REV" | ssh "$PROD_USER@$REMOTE_HOST" "
     set -e
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
@@ -58,7 +56,7 @@ deploy_repo_remotely() {
     echo 'Unpacking to temp...'
     tar -x -C \"\$TMP_DIR\"
 
-    mkdir -p /home/\"\$REMOTE_USER\"/apps
+    mkdir -p /home/\"\$PROD_USER\"/apps
 
     if [ -d \"\$FINAL_DIR\" ]; then
       echo 'Creating backup...'
@@ -72,11 +70,10 @@ deploy_repo_remotely() {
   "
 }
 
-echo "Updating server..."
 deploy_repo_remotely
-echo "Running production deployment via make prod-init"
-ssh user@remote-server "cd \"\$REMOTE_TARGET\" && make prod-init"
+echo "Running system level updates..."
+ssh "$PROD_USER"@"$REMOTE_HOST" "cd \"\$REMOTE_TARGET\" && make prod-init"
 
-# Optionally, you can also clear any caches or perform other post-deployment tasks
+# Here, you can also clear any caches or perform other post-deployment tasks
 
 exit 0
