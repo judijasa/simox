@@ -1,8 +1,14 @@
 [.] Improve deployment 
   [.] Add etc/ to root dir. Place files that need to be deployed in prod server.
-  [.] You need to `make init` like commands (init installation commands): one for dev and one for prod.
+  [x] You need to `make init` like commands (init installation commands): one for dev and one for prod.
       For dev, you need an installation, for example, in order to setup pre-commit;
       for prod, you need an installation to deploy system level configurations (eg Apache configuration).
+      
+      Consider an architecture where src/deploy.sh handles all system level setups that could
+      change in the future eg Apache configuration. Then you can execute src/deploy.sh within
+      Makefile as part of prod initialization. As for system level setups tha will likely not
+      change and only required to be executed once, these can be directly in Makefile, not within
+      deploy.sh
 
 [.] Add zerotier to flake.nix for secure deployment ops (do we need to assign static ip to each network memeber?).
 
