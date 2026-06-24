@@ -7,8 +7,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     # A specific historical commit chosen because it contains the exact version you need
+    # (in this case jq)
     # Not all packages have an explicit version attribute like php84 or mariadb_118
-    nixpkgs-pinned.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
+    # nixpkgs-pinned.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
 
     utils.url = "github:numtide/flake-utils";
   };
@@ -20,11 +21,13 @@
         # Pinned packages evaluated strictly from our historical commit input
         pkgsPinned = import nixpkgs-pinned { inherit system; };
         
-        bashPkg = pkgsPinned.bash;
+        #bashPkg = pkgsPinned.bash;
+        bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
         # Explicitly pinning our chosen package versions
         # Pulling jq from the pinned input instead of the main one
-        jqPkg = pkgsPinned.jq;
+        #jqPkg = pkgsPinned.jq;
+        jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
         phpComposer = pkgs.php84Packages.composer;
@@ -37,33 +40,30 @@
         );
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
+
+        commonPackages = [
+          bashPkg
+          jqPkg
+          mariadbPkg
+          phpComposer
+          phpWithExtensions
+          tmuxPkg
+        ];
       in
       {
-        # 1. PRODUCTION ARTIFACT (Built when running 'nix build')
+        # PRODUCTION ARTIFACT (Built when running 'nix build')
         # This builds the raw binaries, but DOES NOT spin up background services.
         packages.default = pkgs.symlinkJoin {
           name = "prod-dependencies";
-          paths = [
-            bashPkg
-            jqPkg
-            mariadbPkg
-            phpWithExtensions
-            tmuxPkg
-          ];
+          paths = commonPackages;
         };
 
-        # 2. DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
+        # DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
-          buildInputs = [
-            bashPkg
+          buildInputs = commonPackages ++ [
             gitPkg
-            jqPkg
-            mariadbPkg
-            phpComposer
-            phpLinter  # Dev ONLY tool
-            phpWithExtensions
-            pre-commit  # Dev ONLY tool
-            tmuxPkg
+            phpLinter
+            pre-commit
           ];
 
           shellHook = ''
