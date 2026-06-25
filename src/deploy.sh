@@ -54,22 +54,17 @@ deploy_repo_remotely() {
     set -e
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
-    BACKUP_DIR=\${FINAL_DIR}_backup_\$(date +%s)
 
     echo 'Unpacking to temp...'
     tar -x -C \"\$TMP_DIR\"
 
     mkdir -p \"\$REMOTE_BASE_DIR\"
 
-    if [ -d \"\$FINAL_DIR\" ]; then
-      echo 'Creating backup...'
-      mv \"\$FINAL_DIR\" \"\$BACKUP_DIR\"
-    fi
-
     echo 'Activating new version...'
     mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
 
-    echo 'Deploy complete: $REV' > \"\$FINAL_DIR/.deploy_version\"
+    mkdir -p \"\$HOME/var/simox/log/deploy_version\"
+    echo '\$(date +"%Y-%m-%d %H:%M:%S %Z"): $REV' >> \"\$FINAL_DIR/.deploy_version\"
   "
 }
 
