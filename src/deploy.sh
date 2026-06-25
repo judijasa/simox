@@ -17,25 +17,8 @@ fi
 deploy_repo_remotely() {
   REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
   REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
-  REMOTE_HOST="$1"  # Use $HOME/.ssh to config connections
+  local REMOTE_HOST="$1"
 
-  # Checks...
-  if ping -c 1 -W 2 "$REMOTE_HOST" &> /dev/null; then
-      echo "Host is online."
-  else
-      echo "Host is unreachable."
-      exit 1
-  fi
-
-  if [ "$(git branch --show-current)" != "main" ]; then
-    echo "ERROR: not on main branch"
-    exit 1
-  fi
-
-  if ! git diff --quiet || ! git diff --cached --quiet; then
-    echo "ERROR: working tree is not clean"
-    exit 1
-  fi
 
   # Fetch the latest remote state without merging
   git fetch origin main
@@ -57,7 +40,7 @@ deploy_repo_remotely() {
 
   # Deploy (atomic on remote)
 
-  git archive "$REV" | ssh "$PROD_USER@$REMOTE_HOST" "
+  return $(git archive "$REV" | ssh "$PROD_USER@$REMOTE_HOST" "
     set -e
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
@@ -72,11 +55,36 @@ deploy_repo_remotely() {
     mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
 
     mkdir -p \"\$LOG_DIR\" && touch \"\$LOG_DIR/deploy_version.log\"
+
+    if [ -f \"\$LOG_DIR/deploy_version.log\" ]; then
+        tail -n 1 \"\$LOG_DIR/deploy_version.log\" | awk '{print \$NF}'
+    fi
+
     echo '\$(date +"%Y-%m-%d %H:%M:%S %Z"): $REV' >> \"\$LOG_DIR/deploy_version.log\"
-  "
+  ")
 }
 
-deploy_repo_remotely
+REMOTE_HOST="$1"  # Use $HOME/.ssh to config connections
+
+# Checks...
+if ping -c 1 -W 2 "$REMOTE_HOST" &> /dev/null; then
+    echo "Host is online."
+else
+    echo "Host is unreachable."
+    exit 1
+fi
+
+if [ "$(git branch --show-current)" != "main" ]; then
+  echo "ERROR: not on main branch"
+  exit 1
+fi
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "ERROR: working tree is not clean"
+  exit 1
+fi
+
+PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST")
 
 echo "Building packages locally and pushing the pre-compiled closures to the server..."
 nix build
@@ -87,8 +95,29 @@ nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
 REMOTE_STORE_PATH=$(readlink -f ./result)
 ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH /usr/local/simox/result"
 
-echo "Running system level updates..."
-ssh "$PROD_USER"@"$REMOTE_HOST" "cd \"\$REMOTE_TARGET\" && make prod-init"
+
+COMPOSER_LOCK="composer.lock"
+DEPLOY_VENDOR=false
+if ! git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
+    DEPLOY_VENDOR=true
+fi
+
+if [ "$DEPLOY_VENDOR" = true ]; then
+    echo "File $COMPOSER_LOCK has changed. Deploying vendor/ and running system level updates in remote hhost..."
+    # Stream vendor/ over stdin, unpack it, then run make prod-init
+    tar -cf - vendor/ | ssh "$PROD_USER@$REMOTE_HOST" "
+        cd '$REMOTE_TARGET'
+        tar -x
+        make prod-init
+    "
+else
+    echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
+    echo "Running system level updates in remote host..."
+    ssh "$PROD_USER@$REMOTE_HOST" "cd '$REMOTE_TARGET' && make prod-init"
+fi
+
+
+
 
 # Here, you can also clear any caches or perform other post-deployment tasks
 # Perhaps better to clear caches in src/scripts/maitenance cron jobs.
