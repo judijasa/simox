@@ -16,7 +16,7 @@ fi
 deploy_repo_remotely() {
   REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
   REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
-  REMOTE_HOST="$1"
+  REMOTE_HOST="$1"  # Use $HOME/.ssh to config connections
 
   # Preflight checks (local)
 
