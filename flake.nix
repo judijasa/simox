@@ -30,7 +30,7 @@
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
-        phpComposer = pkgs.php84Packages.composer;
+        phpComposer = pkgs.php84Packages.composer; # This is not a PHP extension
         phpLinter = pkgs.phpstan; # Your choice for dev php linter
         phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
           enabled ++ [
@@ -44,8 +44,8 @@
         commonPackages = [
           bashPkg
           jqPkg
-          # mariadbPkg # nix build for stateful systems is an anti-pattern
-          phpComposer
+          # mariadbPkg # nix build for stateful systems is anti-pattern
+          # phpComposer # In prod, you only need the generated vendor/ dir
           phpWithExtensions
           tmuxPkg
         ];
@@ -63,6 +63,7 @@
           buildInputs = commonPackages ++ [
             gitPkg
             mariadbPkg
+            phpComposer
             phpLinter
             pre-commit
           ];
