@@ -30,7 +30,7 @@ deploy_repo_remotely() {
     exit 1
   fi
 
-  # Ensure local main is up to date with remote
+  # Fetch the latest remote state without merging
   git fetch origin main
 
   LOCAL=$(git rev-parse main)
@@ -43,6 +43,8 @@ deploy_repo_remotely() {
     exit 1
   fi
 
+  # REV will always be HEAD
+  # To revert prod server changes: revert commits and re-deploy
   REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV"
 
