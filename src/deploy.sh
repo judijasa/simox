@@ -44,14 +44,20 @@ deploy_repo_remotely() {
     set -e
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
+    BACKUP_DIR=\$FINAL_DIR_backup
     LOG_DIR=\"\$HOME/var/simox/log\"
 
-    echo 'Unpacking to temp...'
+    echo 'Unpacking to temp...' >&2
     tar -x -C \"\$TMP_DIR\"
 
     mkdir -p \"\$REMOTE_BASE_DIR\"
 
-    echo 'Activating new version...'
+    if [ -d \"\$FINAL_DIR\" ]; then
+      echo 'Creating backup...' >&2
+      mv \"\$FINAL_DIR\" \"\$BACKUP_DIR\"
+    fi
+
+    echo 'Activating new version...' >&2
     mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
 
     mkdir -p \"\$LOG_DIR\" && touch \"\$LOG_DIR/deploy_version.log\"
@@ -61,6 +67,7 @@ deploy_repo_remotely() {
     fi
 
     echo '\$(date +"%Y-%m-%d %H:%M:%S %Z"): $REV' >> \"\$LOG_DIR/deploy_version.log\"
+    echo 'Deploy complete: $REV' > \"\$FINAL_DIR/.deploy_version\"
   ")
 }
 
@@ -115,9 +122,6 @@ else
     echo "Running system level updates in remote host..."
     ssh "$PROD_USER@$REMOTE_HOST" "cd '$REMOTE_TARGET' && make prod-init"
 fi
-
-
-
 
 # Here, you can also clear any caches or perform other post-deployment tasks
 # Perhaps better to clear caches in src/scripts/maitenance cron jobs.
