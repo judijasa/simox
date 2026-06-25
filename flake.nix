@@ -44,7 +44,7 @@
         commonPackages = [
           bashPkg
           jqPkg
-          mariadbPkg
+          # mariadbPkg # nix build for stateful systems is an anti-pattern
           phpComposer
           phpWithExtensions
           tmuxPkg
@@ -62,6 +62,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = commonPackages ++ [
             gitPkg
+            mariadbPkg
             phpLinter
             pre-commit
           ];
