@@ -1,3 +1,6 @@
+[.] Add git hook that runs `composer install` everytime composer.json is changed.  
+    Also modify the specific file in vendor/ according to README.md
+
 [.] Add Apache configuration to Makefile.
       
 [.] Add zerotier to flake.nix for secure deployment ops (do we need to assign static ip to each network memeber?).
