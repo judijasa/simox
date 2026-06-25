@@ -3,22 +3,29 @@
 set -euo pipefail
 
 if [[ ! -n $IN_NIX_SHELL ]]; then
-		echo "ERROR: This script must be run inside 'nix develop'";
-		exit 1;
+		echo "ERROR: This script must be run inside 'nix develop'"
+		exit 1
 fi
 
 if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
 then
   echo "This command must be executed from the repository's root directory."
-  exit
+  exit 1
 fi
+
 
 deploy_repo_remotely() {
   REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
   REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
   REMOTE_HOST="$1"  # Use $HOME/.ssh to config connections
 
-  # Preflight checks (local)
+  # Checks...
+  if ping -c 1 -W 2 "$REMOTE_HOST" &> /dev/null; then
+      echo "Host is online."
+  else
+      echo "Host is unreachable."
+      exit 1
+  fi
 
   if [ "$(git branch --show-current)" != "main" ]; then
     echo "ERROR: not on main branch"
@@ -33,13 +40,13 @@ deploy_repo_remotely() {
   # Fetch the latest remote state without merging
   git fetch origin main
 
-  LOCAL=$(git rev-parse main)
-  REMOTE=$(git rev-parse origin/main)
+  LOCAL_REPO_STATE=$(git rev-parse main)
+  REMOTE_REPO_STATE=$(git rev-parse origin/main)
 
-  if [ "$LOCAL" != "$REMOTE" ]; then
+  if [ "$LOCAL_REPO_STATE" != "$REMOTE_REPO_STATE" ]; then
     echo "ERROR: local main is not up to date with origin/main"
-    echo "Local:  $LOCAL"
-    echo "Remote: $REMOTE"
+    echo "Local:  $LOCAL_REPO_STATE"
+    echo "Remote: $REMOTE_REPO_STATE"
     exit 1
   fi
 
