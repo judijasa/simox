@@ -86,5 +86,6 @@ echo "Running system level updates..."
 ssh "$PROD_USER"@"$REMOTE_HOST" "cd \"\$REMOTE_TARGET\" && make prod-init"
 
 # Here, you can also clear any caches or perform other post-deployment tasks
+# Perhaps better to clear caches in src/scripts/maitenance cron jobs.
 
 exit 0
