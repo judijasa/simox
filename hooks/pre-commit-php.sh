@@ -1,3 +1,3 @@
 # Run phpstan on staged files
-# superseded by .pre-commit-config.yaml
 # phpstan analyse --configuration=phpstan.neon
+# Command above is was superseded by .pre-commit-config.yaml approach.

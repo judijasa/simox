@@ -14,9 +14,9 @@ repos:
   - repo: local
     hooks:
       # 1. Your Custom Shell Script
-      - id: general-pre-commit
+      - id: general
         name: My Custom Generic Format Pre-Commit Logic
-        entry: ./hooks/custom-generic-format-pre-commit.sh
+        entry: ./hooks/pre-commit-general.sh
         language: script
         files: .* ```
       
