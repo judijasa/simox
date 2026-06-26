@@ -1,4 +1,6 @@
-[.] Add git hook that runs `composer install` everytime composer.json is changed.  
+[.] src/deploy.sh: Handle case when deploy_version.log is empty (cold start).
+
+[x] Add git hook that runs `composer install` everytime composer.json is changed.  
     Also modify the specific file in vendor/ according to README.md
 
 [.] Add Apache configuration to Makefile.
