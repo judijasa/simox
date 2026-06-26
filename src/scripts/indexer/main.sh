@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 if [[ ! -n $IN_NIX_SHELL ]]; then
   source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
 fi
