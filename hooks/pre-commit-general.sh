@@ -1,4 +1,6 @@
-#!/usr/bin/sh
+#!/usr/bin/env sh
+# Typical !/usr/bin/sh shebang will use system bash, not nix shell bash.
+# The shebang above works even if bash is only found at system level.
 #
 # An example hook script to verify what is about to be committed.
 # Called by "git commit" with no arguments.  The hook should
