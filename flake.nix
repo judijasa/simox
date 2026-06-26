@@ -24,9 +24,9 @@
         #bashPkg = pkgsPinned.bash;
         bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
-        # Explicitly pinning our chosen package versions
-        # Pulling jq from the pinned input instead of the main one
-        #jqPkg = pkgsPinned.jq;
+        # Including jq in nix store wihout bash in nix store
+        # requires modification to jq calls.
+        # jqPkg = pkgsPinned.jq;
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84; # without extensions
