@@ -42,10 +42,10 @@
         tmuxPkg = pkgs.tmux;
 
         commonPackages = [
-          bashPkg
+          bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
           jqPkg
-          # mariadbPkg # nix build for stateful systems is anti-pattern
-          # phpComposer # In prod, you only need the generated vendor/ dir
+          # mariadbPkg  # nix build for stateful systems is anti-pattern
+          # phpComposer  # In prod, you only need the generated vendor/ dir
           phpWithExtensions
           tmuxPkg
         ];
