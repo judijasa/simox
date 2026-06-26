@@ -26,7 +26,7 @@ help:
 
 dev-init: _assert-nix-dev _dev-init
 
-_dev-init: _assert-nix-dev _init-git-hooks _dev-create-dirs _dev-init-cluster
+_dev-init: _assert-nix-dev _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
 	@echo "Developer environment successfully initialized."
 
 _assert-nix-dev:
@@ -59,6 +59,18 @@ _dev-init-cluster:
 	else \
 		echo "	MariaDB cluster already initialized. Skipping."; \
 	fi
+
+_dev-init-composer:
+	@echo "Installing dependencies from composer.lock..."; \
+	@echo "Removing old composer.lock and vendor/ if they exist..."
+	rm -f composer.lock; \
+	@echo "Running composer install..."; \
+	rm -rf vendor; \
+	composer install; \
+	@echo "Patching `vendor/phpcasperjs/phpcasperjs/src/Casper.php`..."; \
+	TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"; \
+	sed -i 's/private $$script = \x27\x27;/protected $$script = \x27\x27;/g' '$$TARGET_FILE'
+	
 
 # PRODUCTION INITIALIZATION (run once in prod server)
 prod-init: _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
