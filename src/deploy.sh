@@ -40,7 +40,7 @@ deploy_repo_remotely() {
 
   # Deploy (atomic on remote)
 
-  return $(git archive "$REV" | ssh "$PROD_USER@$REMOTE_HOST" "
+  return $(git archive "$REV" | ssh "$REMOTE_HOST" "
     set -e
     TMP_DIR=\$(mktemp -d)
     FINAL_DIR='$REMOTE_TARGET'
@@ -95,7 +95,7 @@ PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST")
 
 echo "Building packages locally and pushing the pre-compiled closures to the server..."
 nix build
-nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
+nix copy --to ssh://$REMOTE_HOST ./result
 
 # Ship Nix store folder structure (i.e. the symlinks to nix/store)
 # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
@@ -111,7 +111,7 @@ fi
 if [ "$DEPLOY_VENDOR" = true ]; then
     echo "File $COMPOSER_LOCK has changed. Deploying vendor/ and running system level updates in remote hhost..."
     # Stream vendor/ over stdin, unpack it, then run make prod-init
-    tar -cf - vendor/ | ssh "$PROD_USER@$REMOTE_HOST" "
+    tar -cf - vendor/ | ssh "$REMOTE_HOST-as-root" "
         cd '$REMOTE_TARGET'
         tar -x
         make prod-init
@@ -119,7 +119,7 @@ if [ "$DEPLOY_VENDOR" = true ]; then
 else
     echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
     echo "Running system level updates in remote host..."
-    ssh "$PROD_USER@$REMOTE_HOST" "cd '$REMOTE_TARGET' && make prod-init"
+    ssh "$REMOTE_HOST" "cd '$REMOTE_TARGET'-as-root && make prod-init"
 fi
 
 # Here, you can also clear any caches or perform other post-deployment tasks
