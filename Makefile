@@ -15,7 +15,7 @@ prod-init: PROD_USER = 'deploy'
 prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
 prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
-.PHONY: help dev-init prod-init _dev-init _assert-nix-dev _init-git-hooks _dev-create-dirs \
+.PHONY: help dev-init prod-init _dev-init _assert-nix-dev _assert-dev-vars _init-git-hooks _dev-create-dirs \
     _dev-init-cluster _prod-create-dirs _prod-init-cluster _dev-init-composer _prod-init-website _prod-init-cron-jobs
 
 help:
@@ -77,23 +77,23 @@ _dev-init-composer:
 	@TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"; \
 	sed -i 's/private $$script = \x27\x27;/protected $$script = \x27\x27;/g' "$$TARGET_FILE"
 
+# PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
 prod-init: _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
 	@echo "Deploying simox..."
 
 _prod-create-dirs:
-	@echo "Ensuring 'deploy' system user exists..."
-	@id -u $(PROD_USER) >/dev/null 2>&1 || sudo useradd -m -s /bin/bash $(PROD_USER)
+	@echo "Ensuring '$(PROD_USER)' system user exists..."
+	@useradd -m -s /bin/bash $(PROD_USER) 2>/dev/null || echo "  User '$(PROD_USER)' already exists. Proceeding."
 	@echo "Creating permanent system logging and storage directories..."
-	sudo mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR) && \
-	sudo chown -R $(PROD_USER):$(PROD_USER) $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR); \
-	sudo mkdir -p $(PROD_BASHRC_DIR) && \
-	sudo chown -R $(PROD_USER):$(PROD_USER) $(PROD_BASHRC_DIR) && \
-	cp -n .bashrc $(PROD_BASHRC_FILE)
+	mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR) && \
+	chown -R $(PROD_USER):$(PROD_USER) $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR) && \
+	cp -n .bashrc $(PROD_BASHRC_FILE) && \
+	chown $(PROD_USER):$(PROD_USER) $(PROD_BASHRC_FILE)
 
 _prod-init-cluster:
 	@echo "Initializing raw MariaDB cluster structures..."
 	@if [ ! -d "$(PROD_DB_DATA_DIR)" ]; then \
-	    sudo mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=$(PROD_USER); \
+	    mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=$(PROD_USER); \
 	else \
 	    echo "    MariaDB cluster already initialized. Skipping."; \
 	fi
@@ -107,39 +107,34 @@ _prod-init-website:
 	    exit 1; \
 	fi; \
 	if [ ! -d "$$DEST_DIR" ]; then \
-	    sudo mkdir -p "$$DEST_DIR"; \
-	    sudo chown -R "$(PROD_USER)":"$(PROD_USER)" "$$DEST_DIR"; \
+	    mkdir -p "$$DEST_DIR"; \
 	fi; \
 	echo "Checking for changes and deploying..."; \
 	RSYNC_OUT=$$(rsync -av --delete --out-format="%i %n" "$$SOURCE_DIR" "$$DEST_DIR"); \
+	chown -R $(PROD_USER):$(PROD_USER) "$$DEST_DIR"; \
 	if echo "$$RSYNC_OUT" | grep -E '^([><+\*cstmd]).*' > /dev/null; then \
-	    echo "Changes detected and applied."; \
-	    echo "Restarting web server..."; \
-	    sudo systemctl restart apache2; \
+	    echo "Changes detected and applied. Restarting web server..."; \
+	    systemctl restart apache2; \
 	else \
 	    echo "Websites are up to date. Skipping server restart."; \
 	fi
 
 _prod-init-cron-jobs:
 	@echo "Syncing cron configurations..."
-	@sudo mkdir -p /etc/simo-cron.5min /etc/simo-cron.monthly /etc/simo-cron.hourly; \
+	@mkdir -p /etc/simo-cron.5min /etc/simo-cron.monthly /etc/simo-cron.hourly; \
 	REPO_ORCHEST="./etc/cron.d/ochestrator"; \
 	SYS_ORCHEST="/etc/cron.d/simo-ochestrator"; \
 	CHANGES_DETECTED=0; \
-	declare -A CRON_MAP=( \
-	    ["src/scripts/maintenance/memory_cleaning.sh"]="/etc/simo-cron.5min" \
-	    ["src/scripts/maintenance/trim_log_files.sh"]="/etc/simo-cron.monthly" \
-	    ["src/scripts/indexer/main.sh"]="/etc/simo-cron.hourly" \
-	); \
+	declare -A CRON_MAP=( ["src/scripts/maintenance/memory_cleaning.sh"]="/etc/simo-cron.5min" ["src/scripts/maintenance/trim_log_files.sh"]="/etc/simo-cron.monthly" ["src/scripts/indexer/main.sh"]="/etc/simo-cron.hourly" ); \
 	for SRC in "$${!CRON_MAP[@]}"; do \
 	    DIR="$${CRON_MAP[$$SRC]}"; \
 	    BASE=$$(basename "$$SRC"); \
 	    TARGET="$$DIR/$$BASE"; \
-	    if [ ! -f "$$TARGET" ] || ! sudo cmp -s "$$SRC" "$$TARGET"; then \
+	    if [ ! -f "$$TARGET" ] || ! cmp -s "$$SRC" "$$TARGET"; then \
 	        CHANGES_DETECTED=1; \
 	    fi; \
 	done; \
-	if [ ! -f "$$SYS_ORCHEST" ] || ! sudo cmp -s "$$REPO_ORCHEST" "$$SYS_ORCHEST"; then \
+	if [ ! -f "$$SYS_ORCHEST" ] || ! cmp -s "$$REPO_ORCHEST" "$$SYS_ORCHEST"; then \
 	    CHANGES_DETECTED=1; \
 	fi; \
 	if [ $$CHANGES_DETECTED -eq 1 ]; then \
@@ -148,11 +143,11 @@ _prod-init-cron-jobs:
 	        DIR="$${CRON_MAP[$$SRC]}"; \
 	        BASE=$$(basename "$$SRC"); \
 	        TARGET="$$DIR/simo_$${BASE%.sh}"; \
-	        sudo install -m 755 -o $(PROD_USER) -g $(PROD_USER) "$$SRC" "$$TARGET"; \
+	        install -m 755 -o $(PROD_USER) -g $(PROD_USER) "$$SRC" "$$TARGET"; \
 	    done; \
-	    sudo install -m 644 -o root -g root "$$REPO_ORCHEST" "$$SYS_ORCHEST"; \
+	    install -m 644 -o root -g root "$$REPO_ORCHEST" "$$SYS_ORCHEST"; \
 	    echo "Restarting cron daemon..."; \
-	    sudo systemctl restart cron; \
+	    systemctl restart cron; \
 	else \
 	    echo "Cron systems are up to date. Skipping deployment and restart."; \
 	fi
