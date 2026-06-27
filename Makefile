@@ -26,7 +26,7 @@ help:
 
 dev-init: _assert-nix-dev _dev-init
 
-_dev-init: _assert-nix-dev _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
+_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
 	@echo "Developer environment successfully initialized."
 
 _assert-nix-dev:
