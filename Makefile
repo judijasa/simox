@@ -78,12 +78,18 @@ _dev-init-composer:
 	sed -i 's/private $$script = \x27\x27;/protected $$script = \x27\x27;/g' "$$TARGET_FILE"
 
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
-prod-init: _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
+prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
 	@echo "Deploying simox..."
 
+_prod-assert-user:
+	@echo "Asserting that system user '$(PROD_USER)' exists..."
+	@if ! id -u $(PROD_USER) >/dev/null 2>&1; then \
+	    echo "ERROR: System user '$(PROD_USER)' does not exist on this host."; \
+	    echo "Please provision the user before running this deployment."; \
+	    exit 1; \
+	fi
+
 _prod-create-dirs:
-	@echo "Ensuring '$(PROD_USER)' system user exists..."
-	@useradd -m -s /bin/bash $(PROD_USER) 2>/dev/null || echo "  User '$(PROD_USER)' already exists. Proceeding."
 	@echo "Creating permanent system logging and storage directories..."
 	mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR) && \
 	chown -R $(PROD_USER):$(PROD_USER) $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) $(PROD_BASHRC_DIR) && \

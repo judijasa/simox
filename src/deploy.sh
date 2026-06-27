@@ -39,35 +39,40 @@ deploy_repo_remotely() {
   echo "Deploying commit: $REV"
 
   # Deploy (atomic on remote)
+  return $(git archive "$REV" | ssh "$REMOTE_HOST-as-root" "
+      set -e     
+      
+      useradd -m -s /bin/bash $PROD_USER 2>/dev/null || echo "User $PROD_USER already exists. Proceeding..." >&2
 
-  return $(git archive "$REV" | ssh "$REMOTE_HOST" "
-    set -e
-    TMP_DIR=\$(mktemp -d)
-    FINAL_DIR='$REMOTE_TARGET'
-    BACKUP_DIR=\$FINAL_DIR_backup
-    LOG_DIR=\"\$HOME/var/simox/log\"
+      TMP_DIR=\$(mktemp -d)
+      FINAL_DIR='$REMOTE_TARGET'
+      BACKUP_DIR='${REMOTE_TARGET}_backup'
+      LOG_DIR='/home/$PROD_USER/var/simox/log'
 
-    echo 'Unpacking to temp...' >&2
-    tar -x -C \"\$TMP_DIR\"
+      echo 'Unpacking to temp...' >&2
+      tar -x -C \"\$TMP_DIR\"
 
-    mkdir -p \"\$REMOTE_BASE_DIR\"
+      if [ -d \"\$FINAL_DIR\" ]; then
+          echo 'Creating backup...' >&2
+          rm -rf \"\$BACKUP_DIR\"
+          mv \"\$FINAL_DIR\" \"\$BACKUP_DIR\"
+      fi
 
-    if [ -d \"\$FINAL_DIR\" ]; then
-      echo 'Creating backup...' >&2
-      mv \"\$FINAL_DIR\" \"\$BACKUP_DIR\"
-    fi
+      echo 'Overriding repo codebase...' >&2
+      mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
+      mkdir -p \"\$LOG_DIR\"
+      chown -R $PROD_USER:$PROD_USER \"\$FINAL_DIR\" \"/home/$PROD_USER/var\"
 
-    echo 'Activating new version...' >&2
-    mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
+      LOG_FILE=\"\$LOG_DIR/deploy_version.log\"
+      touch \"\$LOG_FILE\"
+      chown $PROD_USER:$PROD_USER \"\$LOG_FILE\"
+      
+      if [ -f \"\$LOG_FILE\" ]; then
+          tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}' || echo 'None'
+      fi
 
-    mkdir -p \"\$LOG_DIR\" && touch \"\$LOG_DIR/deploy_version.log\"
-
-    if [ -f \"\$LOG_DIR/deploy_version.log\" ]; then
-        tail -n 1 \"\$LOG_DIR/deploy_version.log\" | awk '{print \$NF}'
-    fi
-
-    echo '\$(date +"%Y-%m-%d %H:%M:%S %Z"): $REV' >> \"\$LOG_DIR/deploy_version.log\"
-    echo 'Deploy complete: $REV' > \"\$FINAL_DIR/.deploy_version\"
+      echo \"\$(date +'%Y-%m-%d %H:%M:%S %Z'): $REV\" >> \"\$LOG_FILE\"
+      echo \"Deploy complete: $REV\" > \"\$FINAL_DIR/.deploy_version\"
   ")
 }
 
