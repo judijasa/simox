@@ -102,11 +102,10 @@ nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
 REMOTE_STORE_PATH=$(readlink -f ./result)
 ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH /usr/local/simox/result"
 
-
 COMPOSER_LOCK="composer.lock"
-DEPLOY_VENDOR=false
-if ! git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
-    DEPLOY_VENDOR=true
+DEPLOY_VENDOR=true
+if [ -n "$PREVIOUS_HASH" ] && git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
+    DEPLOY_VENDOR=false
 fi
 
 if [ "$DEPLOY_VENDOR" = true ]; then
