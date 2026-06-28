@@ -24,6 +24,7 @@
         #bashPkg = pkgsPinned.bash;
         bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
+        # gnumakePkg = pkgs.gnumake; # reproducible makefiles
         # Including jq in nix store wihout bash in nix store
         # requires modification to jq calls.
         # jqPkg = pkgsPinned.jq;
@@ -43,6 +44,7 @@
 
         commonPackages = [
           bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
+          # gnumakePkg
           jqPkg
           # mariadbPkg  # nix build for stateful systems is anti-pattern
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
