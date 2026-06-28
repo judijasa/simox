@@ -62,6 +62,7 @@
 
         # DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
+          name = "nix-dev";
           buildInputs = commonPackages ++ [
             gitPkg
             mariadbPkg
@@ -108,7 +109,7 @@
 
             # Customize the prompt (PS1)
             # This sets it to: [nix-shell] user@hostname:current_dir$
-            export PS1="\[$PURPLE\][nix-dev]\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
+            export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
           '';
         };
       }
