@@ -1,4 +1,4 @@
-SHELL := $(BASH_SHELL)
+SHELL := $(shell which bash 2>/dev/null)
 _dev-init: DEV_VAR_DIR = $(shell echo $$SIMO_VAR_PATH)
 _dev-init: DEV_DB_DIR = $(shell echo $$MYSQL_BASE_DIR)
 _dev-init: DEV_DB_DATA_DIR = $(shell echo $$MYSQL_DATA_DIR)
