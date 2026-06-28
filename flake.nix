@@ -108,7 +108,7 @@
             export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
        
             # Inherit nix shell env in tmux
-            # Requires `set -g default-command "${SHELL}"` in .tmux.conf
+            # Requires `set -g default-command ...` in .tmux.conf
             PROJECT_NAME="simox"
             alias tmux="command tmux -L \$PROJECT_NAME new-session -A -s dev"
           '';
