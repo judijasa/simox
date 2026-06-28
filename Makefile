@@ -25,9 +25,6 @@ help:
 
 dev-init: _assert-nix-dev _assert-dev-vars _dev-init
 
-_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
-	@echo "Developer environment successfully initialized."
-
 _assert-nix-dev:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
 	    echo "ERROR: This target must be run inside 'nix develop'"; \
@@ -41,6 +38,9 @@ endif
 ifndef MYSQL_DATA_DIR
 	$(error MYSQL_DATA_DIR is not set in the environment)
 endif
+
+_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
+	@echo "Developer environment successfully initialized."
 
 _init-git-hooks:
 	@echo "Analyzing if Pre-commit Framework is already installed..."
