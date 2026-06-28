@@ -99,14 +99,18 @@
               alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT"
             fi
 
+            # Customize the prompt (PS1)
             # Define ANSI color codes for readability
             CYAN='\033[0;36m'
             PURPLE='\033[0;35m'
             GREEN='\033[0;32m'
             NC='\033[0m' # No Color
-
-            # Customize the prompt (PS1)
             export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
+       
+            # Inherit nix shell env in tmux
+            # Requires `set -g default-command "${SHELL}"` in .tmux.conf
+            PROJECT_NAME="simox"
+            alias tmux="command tmux -L \$PROJECT_NAME new-session -A -s dev"
           '';
         };
       }
