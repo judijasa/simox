@@ -1,10 +1,18 @@
 SHELL := $(shell which bash 2>/dev/null)
-_dev-init: DEV_VAR_DIR = $(shell echo $$SIMO_VAR_PATH)
-_dev-init: DEV_DB_DIR = $(shell echo $$MYSQL_BASE_DIR)
-_dev-init: DEV_DB_DATA_DIR = $(shell echo $$MYSQL_DATA_DIR)
-_dev-init: DEV_DB_UNIX_PORT = $(shell echo $$MYSQL_UNIX_PORT)
-_dev-init: DEV_DB_PID_FILE = $(shell echo $$MYSQL_PID_FILE)
-_dev-init: DEV_LOG_DIR = $(shell echo $$SIMO_LOG_PATH)
+
+ifndef SIMO_VAR_PATH
+	$(error SIMO_VAR_PATH is not set in the environment)
+endif
+ifndef MYSQL_DATA_DIR
+	$(error MYSQL_DATA_DIR is not set in the environment)
+endif
+
+_dev-init: DEV_VAR_DIR = $(SIMO_VAR_PATH)
+_dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)
+_dev-init: DEV_DB_DATA_DIR = $(MYSQL_DATA_DIR)
+_dev-init: DEV_DB_UNIX_PORT = $(MYSQL_UNIX_PORT)
+_dev-init: DEV_DB_PID_FILE = $(MYSQL_PID_FILE)
+_dev-init: DEV_LOG_DIR = $(SIMO_LOG_PATH)
 
 prod-init: PROD_DB_DIR = /var/lib/simox/mariadb
 prod-init: PROD_DB_DATA_DIR = $(PROD_DB_DIR)/data
@@ -15,7 +23,7 @@ prod-init: PROD_USER = 'deploy'
 prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
 prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
-.PHONY: help dev-init _assert-nix-dev _assert-dev-vars _dev-init _init-git-hooks _dev-create-dirs \
+.PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
     _dev-init-cluster _dev-init-composer prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster \
     _prod-init-website _prod-init-cron-jobs
 
@@ -24,21 +32,13 @@ help:
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
 	@echo "  prod-init  - Run ONCE on a brand-new production server to provision system state"
 
-dev-init: _assert-nix-dev _assert-dev-vars _dev-init
+dev-init: _assert-nix-dev _dev-init
 
 _assert-nix-dev:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
 	    echo "ERROR: This target must be run inside 'nix develop'"; \
 	    exit 1; \
 	fi
-
-_assert-dev-vars:
-	ifndef SIMO_VAR_PATH
-		$(error SIMO_VAR_PATH is not set in the environment)
-	endif
-	ifndef MYSQL_DATA_DIR
-		$(error MYSQL_DATA_DIR is not set in the environment)
-	endif
 
 _dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
 	@echo "Developer environment successfully initialized."
