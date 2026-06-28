@@ -98,7 +98,17 @@
 
               # Local alias ensuring connections point to the workspace socket
               alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT"
-            if
+            fi
+
+            # Define ANSI color codes for readability
+            CYAN='\033[0;36m'
+            PURPLE='\033[0;35m'
+            GREEN='\033[0;32m'
+            NC='\033[0m' # No Color
+
+            # Customize the prompt (PS1)
+            # This sets it to: [nix-shell] user@hostname:current_dir$
+            export PS1="\[$PURPLE\][nix-dev]\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
           '';
         };
       }
