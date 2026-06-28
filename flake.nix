@@ -19,7 +19,7 @@
       let
         pkgs = import nixpkgs { inherit system; };
         # Pinned packages evaluated strictly from our historical commit input
-        pkgsPinned = import nixpkgs-pinned { inherit system; };
+        # pkgsPinned = import nixpkgs-pinned { inherit system; };
         
         #bashPkg = pkgsPinned.bash;
         bashPkg = pkgs.bash;
