@@ -62,14 +62,12 @@
 
         # DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
-          name = "nix-dev";
           buildInputs = commonPackages ++ [
             gitPkg
             mariadbPkg
             phpLinter
             pre-commit
           ];
-
           shellHook = ''
             # Dynamic path: binds variables natively to your local repository directory
             export SIMO_REPO_PATH="$PWD"
@@ -108,10 +106,7 @@
             NC='\033[0m' # No Color
 
             # Customize the prompt (PS1)
-            # Purge unwanted default Nix prefix
-            PS1="$(echo "$PS1" | sed 's/(nix:nix-shell-env) //g')"
-            # This sets it to: [nix-shell] user@hostname:current_dir$
-            export PS1="\[$PURPLE\][nix-dev]\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
+            export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
           '';
         };
       }
