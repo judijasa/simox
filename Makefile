@@ -68,11 +68,9 @@ _dev-init-cluster:
 	fi
 
 _dev-init-composer:
-	@echo "Installing dependencies from composer.lock..."
-	@echo "Removing old composer.lock and vendor/ if they exist..."
-	-rm -f composer.lock
+	@echo "Removing vendor/ if exists..." \
 	-rm -rf vendor
-	@echo "Running composer install..."
+	@echo "Running composer install..."; \
 	composer install
 	@echo "Patching vendor/phpcasperjs/phpcasperjs/src/Casper.php..."
 	@TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"; \
