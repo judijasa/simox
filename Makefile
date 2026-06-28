@@ -15,8 +15,9 @@ prod-init: PROD_USER = 'deploy'
 prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
 prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
-.PHONY: help dev-init prod-init _dev-init _assert-nix-dev _assert-dev-vars _init-git-hooks _dev-create-dirs \
-    _dev-init-cluster _prod-create-dirs _prod-init-cluster _dev-init-composer _prod-init-website _prod-init-cron-jobs
+.PHONY: help dev-init _assert-nix-dev _assert-dev-vars _dev-init _init-git-hooks _dev-create-dirs \
+    _dev-init-cluster _dev-init-composer prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster \
+    _prod-init-website _prod-init-cron-jobs
 
 help:
 	@echo "Available initialization targets:"
@@ -32,12 +33,12 @@ _assert-nix-dev:
 	fi
 
 _assert-dev-vars:
-ifndef SIMO_VAR_PATH
-	$(error SIMO_VAR_PATH is not set in the environment)
-endif
-ifndef MYSQL_DATA_DIR
-	$(error MYSQL_DATA_DIR is not set in the environment)
-endif
+	ifndef SIMO_VAR_PATH
+		$(error SIMO_VAR_PATH is not set in the environment)
+	endif
+	ifndef MYSQL_DATA_DIR
+		$(error MYSQL_DATA_DIR is not set in the environment)
+	endif
 
 _dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
 	@echo "Developer environment successfully initialized."
