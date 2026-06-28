@@ -8,9 +8,6 @@
   "scripts": {
     "post-install-cmd": [
       "CasperJsInstaller\\Installer::install"
-    ],
-    "post-update-cmd": [
-      "CasperJsInstaller\\Installer::install"
     ]
   },
   "autoload": {
