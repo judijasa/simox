@@ -45,7 +45,9 @@
           bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
           jqPkg
           # mariadbPkg  # nix build for stateful systems is anti-pattern
-          # phpComposer  # In prod, you only need the generated vendor/ dir
+          # vendor/ is in .gitignore. Generate vendor/ (via composer)
+          # in prod server to avoid accidental dirty deployments.
+          phpComposer
           phpWithExtensions
           tmuxPkg
         ];
@@ -63,7 +65,6 @@
           buildInputs = commonPackages ++ [
             gitPkg
             mariadbPkg
-            phpComposer
             phpLinter
             pre-commit
           ];
