@@ -114,17 +114,19 @@ if [ -n "$PREVIOUS_HASH" ] && git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMP
 fi
 
 if [ "$DEPLOY_VENDOR" = true ]; then
-    echo "File $COMPOSER_LOCK has changed. Deploying vendor/ and running system level updates in remote hhost..."
-    # Stream vendor/ over stdin, unpack it, then run make prod-init
-    tar -cf - vendor/ | ssh "$REMOTE_HOST-as-root" "
+    echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
+    # TO DO: Add minimal test for modified vendor/
+    ssh "$REMOTE_HOST-as-root" "
+        TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
         cd '$REMOTE_TARGET'
-        tar -x
+        composer install && \\
+        sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
         make prod-init
     "
 else
     echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
     echo "Running system level updates in remote host..."
-    ssh "$REMOTE_HOST" "cd '$REMOTE_TARGET'-as-root && make prod-init"
+    ssh "$REMOTE_HOST-as-root" "cd '$REMOTE_TARGET' && make prod-init"
 fi
 
 # Here, you can also clear any caches or perform other post-deployment tasks
