@@ -30,13 +30,14 @@
         # jqPkg = pkgsPinned.jq;
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
-        # phpPkg = pkgs.php84; # without extensions
+        # phpPkg = pkgs.php84;  # without extensions
         phpComposer = pkgs.php84Packages.composer; # This is not a PHP extension
-        phpLinter = pkgs.phpstan; # Your choice for dev php linter
+        phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
           enabled ++ [
             all.mysqli 
-            all.pdo_mysql 
+            all.pdo_mysql
+            all.bz2  # required by jerome-breton composer dependency
           ]
         );
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
