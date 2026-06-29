@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# Check if composer.json is staged
+# If composer.json is staged, recreate composer.lock (and stage it) and vendor/
 if git diff --cached --name-only | grep -qx "composer.json"; then
     echo "composer.json is staged. Performing tasks..."
     echo "Removing old composer.lock and vendor/..."
