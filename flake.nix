@@ -31,15 +31,19 @@
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84;  # without extensions
-        phpComposer = pkgs.php84Packages.composer; # This is not a PHP extension
-        phpLinter = pkgs.phpstan;  # Your choice for dev php linter
-        phpWithExtensions = pkgs.php84.withExtensions ({ all, enabled }: 
+        phpPkg = pkgs.php84.withExtensions ({ all, enabled }: 
           enabled ++ [
             all.mysqli 
             all.pdo_mysql
             all.bz2  # required by jerome-breton composer dependency
           ]
         );
+        # Make sure Composer uses this php, as it has the required extensions.
+        # phpComposer = pkgs.php84Packages.composer; (discarded)
+        phpComposer = pkgs.php84Packages.composer.override {
+          inherit phpPkg;
+        };
+        phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
 
@@ -51,7 +55,7 @@
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
           phpComposer
-          phpWithExtensions
+          phpPkg
           tmuxPkg
         ];
       in
