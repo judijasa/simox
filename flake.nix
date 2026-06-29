@@ -41,7 +41,7 @@
         # Make sure Composer uses this php, as it has the required extensions.
         # phpComposer = pkgs.php84Packages.composer; (discarded)
         phpComposer = pkgs.php84Packages.composer.override {
-          inherit phpPkg;
+          php = phpPkg;
         };
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
