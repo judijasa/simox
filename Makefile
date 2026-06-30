@@ -1,10 +1,10 @@
 SHELL := $(shell which bash 2>/dev/null)
 
 ifndef SIMO_VAR_PATH
-	$(error SIMO_VAR_PATH is not set in the environment)
+$(error SIMO_VAR_PATH is not set in the environment)
 endif
 ifndef MYSQL_DATA_DIR
-	$(error MYSQL_DATA_DIR is not set in the environment)
+$(error MYSQL_DATA_DIR is not set in the environment)
 endif
 
 _dev-init: DEV_VAR_DIR = $(SIMO_VAR_PATH)
@@ -13,6 +13,8 @@ _dev-init: DEV_DB_DATA_DIR = $(MYSQL_DATA_DIR)
 _dev-init: DEV_DB_UNIX_PORT = $(MYSQL_UNIX_PORT)
 _dev-init: DEV_DB_PID_FILE = $(MYSQL_PID_FILE)
 _dev-init: DEV_LOG_DIR = $(SIMO_LOG_PATH)
+_dev-init: TAG_BEGIN = \# generated: simox-hosts
+_dev-init: TAG_END   = \# end: simox-hosts
 
 prod-init: PROD_DB_DIR = /var/lib/simox/mariadb
 prod-init: PROD_DB_DATA_DIR = $(PROD_DB_DIR)/data
@@ -23,9 +25,10 @@ prod-init: PROD_USER = 'deploy'
 prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
 prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
+
 .PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
-    _dev-init-cluster _dev-init-composer prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster \
-    _prod-init-website _prod-init-cron-jobs
+    _dev-init-cluster _dev-init-composer _dev-update-hosts prod-init _prod-assert-user _prod-create-dirs \
+    _prod-init-cluster _prod-init-website _prod-init-cron-jobs
 
 help:
 	@echo "Available initialization targets:"
@@ -40,7 +43,7 @@ _assert-nix-dev:
 	    exit 1; \
 	fi
 
-_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer
+_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts
 	@echo "Developer environment successfully initialized."
 
 _init-git-hooks:
@@ -75,6 +78,24 @@ _dev-init-composer:
 	@echo "Patching vendor/phpcasperjs/phpcasperjs/src/Casper.php..."
 	@TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"; \
 	sed -i 's/private $$script = \x27\x27;/protected $$script = \x27\x27;/g' "$$TARGET_FILE"
+
+_dev-update-hosts:
+	@echo "Syncing repository hosts to /etc/hosts..."
+	@payload=$$(grep -v '^[[:space:]]*#' etc/hosts | grep -v '^[[:space:]]*$$'); \
+	if [ -z "$$payload" ]; then \
+		echo "No valid hosts found in etc_hosts_local."; \
+		exit 0; \
+	fi; \
+	tmp_hosts=$$(mktemp); \
+	\
+	sed "/$(TAG_BEGIN)/,/$(TAG_END)/d" /etc/hosts > "$$tmp_hosts"; \
+	echo "$(TAG_BEGIN)" >> "$$tmp_hosts"; \
+	echo "$$payload" >> "$$tmp_hosts"; \
+	echo "$(TAG_END)" >> "$$tmp_hosts"; \
+	echo "Applying changes (atomically) to /etc/hosts (requires sudo)..."; \
+	sudo cp "$$tmp_hosts" /etc/hosts; \
+	rm -f "$$tmp_hosts"; \
+	echo "Successfully synced!"
 
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
 prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
