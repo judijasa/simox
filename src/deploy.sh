@@ -2,18 +2,28 @@
 
 set -euo pipefail
 
-deploy_repo_remotely() {
-  REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
-  REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
-  local REMOTE_HOST="$1"
+flight_checks() {
+  if [[ ! -n $IN_NIX_SHELL ]]; then
+      echo "ERROR: This script must be run inside 'nix develop'"
+      exit 1
+  fi
+
+  if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
+  then
+    echo "This command must be executed from the repository's root directory."
+    exit 1
+  fi
+
+  if [ "$(git branch --show-current)" != "main" ]; then
+    echo "ERROR: not on main branch"
+    exit 1
+  fi
 
 
   # Fetch the latest remote state without merging
   git fetch origin main
-
   LOCAL_REPO_STATE=$(git rev-parse main)
   REMOTE_REPO_STATE=$(git rev-parse origin/main)
-
   if [ "$LOCAL_REPO_STATE" != "$REMOTE_REPO_STATE" ]; then
     echo "ERROR: local main is not up to date with origin/main"
     echo "Local:  $LOCAL_REPO_STATE"
@@ -21,8 +31,24 @@ deploy_repo_remotely() {
     exit 1
   fi
 
-  # REV will always be HEAD
-  # To revert prod server changes: revert commits and re-deploy
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "ERROR: working tree is not clean"
+    exit 1
+  fi
+
+  if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
+    echo "Host ${REMOTE_HOST}-as-root is online."
+  else
+    echo "Host ${REMOTE_HOST}-as-root is unreachable."
+    exit 1
+  fi
+}
+
+deploy_repo_remotely() {
+  REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
+  REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
+  local REMOTE_HOST="$1"
+
   REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV"
 
@@ -64,69 +90,48 @@ deploy_repo_remotely() {
   ")
 }
 
+deploy_nix_packages() {
+  echo "Building packages locally and pushing the pre-compiled closures to the server..."
+  nix build
+  nix copy --to ssh://$REMOTE_HOST ./result
+
+  # Ship Nix store folder structure (i.e. the symlinks to nix/store)
+  # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
+  NIX_BIN="/usr/local/simox/result/bin"
+  REMOTE_STORE_PATH=$(readlink -f ./result)
+  ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH $NIX_BIN"
+}
+
+deploy_composer_dependencies() {
+  COMPOSER_LOCK="composer.lock"
+  DEPLOY_VENDOR=true
+  if [ -n "$PREVIOUS_HASH" ] && git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
+      DEPLOY_VENDOR=false
+  fi
+
+  if [ "$DEPLOY_VENDOR" = true ]; then
+      echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
+      # TO DO: Add minimal test for modified vendor/
+      ssh "$REMOTE_HOST-as-root" "
+          TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
+          cd '$REMOTE_TARGET'
+          composer install && \\
+          sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
+      "
+  else
+      echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
+      echo "Running system level updates in remote host..."
+      ssh "$REMOTE_HOST-as-root" "cd '$REMOTE_TARGET'"
+  fi
+}
+
 REMOTE_HOST="$1"  # Use ~/.ssh to config connections
 
-# Checks...
-if [[ ! -n $IN_NIX_SHELL ]]; then
-		echo "ERROR: This script must be run inside 'nix develop'"
-		exit 1
-fi
-
-if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
-then
-  echo "This command must be executed from the repository's root directory."
-  exit 1
-fi
-
-if [ "$(git branch --show-current)" != "main" ]; then
-  echo "ERROR: not on main branch"
-  exit 1
-fi
-
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "ERROR: working tree is not clean"
-  exit 1
-fi
-
-if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
-  echo "Host ${REMOTE_HOST}-as-root is online."
-else
-  echo "Host ${REMOTE_HOST}-as-root is unreachable."
-  exit 1
-fi
-
+flight_checks
 PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST")
-
-echo "Building packages locally and pushing the pre-compiled closures to the server..."
-nix build
-nix copy --to ssh://$REMOTE_HOST ./result
-
-# Ship Nix store folder structure (i.e. the symlinks to nix/store)
-# Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
-REMOTE_STORE_PATH=$(readlink -f ./result)
-ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH /usr/local/simox/result"
-
-COMPOSER_LOCK="composer.lock"
-DEPLOY_VENDOR=true
-if [ -n "$PREVIOUS_HASH" ] && git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
-    DEPLOY_VENDOR=false
-fi
-
-if [ "$DEPLOY_VENDOR" = true ]; then
-    echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
-    # TO DO: Add minimal test for modified vendor/
-    ssh "$REMOTE_HOST-as-root" "
-        TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
-        cd '$REMOTE_TARGET'
-        composer install && \\
-        sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
-        make prod-init
-    "
-else
-    echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
-    echo "Running system level updates in remote host..."
-    ssh "$REMOTE_HOST-as-root" "cd '$REMOTE_TARGET' && make prod-init"
-fi
+deploy_nix_packages
+deploy_composer_dependencies "$PREVIOUS_HASH" && \\
+make prod-init
 
 # Here, you can also clear any caches or perform other post-deployment tasks
 # Perhaps better to clear caches in src/scripts/maitenance cron jobs.
