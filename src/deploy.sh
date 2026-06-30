@@ -21,7 +21,7 @@ flight_checks() {
 
 
   # Fetch the latest remote state without merging
-  git fetch origin main
+  git fetch origin main 2>/dev/null
   LOCAL_REPO_STATE=$(git rev-parse main)
   REMOTE_REPO_STATE=$(git rev-parse origin/main)
   if [ "$LOCAL_REPO_STATE" != "$REMOTE_REPO_STATE" ]; then
