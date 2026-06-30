@@ -49,7 +49,8 @@ deploy_repo_remotely() {
   local REMOTE_HOST="$1"
 
   REV=$(git rev-parse HEAD)
-  echo "Deploying commit: $REV"
+  echo "Deploying commit: $REV" >&2
+  echo "REMOTE HOST: $REMOTE_HOST-as-root" >&2
 
   # Deploy (atomic on remote)
   return $(git archive "$REV" | ssh "$REMOTE_HOST-as-root" "
@@ -98,7 +99,7 @@ deploy_nix_packages() {
   # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
   NIX_BIN="/usr/local/simox/result/bin"
   REMOTE_STORE_PATH=$(readlink -f ./result)
-  ssh $PROD_USER@$REMOTE_HOST "ln -sfn $REMOTE_STORE_PATH $NIX_BIN"
+  ssh "$REMOTE_HOST-as-root" "ln -sfn $REMOTE_STORE_PATH $NIX_BIN"
 }
 
 deploy_composer_dependencies() {
@@ -126,9 +127,12 @@ deploy_composer_dependencies() {
 
 REMOTE_HOST="$1"  # Use ~/.ssh to config connections
 
-flight_checks
-PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST")
-deploy_nix_packages
+# flight_checks && \\
+if ! PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST"); then
+    echo "Failed to deploy repository."
+    exit 1
+fi
+deploy_nix_packages && \\  # keep it before deploying composer
 deploy_composer_dependencies "$PREVIOUS_HASH" && \\
 make prod-init
 
