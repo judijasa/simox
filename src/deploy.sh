@@ -78,13 +78,6 @@ then
   exit 1
 fi
 
-if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
-  echo "Host ${REMOTE_HOST}-as-root is online."
-else
-  echo "Host ${REMOTE_HOST}-as-root is unreachable."
-  exit 1
-fi
-
 if [ "$(git branch --show-current)" != "main" ]; then
   echo "ERROR: not on main branch"
   exit 1
@@ -92,6 +85,13 @@ fi
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "ERROR: working tree is not clean"
+  exit 1
+fi
+
+if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
+  echo "Host ${REMOTE_HOST}-as-root is online."
+else
+  echo "Host ${REMOTE_HOST}-as-root is unreachable."
   exit 1
 fi
 
