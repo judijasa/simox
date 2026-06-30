@@ -2,18 +2,6 @@
 
 set -euo pipefail
 
-if [[ ! -n $IN_NIX_SHELL ]]; then
-		echo "ERROR: This script must be run inside 'nix develop'"
-		exit 1
-fi
-
-if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
-then
-  echo "This command must be executed from the repository's root directory."
-  exit 1
-fi
-
-
 deploy_repo_remotely() {
   REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
   REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
@@ -76,14 +64,25 @@ deploy_repo_remotely() {
   ")
 }
 
-REMOTE_HOST="$1"  # Use $HOME/.ssh to config connections
+REMOTE_HOST="$1"  # Use ~/.ssh to config connections
 
 # Checks...
-if ping -c 1 -W 2 "$REMOTE_HOST" &> /dev/null; then
-    echo "Host is online."
+if [[ ! -n $IN_NIX_SHELL ]]; then
+		echo "ERROR: This script must be run inside 'nix develop'"
+		exit 1
+fi
+
+if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
+then
+  echo "This command must be executed from the repository's root directory."
+  exit 1
+fi
+
+if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
+  echo "Host ${REMOTE_HOST}-as-root is online."
 else
-    echo "Host is unreachable."
-    exit 1
+  echo "Host ${REMOTE_HOST}-as-root is unreachable."
+  exit 1
 fi
 
 if [ "$(git branch --show-current)" != "main" ]; then
