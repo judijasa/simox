@@ -19,7 +19,6 @@ flight_checks() {
     exit 1
   fi
 
-
   # Fetch the latest remote state without merging
   git fetch origin main 2>/dev/null
   LOCAL_REPO_STATE=$(git rev-parse main)
