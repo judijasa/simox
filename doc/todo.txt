@@ -1,7 +1,13 @@
-[.] src/deploy.sh: Handle case when deploy_version.log is empty (cold start).
+[c] Testing:
+    
+    bash src/deploy.sh prod-server-1
 
-[x] Add git hook that runs `composer install` everytime composer.json is changed.  
-    Also modify the specific file in vendor/ according to README.md
+[.] Makefile and src/deploy.sh: Make test for composer install (CasperTrio test)
+    and Mariadb connectivity. For both, dev-init and prod-init.
+
+[.] Create key to access server as root
+
+[.] Test `make init` to see if it modifies vendor as expected.
 
 [.] Add Apache configuration to Makefile.
       
