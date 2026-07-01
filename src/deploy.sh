@@ -7,6 +7,8 @@ flight_checks() {
       echo "ERROR: This script must be run inside 'nix develop'"
       exit 1
   fi
+  
+  PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
 
   if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
   then
@@ -21,8 +23,8 @@ flight_checks() {
 
   # Fetch the latest remote state without merging
   git fetch origin main 2>/dev/null
-  LOCAL_REPO_STATE=$(git rev-parse main)
-  REMOTE_REPO_STATE=$(git rev-parse origin/main)
+  local LOCAL_REPO_STATE=$(git rev-parse main)
+  local REMOTE_REPO_STATE=$(git rev-parse origin/main)
   if [ "$LOCAL_REPO_STATE" != "$REMOTE_REPO_STATE" ]; then
     echo "ERROR: local main is not up to date with origin/main"
     echo "Local:  $LOCAL_REPO_STATE"
@@ -44,96 +46,120 @@ flight_checks() {
 }
 
 deploy_repo_remotely() {
-  REMOTE_BASE_DIR="/home/${PROD_USER}/apps/"
-  REMOTE_TARGET="${REMOTE_BASE_DIR}/simox"
-  local REMOTE_HOST="$1"
-
   REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV" >&2
-  echo "REMOTE HOST: $REMOTE_HOST-as-root" >&2
 
   # Deploy (atomic on remote)
-  return $(git archive "$REV" | ssh "$REMOTE_HOST-as-root" "
+  git archive "$REV" | ssh "root@$REMOTE_HOST" "
       set -e     
       
-      useradd -m -s /bin/bash $PROD_USER 2>/dev/null || echo "User $PROD_USER already exists. Proceeding..." >&2
+      if ! id \"$PROD_USER\" &>/dev/null; then
+          echo \"User $PROD_USER doesn't exist. Create and setup ssh access to it.\" >&2
+          exit 1
+      fi
 
-      TMP_DIR=\$(mktemp -d)
-      FINAL_DIR='$REMOTE_TARGET'
-      BACKUP_DIR='${REMOTE_TARGET}_backup'
-      LOG_DIR='/home/$PROD_USER/var/simox/log'
+      # Define directories based on structural paths
+      BASE_DIR=\$(dirname '$REMOTE_TARGET_DIR')
+      FINAL_DIR='$REMOTE_TARGET_DIR'
+      BACKUP_DIR=\"\${FINAL_DIR}_backup\"
+      VAR_DIR='/home/$PROD_USER/var'
+      LOG_DIR=\"\$VAR_DIR/simox/log\"
 
+      # Unpack inside the same parent base directory to ensure fast rename across the same mount point
+      TMP_DIR=\$(mktemp -d -p \"\$BASE_DIR\")
       echo 'Unpacking to temp...' >&2
       tar -x -C \"\$TMP_DIR\"
+      
+      # Ensure permissions are set before pushing live
+      mkdir -p \"\$LOG_DIR\"
+      chown -R $PROD_USER:$PROD_USER \"\$TMP_DIR\" \"\$VAR_DIR\"
 
+      # Clear out any previous backup directory
+      rm -rf \"\$BACKUP_DIR\"
+
+      # Near-Atomic Swap: Move current to backup, and instantly place the new one
       if [ -d \"\$FINAL_DIR\" ]; then
-          echo 'Creating backup...' >&2
-          rm -rf \"\$BACKUP_DIR\"
+          echo 'Moving current codebase to backup...' >&2
           mv \"\$FINAL_DIR\" \"\$BACKUP_DIR\"
       fi
 
-      echo 'Overriding repo codebase...' >&2
+      echo 'Activating new repository codebase...' >&2
       mv \"\$TMP_DIR\" \"\$FINAL_DIR\"
-      mkdir -p \"\$LOG_DIR\"
-      chown -R $PROD_USER:$PROD_USER \"\$FINAL_DIR\" \"/home/$PROD_USER/var\"
 
+      # Handle logging and capture old version output for stdout
       LOG_FILE=\"\$LOG_DIR/deploy_version.log\"
       touch \"\$LOG_FILE\"
       chown $PROD_USER:$PROD_USER \"\$LOG_FILE\"
       
-      if [ -f \"\$LOG_FILE\" ]; then
-          tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}' || echo 'None'
+      # This outputs the previous hash to stdout so PREVIOUS_REV captures it
+      if [ -s \"\$LOG_FILE\" ]; then
+          tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}'
+      else
+          echo 'None'
       fi
 
+      # Append current deployment info
       echo \"\$(date +'%Y-%m-%d %H:%M:%S %Z'): $REV\" >> \"\$LOG_FILE\"
       echo \"Deploy complete: $REV\" > \"\$FINAL_DIR/.deploy_version\"
-  ")
+      chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.deploy_version\"
+  "
 }
 
 deploy_nix_packages() {
   echo "Building packages locally and pushing the pre-compiled closures to the server..."
   nix build
-  nix copy --to ssh://$REMOTE_HOST ./result
+  nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
 
   # Ship Nix store folder structure (i.e. the symlinks to nix/store)
   # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
-  NIX_BIN="/usr/local/simox/result/bin"
   REMOTE_STORE_PATH=$(readlink -f ./result)
-  ssh "$REMOTE_HOST-as-root" "ln -sfn $REMOTE_STORE_PATH $NIX_BIN"
+  ssh "root@$REMOTE_HOST" "
+    NIX_BIN='/usr/local/simox/result/bin'
+    mkdir -p \"\$NIX_BIN\"
+    ln -sfn '$REMOTE_STORE_PATH' \"\$NIX_BIN\"
+  "
 }
 
 deploy_composer_dependencies() {
-  COMPOSER_LOCK="composer.lock"
-  DEPLOY_VENDOR=true
-  if [ -n "$PREVIOUS_HASH" ] && git diff --quiet "$PREVIOUS_HASH" "$REV" -- "$COMPOSER_JSON"; then
+  local PREVIOUS_HASH_DEPLOYED="$1"
+  local CURRENT_HASH_DEPLOYED="$2"
+  local COMPOSER_JSON="composer.json"
+  local COMPOSER_LOCK="composer.lock"
+  local DEPLOY_VENDOR=true
+  if [ -n "$PREVIOUS_HASH_DEPLOYED" ] && git diff --quiet "$PREVIOUS_HASH_DEPLOYED" "$CURRENT_HASH_DEPLOYED" -- "$COMPOSER_JSON"; then
       DEPLOY_VENDOR=false
   fi
 
   if [ "$DEPLOY_VENDOR" = true ]; then
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
-      ssh "$REMOTE_HOST-as-root" "
+      ssh "root@$REMOTE_HOST" "
           TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
-          cd '$REMOTE_TARGET'
+          cd '$REMOTE_TARGET_DIR'
           composer install && \\
           sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
       "
   else
       echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
       echo "Running system level updates in remote host..."
-      ssh "$REMOTE_HOST-as-root" "cd '$REMOTE_TARGET'"
+      ssh "root@$REMOTE_HOST" "cd '$REMOTE_TARGET_DIR'"
   fi
 }
 
-REMOTE_HOST="$1"  # Use ~/.ssh to config connections
 
-# flight_checks && \\
-if ! PREVIOUS_HASH=$(deploy_repo_remotely "$REMOTE_HOST"); then
+REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
+
+# flight_checks
+
+REMOTE_BASE_DIR="/home/${PROD_USER}/apps"
+REMOTE_TARGET_DIR="${REMOTE_BASE_DIR}/simox"
+
+if ! PREVIOUS_REV=$(deploy_repo_remotely); then
     echo "Failed to deploy repository."
     exit 1
 fi
-deploy_nix_packages && \\  # keep it before deploying composer
-deploy_composer_dependencies "$PREVIOUS_HASH" && \\
+deploy_nix_packages # keep it before deploying composer
+deploy_composer_dependencies "$PREVIOUS_REV" "$REV"
 make prod-init
 
 # Here, you can also clear any caches or perform other post-deployment tasks
