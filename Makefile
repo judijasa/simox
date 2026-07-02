@@ -28,7 +28,7 @@ prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
 .PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
     _dev-init-cluster _dev-init-composer _dev-update-hosts prod-init _prod-assert-user _prod-create-dirs \
-    _prod-init-cluster _prod-init-cron-jobs
+    _prod-init-cluster
 
 help:
 	@echo "Available initialization targets:"
@@ -101,7 +101,7 @@ _dev-update-hosts:
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
 ###########################
 
-prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-cron-jobs
+prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster
 	@echo "Deploying simox..."
 
 _prod-assert-user:
@@ -125,37 +125,4 @@ _prod-init-cluster:
 	    mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=$(PROD_USER); \
 	else \
 	    echo "    MariaDB cluster already initialized. Skipping."; \
-	fi
-
-_prod-init-cron-jobs:
-	@echo "Syncing cron configurations..."
-	@mkdir -p /etc/simo-cron.5min /etc/simo-cron.monthly /etc/simo-cron.hourly; \
-	REPO_ORCHEST="./etc/cron.d/ochestrator"; \
-	SYS_ORCHEST="/etc/cron.d/simo-ochestrator"; \
-	CHANGES_DETECTED=0; \
-	declare -A CRON_MAP=( ["src/scripts/maintenance/memory_cleaning.sh"]="/etc/simo-cron.5min" ["src/scripts/maintenance/trim_log_files.sh"]="/etc/simo-cron.monthly" ["src/scripts/indexer/main.sh"]="/etc/simo-cron.hourly" ); \
-	for SRC in "$${!CRON_MAP[@]}"; do \
-	    DIR="$${CRON_MAP[$$SRC]}"; \
-	    BASE=$$(basename "$$SRC"); \
-	    TARGET="$$DIR/$$BASE"; \
-	    if [ ! -f "$$TARGET" ] || ! cmp -s "$$SRC" "$$TARGET"; then \
-	        CHANGES_DETECTED=1; \
-	    fi; \
-	done; \
-	if [ ! -f "$$SYS_ORCHEST" ] || ! cmp -s "$$REPO_ORCHEST" "$$SYS_ORCHEST"; then \
-	    CHANGES_DETECTED=1; \
-	fi; \
-	if [ $$CHANGES_DETECTED -eq 1 ]; then \
-	    echo "Changes detected in cron specifications. Deploying updates..."; \
-	    for SRC in "$${!CRON_MAP[@]}"; do \
-	        DIR="$${CRON_MAP[$$SRC]}"; \
-	        BASE=$$(basename "$$SRC"); \
-	        TARGET="$$DIR/simo_$${BASE%.sh}"; \
-	        install -m 755 -o $(PROD_USER) -g $(PROD_USER) "$$SRC" "$$TARGET"; \
-	    done; \
-	    install -m 644 -o root -g root "$$REPO_ORCHEST" "$$SYS_ORCHEST"; \
-	    echo "Restarting cron daemon..."; \
-	    systemctl restart cron; \
-	else \
-	    echo "Cron systems are up to date. Skipping deployment and restart."; \
 	fi
