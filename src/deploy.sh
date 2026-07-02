@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This script has two purposes:
+# 1. Continuous development deployment and
+# 2. Initial deployment ("only-once ops")
+# Usage:
+#   deploy <target_host>
+# For initial deployment:
+#   deploy --init <target_host>
+
 set -euo pipefail
 
 flight_checks() {
@@ -144,23 +152,23 @@ deploy_nix_packages() {
 }
 
 deploy_composer_dependencies() {
-  local PREVIOUS_HASH_DEPLOYED="$1"
-  local CURRENT_HASH_DEPLOYED="$2"
+  local PROD_USER="$1"
+  local REMOTE_TARGET_DIR="$2"
+  local PREVIOUS_HASH_DEPLOYED="$3"
+  local CURRENT_HASH_DEPLOYED="$4"
   local COMPOSER_JSON="composer.json"
   local COMPOSER_LOCK="composer.lock"
-  local DEPLOY_VENDOR=true
-  if [ -n "$PREVIOUS_HASH_DEPLOYED" ] && git diff --quiet "$PREVIOUS_HASH_DEPLOYED" "$CURRENT_HASH_DEPLOYED" -- "$COMPOSER_JSON"; then
-      DEPLOY_VENDOR=false
-  fi
+  local DEPLOY_VENDOR=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $COMPOSER_JSON)
 
-  if [ "$DEPLOY_VENDOR" = true ]; then
+  if [ "$DEPLOY_VENDOR" = true || "$INIT" = "true" ]; then
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
       ssh "root@$REMOTE_HOST" "
           TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
-          cd '$REMOTE_TARGET_DIR'
+          cd \"$REMOTE_TARGET_DIR\"
           composer install && \\
           sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
+          chown -R $PROD_USER:$PROD_USER \"$REMOTE_TARGET_DIR/vendor\"
       "
   else
       echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
@@ -169,21 +177,140 @@ deploy_composer_dependencies() {
   fi
 }
 
-REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
-flight_checks
-PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
-REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
-if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR); then
+git_target_changed() {
+  local PREVIOUS_HASH_DEPLOYED="$1"
+  local CURRENT_HASH_DEPLOYED="$2"
+  local TARGET="$3"  # file (or directory) path
+
+  if [ -n "$PREVIOUS_HASH_DEPLOYED" ] && git diff --quiet "$PREVIOUS_HASH_DEPLOYED" "$CURRENT_HASH_DEPLOYED" -- "$TARGET"; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+deploy_website() {
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+  local REMOTE_TARGET_DIR="$3"
+  local PREVIOUS_HASH_DEPLOYED="$4"
+  local CURRENT_HASH_DEPLOYED="$5"
+  local PUBLIC_DIR="${REMOTE_TARGET_DIR}/public"
+  local DEPLOY_WEB=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $PUBLIC_DIR)
+
+  if [ "$DEPLOY_WEB" = "true" || "$INIT" = "true" ]; then
+    ssh "root@$REMOTE_HOST" "
+      SOURCE_DIR=\"$PUBLIC_DIR\"
+      DEST_DIR='/var/www/html/simox'
+      echo 'Checking for website changes and deploying...'
+      if [ ! -d \"\$SOURCE_DIR\" ]; then
+          echo \"Error: Source directory \$SOURCE_DIR not found.\"
+          exit 1
+      fi
+      mkdir -p \"\$DEST_DIR\"
+      echo 'Checking for changes and deploying...'
+      RSYNC_OUT=\$(rsync -av --delete --chown=$PROD_USER:$PROD_USER --out-format=\"%i %n\" \"\$SOURCE_DIR\" \"\$DEST_DIR\")
+      if echo \"\$RSYNC_OUT\" | grep -E '\^([><+*cstmd]).\*' > /dev/null; then
+          echo 'Changes detected and applied. Restarting web server...'
+          systemctl restart apache2
+      else
+          echo 'Websites are up to date. Skipping server restart.'
+      fi
+    "
+  fi
+}
+
+deploy_cron_jobs() {
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+  local REMOTE_TARGET_BASE_DIR="$3"
+
+  ssh "root@$REMOTE_HOST" "
+    REPO_ORCHEST=\"\$REMOTE_TARGET_BASE_DIR/etc/cron.d/ochestrator\"
+    SYS_ORCHEST='/etc/cron.d/simo-ochestrator'
+    CHANGES_DETECTED=0
+
+    echo 'Syncing cron configurations...'
+
+    mkdir -p '/etc/simo-cron.5min' '/etc/simo-cron.monthly' '/etc/simo-cron.hourly'
+    declare -A CRON_MAP=( \
+      ['src/scripts/maintenance/memory_cleaning.sh']='/etc/simo-cron.5min' \
+      ['src/scripts/maintenance/trim_log_files.sh']='/etc/simo-cron.monthly' \
+      ['src/scripts/indexer/main.sh']='/etc/simo-cron.hourly')
+    for SRC_REL in \"\${!CRON_MAP[@]}\"; do
+      if [ ! -f \"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\" ]; then
+          echo \"Error: Source file \$SRC_REL missing on remote!\"
+          exit 1
+      fi
+    done
+    for SRC_REL in \"\${!CRON_MAP[@]}\"; do
+      SRC=\"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\"
+      DIR=\"\${CRON_MAP[\$SRC_REL]}\"
+      BASE=\$(basename \"\$SRC\")
+      TARGET=\"\$DIR/\$BASE\"
+      if [ ! -f \"\$TARGET\" ] || ! cmp -s \"\$SRC\" \"\$TARGET\"; then
+          CHANGES_DETECTED=1
+      fi
+    done
+    if [ ! -f \"\$SYS_ORCHEST\" ] || ! cmp -s \"\$REPO_ORCHEST\" \"\$SYS_ORCHEST\"; then
+        CHANGES_DETECTED=1
+    fi
+    if [ \$CHANGES_DETECTED -eq 1 ]; then
+        echo 'Changes detected in cron specifications. Deploying updates...'
+        for SRC_REL in \"\${!CRON_MAP[@]}\"; do
+          SRC=\"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\"
+          DIR=\"\${CRON_MAP[\$SRC_REL]}\"
+          BASE=\$(basename \"\$SRC\")
+          TARGET=\"\$DIR/simo_\${BASE%.sh}\"
+          install -m 755 -o \"$PROD_USER\" -g \"$PROD_USER\" \"\$SRC\" \"\$TARGET\"
+        done
+        install -m 644 -o root -g root \"\$REPO_ORCHEST\" \"\$SYS_ORCHEST\"
+        echo 'Restarting cron daemon...'
+        systemctl restart cron  # cron or crond? depends on Linux distro
+    else
+        echo 'Cron systems are up to date. Skipping deployment and restart.'
+    fi
+  "
+}
+
+INIT=false
+ARGS=()
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --init) INIT=true ;;
+    --) shift; ARGS+=("$@"); break ;; # Stop parsing flags
+    -*) echo "Unknown option: $1"; exit 1 ;;
+    *) ARGS+=("$1") ;;
+  esac
+  shift
+done
+
+main() {
+  local INIT="$INIT"
+  local REMOTE_HOST="${2:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
+  flight_checks
+  local PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
+  local REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
+
+  if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR); then
     echo "Failed to deploy repository."
     exit 1
-fi
-read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
-$NIX_EXISTS || install_nix_remotely $REMOTE_HOST $PROD_USER
-deploy_nix_packages $REMOTE_HOST $PROD_USER  # keep it before deploying composer
-deploy_composer_dependencies "$PREVIOUS_REV" "$REV"
-make prod-init
+  fi
+  read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
+  "$NIX_EXISTS" || install_nix_remotely "$REMOTE_HOST" "$PROD_USER"
+  deploy_nix_packages "$REMOTE_HOST" "$PROD_USER"  # keep it before deploying composer
+  deploy_composer_dependencies "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
+  deploy_website "$PREVIOUS_REV" "$REV" "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
+  deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_BASE_DIR"
+  if [ "$INIT" = "true" ]; then
+    # prod-init is for execute only once workflows in prod server
+    make prod-init
+  fi
 
-# Here, you can also clear any caches or perform other post-deployment tasks
-# Perhaps better to clear caches in src/scripts/maitenance cron jobs.
+  # Here, you can also clear any caches or perform other post-deployment tasks
+  # Perhaps better to clear caches in src/scripts/maitenance cron jobs.
+}
 
+main "${ARGS[@]}"
 exit 0
