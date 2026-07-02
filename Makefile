@@ -28,7 +28,7 @@ prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
 .PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
     _dev-init-cluster _dev-init-composer _dev-update-hosts prod-init _prod-assert-user _prod-create-dirs \
-    _prod-init-cluster _prod-init-website _prod-init-cron-jobs
+    _prod-init-cluster _prod-init-cron-jobs
 
 help:
 	@echo "Available initialization targets:"
@@ -101,7 +101,7 @@ _dev-update-hosts:
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
 ###########################
 
-prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
+prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-cron-jobs
 	@echo "Deploying simox..."
 
 _prod-assert-user:
@@ -125,27 +125,6 @@ _prod-init-cluster:
 	    mariadb-install-db --datadir=$(PROD_DB_DATA_DIR) --user=$(PROD_USER); \
 	else \
 	    echo "    MariaDB cluster already initialized. Skipping."; \
-	fi
-
-_prod-init-website:
-	@echo "Checking for website changes and deploying..."
-	@SOURCE_DIR="./public"; \
-	DEST_DIR="/var/www/html/simox"; \
-	if [ ! -d "$$SOURCE_DIR" ]; then \
-	    echo "Error: Source directory '$$SOURCE_DIR' not found."; \
-	    exit 1; \
-	fi; \
-	if [ ! -d "$$DEST_DIR" ]; then \
-	    mkdir -p "$$DEST_DIR"; \
-	fi; \
-	echo "Checking for changes and deploying..."; \
-	RSYNC_OUT=$$(rsync -av --delete --out-format="%i %n" "$$SOURCE_DIR" "$$DEST_DIR"); \
-	chown -R $(PROD_USER):$(PROD_USER) "$$DEST_DIR"; \
-	if echo "$$RSYNC_OUT" | grep -E '^([><+\*cstmd]).*' > /dev/null; then \
-	    echo "Changes detected and applied. Restarting web server..."; \
-	    systemctl restart apache2; \
-	else \
-	    echo "Websites are up to date. Skipping server restart."; \
 	fi
 
 _prod-init-cron-jobs:
