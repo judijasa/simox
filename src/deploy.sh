@@ -8,8 +8,6 @@ flight_checks() {
       exit 1
   fi
   
-  PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
-
   if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
   then
     echo "This command must be executed from the repository's root directory."
@@ -46,6 +44,10 @@ flight_checks() {
 }
 
 deploy_repo_remotely() {
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+  local REMOTE_TARGET_DIR="$3"
+
   REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV" >&2
 
@@ -91,21 +93,42 @@ deploy_repo_remotely() {
       touch \"\$LOG_FILE\"
       chown $PROD_USER:$PROD_USER \"\$LOG_FILE\"
       
-      # This outputs the previous hash to stdout so PREVIOUS_REV captures it
-      if [ -s \"\$LOG_FILE\" ]; then
-          tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}'
-      else
-          echo 'None'
-      fi
-
       # Append current deployment info
       echo \"\$(date +'%Y-%m-%d %H:%M:%S %Z'): $REV\" >> \"\$LOG_FILE\"
       echo \"Deploy complete: $REV\" > \"\$FINAL_DIR/.deploy_version\"
       chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.deploy_version\"
+
+      # Piggyback: Check if nix is in the user's path or standard profile
+      if su - "$PROD_USER" -c 'command -v nix' &>/dev/null; then
+          NIX_INSTALLED="true"
+      else
+          NIX_INSTALLED="false"
+      fi
+
+      # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
+      if [ -s "\$LOG_FILE" ]; then
+          echo "\$(tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}') \$NIX_INSTALLED"
+      else
+          echo "None \$NIX_INSTALLED"
+      fi
   "
 }
 
+install_nix_remotely() {
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+  echo "Installing Nix directly into the $PROD_USER account on $REMOTE_HOST..."
+  if ! ssh "$PROD_USER@$REMOTE_HOST" "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"; then
+      echo "Nix installation failed."
+      return 1
+  fi
+  echo "Nix installed successfully."
+}
+
 deploy_nix_packages() {
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+
   echo "Building packages locally and pushing the pre-compiled closures to the server..."
   nix build
   nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
@@ -146,19 +169,17 @@ deploy_composer_dependencies() {
   fi
 }
 
-
 REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
-
-# flight_checks
-
-REMOTE_BASE_DIR="/home/${PROD_USER}/apps"
-REMOTE_TARGET_DIR="${REMOTE_BASE_DIR}/simox"
-
-if ! PREVIOUS_REV=$(deploy_repo_remotely); then
+flight_checks
+PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
+REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
+if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR); then
     echo "Failed to deploy repository."
     exit 1
 fi
-deploy_nix_packages # keep it before deploying composer
+read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
+$NIX_EXISTS || install_nix_remotely $REMOTE_HOST $PROD_USER
+deploy_nix_packages $REMOTE_HOST $PROD_USER  # keep it before deploying composer
 deploy_composer_dependencies "$PREVIOUS_REV" "$REV"
 make prod-init
 
