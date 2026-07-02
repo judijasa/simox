@@ -97,7 +97,10 @@ _dev-update-hosts:
 	rm -f "$$tmp_hosts"; \
 	echo "Successfully synced!"
 
+###########################
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)
+###########################
+
 prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster _prod-init-website _prod-init-cron-jobs
 	@echo "Deploying simox..."
 
@@ -129,7 +132,7 @@ _prod-init-website:
 	@SOURCE_DIR="./public"; \
 	DEST_DIR="/var/www/html/simox"; \
 	if [ ! -d "$$SOURCE_DIR" ]; then \
-	    echo "Error: Source directory '$$SOURCE_DIR' not found." >&2; \
+	    echo "Error: Source directory '$$SOURCE_DIR' not found."; \
 	    exit 1; \
 	fi; \
 	if [ ! -d "$$DEST_DIR" ]; then \
