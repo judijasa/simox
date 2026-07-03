@@ -268,7 +268,7 @@ deploy_cron_jobs() {
         done
         install -m 644 -o root -g root \"\$REPO_ORCHEST\" \"\$SYS_ORCHEST\"
         echo 'Restarting cron daemon...'
-        systemctl restart cron  # cron or crond? depends on Linux distro
+        systemctl restart cron  || systemctl restart crond
     else
         echo 'Cron systems are up to date. Skipping deployment and restart.'
     fi
