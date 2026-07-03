@@ -3,7 +3,7 @@
 ## Esta aplicacion...
 1. Extrae las ofertas de empleo reportadas en la plataforma SIMO del gobierno de Colombia.
 2. Guarda las ofertas de empleo en una base de datos.
-3. Ofrece un portal en linea para ofertas de empleo.
+3. Ofrece un portal en línea para ofertas de empleo.
 
 This application is comprised of three components: _crawler_, _database_ and _website_.
 <!--
