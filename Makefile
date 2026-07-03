@@ -6,6 +6,9 @@ endif
 ifndef MYSQL_DATA_DIR
 $(error MYSQL_DATA_DIR is not set in the environment)
 endif
+ifndef PROD_USER
+$(error PROD_USER is not set in the environment)
+endif
 
 _dev-init: DEV_VAR_DIR = $(SIMO_VAR_PATH)
 _dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)
@@ -21,7 +24,7 @@ prod-init: PROD_DB_DATA_DIR = $(PROD_DB_DIR)/data
 prod-init: PROD_DB_UNIX_PORT = $(PROD_DB_DIR)/mysql.sock
 prod-init: PROD_DB_PID_FILE = $(PROD_DB_DIR)/mysql.pid
 prod-init: PROD_LOG_DIR = /var/log/simox
-prod-init: PROD_USER = 'deploy'
+prod-init: PROD_USER = $(PROD_USER)
 prod-init: PROD_BASHRC_DIR = /home/$(PROD_USER)/bashrc.d
 prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 

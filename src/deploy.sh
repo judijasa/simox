@@ -160,7 +160,7 @@ deploy_composer_dependencies() {
   local COMPOSER_LOCK="composer.lock"
   local DEPLOY_VENDOR=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $COMPOSER_JSON)
 
-  if [ "$DEPLOY_VENDOR" = true || "$INIT" = "true" ]; then
+  if [ "$DEPLOY_VENDOR" = "true" || "$INIT" = "true" ]; then
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
       ssh "root@$REMOTE_HOST" "
@@ -172,8 +172,6 @@ deploy_composer_dependencies() {
       "
   else
       echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
-      echo "Running system level updates in remote host..."
-      ssh "root@$REMOTE_HOST" "cd '$REMOTE_TARGET_DIR'"
   fi
 }
 
@@ -183,9 +181,9 @@ git_target_changed() {
   local TARGET="$3"  # file (or directory) path
 
   if [ -n "$PREVIOUS_HASH_DEPLOYED" ] && git diff --quiet "$PREVIOUS_HASH_DEPLOYED" "$CURRENT_HASH_DEPLOYED" -- "$TARGET"; then
-    echo "true"
-  else
     echo "false"
+  else
+    echo "true"
   fi
 }
 
@@ -210,7 +208,7 @@ deploy_website() {
       mkdir -p \"\$DEST_DIR\"
       echo 'Checking for changes and deploying...'
       RSYNC_OUT=\$(rsync -av --delete --chown=$PROD_USER:$PROD_USER --out-format=\"%i %n\" \"\$SOURCE_DIR\" \"\$DEST_DIR\")
-      if echo \"\$RSYNC_OUT\" | grep -E '\^([><+*cstmd]).\*' > /dev/null; then
+      if echo \"\$RSYNC_OUT\" | grep -E '[><+*cstmd]' > /dev/null; then
           echo 'Changes detected and applied. Restarting web server...'
           systemctl restart apache2
       else
@@ -223,11 +221,11 @@ deploy_website() {
 deploy_cron_jobs() {
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
-  local REMOTE_TARGET_BASE_DIR="$3"
+  local SOURCE_BASE_DIR="$3"
 
   ssh "root@$REMOTE_HOST" "
-    REPO_ORCHEST=\"\$REMOTE_TARGET_BASE_DIR/etc/cron.d/ochestrator\"
-    SYS_ORCHEST='/etc/cron.d/simo-ochestrator'
+    REPO_ORCHEST=\"$SOURCE_BASE_DIR/etc/cron.d/orchestrator\"
+    SYS_ORCHEST='/etc/cron.d/simo-orchestrator'
     CHANGES_DETECTED=0
 
     echo 'Syncing cron configurations...'
@@ -238,13 +236,13 @@ deploy_cron_jobs() {
       ['src/scripts/maintenance/trim_log_files.sh']='/etc/simo-cron.monthly' \
       ['src/scripts/indexer/main.sh']='/etc/simo-cron.hourly')
     for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-      if [ ! -f \"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\" ]; then
+      if [ ! -f \"$SOURCE_BASE_DIR/\$SRC_REL\" ]; then
           echo \"Error: Source file \$SRC_REL missing on remote!\"
           exit 1
       fi
     done
     for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-      SRC=\"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\"
+      SRC=\"$SOURCE_BASE_DIR/\$SRC_REL\"
       DIR=\"\${CRON_MAP[\$SRC_REL]}\"
       BASE=\$(basename \"\$SRC\")
       TARGET=\"\$DIR/\$BASE\"
@@ -258,7 +256,7 @@ deploy_cron_jobs() {
     if [ \$CHANGES_DETECTED -eq 1 ]; then
         echo 'Changes detected in cron specifications. Deploying updates...'
         for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-          SRC=\"$REMOTE_TARGET_BASE_DIR/\$SRC_REL\"
+          SRC=\"$SOURCE_BASE_DIR/\$SRC_REL\"
           DIR=\"\${CRON_MAP[\$SRC_REL]}\"
           BASE=\$(basename \"\$SRC\")
           TARGET=\"\$DIR/simo_\${BASE%.sh}\"
@@ -298,18 +296,18 @@ main() {
     exit 1
   fi
   read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
-  "$NIX_EXISTS" || install_nix_remotely "$REMOTE_HOST" "$PROD_USER"
+  [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER"
   deploy_nix_packages "$REMOTE_HOST" "$PROD_USER"  # keep it before deploying composer
   deploy_composer_dependencies "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
-  deploy_website "$PREVIOUS_REV" "$REV" "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
-  deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_BASE_DIR"
+  deploy_website "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
+  deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
   if [ "$INIT" = "true" ]; then
     # prod-init is for execute only once workflows in prod server
     make prod-init
   fi
 
   # Here, you can also clear any caches or perform other post-deployment tasks
-  # Perhaps better to clear caches in src/scripts/maitenance cron jobs.
+  # Perhaps better to clear caches in src/scripts/maintenance cron jobs.
 }
 
 main "${ARGS[@]}"
