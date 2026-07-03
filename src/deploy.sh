@@ -55,8 +55,8 @@ deploy_repo_remotely() {
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
   local REMOTE_TARGET_DIR="$3"
+  local REV="$4"
 
-  REV=$(git rev-parse HEAD)
   echo "Deploying commit: $REV" >&2
 
   # Deploy (atomic on remote)
@@ -143,6 +143,8 @@ deploy_nix_packages() {
 
   # Ship Nix store folder structure (i.e. the symlinks to nix/store)
   # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
+  # Keep NIX_BIN root owned, PROD_USER only needs to read/exec Nix binaries.
+  # If PROD_USER writes here, could inject malicious executables.
   REMOTE_STORE_PATH=$(readlink -f ./result)
   ssh "root@$REMOTE_HOST" "
     NIX_BIN='/usr/local/simox/result/bin'
@@ -152,10 +154,11 @@ deploy_nix_packages() {
 }
 
 deploy_composer_dependencies() {
-  local PROD_USER="$1"
-  local REMOTE_TARGET_DIR="$2"
-  local PREVIOUS_HASH_DEPLOYED="$3"
-  local CURRENT_HASH_DEPLOYED="$4"
+  local REMOTE_HOST="$1"
+  local PROD_USER="$2"
+  local REMOTE_TARGET_DIR="$3"
+  local PREVIOUS_HASH_DEPLOYED="$4"
+  local CURRENT_HASH_DEPLOYED="$5"
   local COMPOSER_JSON="composer.json"
   local COMPOSER_LOCK="composer.lock"
   local DEPLOY_VENDOR=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $COMPOSER_JSON)
@@ -223,6 +226,7 @@ deploy_cron_jobs() {
   local PROD_USER="$2"
   local SOURCE_BASE_DIR="$3"
 
+  # Keep /etc/simo-cron.* root-owned. They will be used by Cron deamon, which runs as root.
   ssh "root@$REMOTE_HOST" "
     REPO_ORCHEST=\"$SOURCE_BASE_DIR/etc/cron.d/orchestrator\"
     SYS_ORCHEST='/etc/cron.d/simo-orchestrator'
@@ -290,15 +294,16 @@ main() {
   flight_checks
   local PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
   local REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
+  local REV=$(git rev-parse HEAD)
 
-  if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR); then
+  if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR $REV); then
     echo "Failed to deploy repository."
     exit 1
   fi
   read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
-  [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER"
+  [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER" || exit 1
   deploy_nix_packages "$REMOTE_HOST" "$PROD_USER"  # keep it before deploying composer
-  deploy_composer_dependencies "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
+  deploy_composer_dependencies "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
   deploy_website "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
   deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
   if [ "$INIT" = "true" ]; then
