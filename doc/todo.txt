@@ -1,11 +1,18 @@
+[.] Install mariadb in prod-init.
+
 [c] Testing:
     
     bash src/deploy.sh prod-server-1
 
+[.] Currently, in src/deploy.sh and Makefile,
+    you are assuming REMOTE_HOST to be the same for website and database
+    deployments. Assume they are not, but if using the same prod server for both,
+    config ssh to point to the same prod server but with different alias.
+
+[.] Find out what to do with the generated result folder during exec of src/deploy.sh
+
 [.] Makefile and src/deploy.sh: Make test for composer install (CasperTrio test)
     and Mariadb connectivity. For both, dev-init and prod-init.
-
-[.] Create key to access server as root
 
 [.] Test `make init` to see if it modifies vendor as expected.
 
@@ -17,7 +24,8 @@
 
 [.] Create tables: vacante, estudio
 
-[.] job_snapshot --trigger--> job, job_snapshot --cron-agent--> vacante (vacante.sec is job.sec fk, so use job.id as cursor and link to job_snapshot via job.max_snap_id)
+[.] job_snapshot --trigger--> job, job_snapshot --cron-agent--> vacante
+    (vacante.sec is job.sec fk, so use job.id as cursor and link to job_snapshot via job.max_snap_id)
 
 [.] After making work as expected a version that has the two non api approaches
     properly commented and the api approach active, while compatible with
@@ -119,6 +127,37 @@
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] Make --init option to src/deploy.sh
+
+  Only under init, src/deploy.sh will
+  run `make prod-init` and will install
+  Nix in the server if not yet installed.
+  Consider also installing mariadb in this
+  workflow. At the end, it should leave
+  a file, with the version of Nix (
+  restrict to PROD_USER), MariaDB (restrict to prod user?), etc
+  installed in the server.
+
+  Nix installation script in src/deploy.sh
+  [x] Use first ssh connection to piggyback checking if Nix is already installed;
+      if not installed, make dedicated connection to do so. (see latest Gemini chat)
+  [x] Relocate continuous development (CD) parts from Makefile to src/deploy.sh
+      eg _prod-init-website and _prod-init-cron-jobs.
+
+      [x] deploy-website: check if changes in web directories where made
+          (perhaps not good as it could be hard to handle edge cases eg git rebase, etc.
+          Another possible issue, what if deploy_version is accidentally removed...
+          solution: with --init, override without asking about commits),
+          if yes, then deploy. Not good design as it requires keeping explicit
+          track of web code.
+      [x] deploy-cron-jobs: check if changes in cron jobs where made,
+          if yes, then deploy. Not good design as it requires keeping explicit
+          track of cron jobs.
+      [x] Add --init option to src/deploy.sh to conditionally exec make prod-init and any other
+          only-once workflow.
+
+[x] Create key to access server as root
 
 [x] Don't keep backups after you deploy repo codebase to prod servers.
     Instead, keep log of with latest commit hash of each deployment.
