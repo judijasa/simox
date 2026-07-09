@@ -295,7 +295,7 @@ done
 
 main() {
   local INIT="$INIT"
-  local REMOTE_HOST="${2:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
+  local REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
   flight_checks
   local PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
   local REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
@@ -319,6 +319,5 @@ main() {
   # Here, you can also clear any caches or perform other post-deployment tasks
   # Perhaps better to clear caches in src/scripts/maintenance cron jobs.
 }
-
 main "${ARGS[@]}"
 exit 0
