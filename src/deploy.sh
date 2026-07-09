@@ -148,8 +148,6 @@ deploy_nix_packages() {
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
 
-  echo "Building packages locally and pushing the pre-compiled closures to the server..."
-  nix build
   ssh "root@$REMOTE_HOST" "
     mkdir -p '/usr/local/simox'
     chown $PROD_USER:$PROD_USER '/usr/local/simox'
@@ -158,6 +156,9 @@ deploy_nix_packages() {
     grep -qxF \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" \"/home/$PROD_USER/.bashrc\" || \
     echo \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" >> \"/home/$PROD_USER/.bashrc\"
   "
+
+  echo "Building packages locally..."
+  nix build
   echo "Copying nix closure to remote..."
   nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
 
