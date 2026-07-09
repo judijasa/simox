@@ -149,7 +149,8 @@ deploy_nix_packages() {
   local PROD_USER="$2"
 
   ssh "root@$REMOTE_HOST" "
-    mkdir -p '/usr/local/simox'
+    mkdir -p '/usr/local/simox' '/home/$PROD_USER/.nix-gcroots'
+    chown $PROD_USER:$PROD_USER '/home/$PROD_USER/.nix-gcroots'
     ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
   "
 
@@ -162,7 +163,8 @@ deploy_nix_packages() {
   REMOTE_STORE_PATH=$(readlink -f ./result)
   echo "Registering nix store root on remote..."
   ssh "root@$REMOTE_HOST" "
-    HOME='/home/$PROD_USER' nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
+    su - $PROD_USER -c '/home/$PROD_USER/.nix-profile/bin/nix-store --add-root /home/$PROD_USER/.nix-gcroots/simox --realise $REMOTE_STORE_PATH'
+    ln -sfn '$REMOTE_STORE_PATH' '/usr/local/simox/result'
   "
   rm -f result
 }
