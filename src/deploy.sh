@@ -171,6 +171,7 @@ deploy_nix_packages() {
   else
     echo "Building packages on remote (local=$LOCAL_ARCH, remote=$REMOTE_ARCH)..."
     REMOTE_STORE_PATH=$(ssh "$PROD_USER@$REMOTE_HOST" "
+        set -e
         . /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh
         cd '$REMOTE_TARGET_DIR'
         nix --extra-experimental-features 'nix-command flakes' build >&2
