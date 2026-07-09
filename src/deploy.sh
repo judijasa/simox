@@ -147,30 +147,37 @@ deploy_nix_packages() {
   #   PROD_USER writes here, it could inject malicious executables.
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
+  local REMOTE_TARGET_DIR="$3"
 
-  ssh "root@$REMOTE_HOST" "
+  local REMOTE_ARCH
+  REMOTE_ARCH=$(ssh "root@$REMOTE_HOST" "
+    set -e
     mkdir -p '/usr/local/simox' '/home/$PROD_USER/.nix-gcroots'
     chown $PROD_USER:$PROD_USER '/home/$PROD_USER/.nix-gcroots'
     ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
-  "
+    uname -m
+  ")
 
-  # WARNING: 'nix build' builds for the local machine's architecture.
-  # If the remote host differs (e.g. local=x86_64, remote=aarch64 Raspberry Pi),
-  # the deployment will fail; errors will show up while calling nix binaries
-  # from the server eg "cannot execute binary file: Exec format error"
-  echo "Building packages locally..."
-  nix build
-  echo "Copying nix closure to remote..."
-  nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
+  local LOCAL_ARCH REMOTE_STORE_PATH
+  LOCAL_ARCH=$(uname -m)
 
-  local REMOTE_STORE_PATH
-  REMOTE_STORE_PATH=$(readlink -f ./result)
+  if [ "$LOCAL_ARCH" = "$REMOTE_ARCH" ]; then
+    echo "Building packages locally..."
+    nix build
+    echo "Copying nix closure to remote..."
+    nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
+    REMOTE_STORE_PATH=$(readlink -f ./result)
+    rm -f result
+  else
+    echo "Building packages on remote (local=$LOCAL_ARCH, remote=$REMOTE_ARCH)..."
+    REMOTE_STORE_PATH=$(ssh "$PROD_USER@$REMOTE_HOST" "bash -l -c 'cd \"$REMOTE_TARGET_DIR\" && nix build >&2 && readlink -f result && rm -f result'")
+  fi
+
   echo "Registering nix store root on remote..."
   ssh "root@$REMOTE_HOST" "
     su - $PROD_USER -c '/home/$PROD_USER/.nix-profile/bin/nix-store --add-root /home/$PROD_USER/.nix-gcroots/simox --realise $REMOTE_STORE_PATH'
     ln -sfn '$REMOTE_STORE_PATH' '/usr/local/simox/result'
   "
-  rm -f result
 }
 
 deploy_composer_dependencies() {
@@ -322,7 +329,7 @@ main() {
   fi
   read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
   [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER" || true
-  deploy_nix_packages "$REMOTE_HOST" "$PROD_USER"  # keep it before deploying composer
+  deploy_nix_packages "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"  # keep it before deploying composer
   deploy_composer_dependencies "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
   deploy_website "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
   deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
