@@ -183,9 +183,8 @@ deploy_composer_dependencies() {
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
       ssh "root@$REMOTE_HOST" "
-          TARGET_FILE='vendor/phpcasperjs/phpcasperjs/src/Casper.php'
-          cd \"$REMOTE_TARGET_DIR\"
-          composer install && \\
+          TARGET_FILE=\"$REMOTE_TARGET_DIR/vendor/phpcasperjs/phpcasperjs/src/Casper.php\"
+          su - $PROD_USER -c 'cd $REMOTE_TARGET_DIR && composer install' && \\
           sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
           chown -R $PROD_USER:$PROD_USER \"$REMOTE_TARGET_DIR/vendor\"
       "
