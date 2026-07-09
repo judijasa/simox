@@ -154,6 +154,10 @@ deploy_nix_packages() {
     ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
   "
 
+  # WARNING: 'nix build' builds for the local machine's architecture.
+  # If the remote host differs (e.g. local=x86_64, remote=aarch64 Raspberry Pi),
+  # the deployment will fail; errors will show up while calling nix binaries
+  # from the server eg "cannot execute binary file: Exec format error"
   echo "Building packages locally..."
   nix build
   echo "Copying nix closure to remote..."
