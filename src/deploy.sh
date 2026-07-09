@@ -156,7 +156,7 @@ deploy_nix_packages() {
 
     # Ensure nix is in PATH for non-interactive SSH on remote...
     grep -qxF \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" \"/home/$PROD_USER/.bashrc\" || \
-    echo '. \"/home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" >> \"/home/$PROD_USER/.bashrc\"
+    echo \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" >> \"/home/$PROD_USER/.bashrc\"
   "
   echo "Copying nix closure to remote..."
   nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
