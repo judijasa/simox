@@ -150,10 +150,12 @@ deploy_nix_packages() {
 
   echo "Building packages locally and pushing the pre-compiled closures to the server..."
   nix build
+  echo "Copying nix closure to remote..."
   nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
 
   local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
+  echo "Registering nix store root on remote..."
   ssh "$PROD_USER@$REMOTE_HOST" "
     set -e
     . /home/${PROD_USER}/.profile
