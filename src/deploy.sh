@@ -112,8 +112,8 @@ deploy_repo_remotely() {
       else
         NIX_INSTALLED='false'
         # Piggyback: sudo privileged pre-installation step
-        mkdir -p '/nix' '/usr/local/simox'
-        chown $PROD_USER:$PROD_USER /nix '/usr/local/simox'
+        mkdir -p '/nix'
+        chown $PROD_USER:$PROD_USER '/nix'
       fi
 
       # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
@@ -150,6 +150,14 @@ deploy_nix_packages() {
 
   echo "Building packages locally and pushing the pre-compiled closures to the server..."
   nix build
+  ssh "root@$REMOTE_HOST" "
+    mkdir -p '/usr/local/simox'
+    chown $PROD_USER:$PROD_USER '/usr/local/simox'
+
+    # Ensure nix is in PATH for non-interactive SSH on remote...
+    grep -qxF \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" \"/home/$PROD_USER/.bashrc\" || \
+    echo '. \"/home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" >> \"/home/$PROD_USER/.bashrc\"
+  "
   echo "Copying nix closure to remote..."
   nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
 
@@ -157,9 +165,7 @@ deploy_nix_packages() {
   REMOTE_STORE_PATH=$(readlink -f ./result)
   echo "Registering nix store root on remote..."
   ssh "$PROD_USER@$REMOTE_HOST" "
-    set -e
-    . /home/${PROD_USER}/.profile
-    /home/${PROD_USER}/.nix-profile/bin/nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
+    nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
   "
   rm -f result
 }
