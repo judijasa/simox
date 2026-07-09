@@ -112,8 +112,8 @@ deploy_repo_remotely() {
       else
         NIX_INSTALLED='false'
         # Piggyback: sudo privileged pre-installation step
-        mkdir -p /nix
-        chown $PROD_USER:$PROD_USER /nix
+        mkdir -p '/nix' '/usr/local/simox'
+        chown $PROD_USER:$PROD_USER /nix '/usr/local/simox'
       fi
 
       # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
@@ -154,11 +154,7 @@ deploy_nix_packages() {
 
   local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
-  ssh "root@$REMOTE_HOST" "
-    set -e
-    # source PROD_USER nix env before running nix-store command
-    . /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh
-    mkdir -p '/usr/local/simox'
+  ssh "$PROD_USER@$REMOTE_HOST" "
     nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
   "
   rm -f result
