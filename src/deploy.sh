@@ -107,17 +107,17 @@ deploy_repo_remotely() {
       chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.deploy_version\"
 
       # Piggyback: Check if nix is in the user's path or standard profile
-      if su - "$PROD_USER" -c 'command -v nix' &>/dev/null; then
-          NIX_INSTALLED="true"
+      if su - \"$PROD_USER\" -c 'command -v nix' &>/dev/null; then
+          NIX_INSTALLED='true'
       else
-          NIX_INSTALLED="false"
+          NIX_INSTALLED='false'
       fi
 
       # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
-      if [ -s "\$LOG_FILE" ]; then
-          echo "\$(tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}') \$NIX_INSTALLED"
+      if [ -s \"\$LOG_FILE\" ]; then
+          echo \"\$(tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}') \$NIX_INSTALLED\"
       else
-          echo "None \$NIX_INSTALLED"
+          echo \"None \$NIX_INSTALLED\"
       fi
   "
 }
