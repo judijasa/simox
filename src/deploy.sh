@@ -139,20 +139,21 @@ deploy_nix_packages() {
   #   compilers, -dev packages, 20GB of disk, etc.
   # - Ship Nix store folder structure (i.e. the symlinks to nix/store)
   # - Keep it consistent with NIX_BIN value at etc/cron.d/orchestrator.
-  # - Keep NIX_BIN root owned, PROD_USER only needs to read/exec Nix binaries.
-  #   If PROD_USER writes here, could inject malicious executables.
+  # - Keep /usr/local/simox/result/ root owned. This because
+  #   PROD_USER only needs to read/exec Nix binaries and if
+  #   PROD_USER writes here, it could inject malicious executables.
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
 
   echo "Building packages locally and pushing the pre-compiled closures to the server..."
   nix build
-  nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
+  nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
 
+  local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
   ssh "root@$REMOTE_HOST" "
-    NIX_BIN='/usr/local/simox/result/bin'
-    mkdir -p \"\$NIX_BIN\"
-    ln -sfn '$REMOTE_STORE_PATH' \"\$NIX_BIN\"
+    mkdir -p '/usr/local/simox'
+    nix-store --add-root /usr/local/simox/result --realise "$REMOTE_STORE_PATH"
   "
 }
 
