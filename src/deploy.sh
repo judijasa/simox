@@ -150,11 +150,7 @@ deploy_nix_packages() {
 
   ssh "root@$REMOTE_HOST" "
     mkdir -p '/usr/local/simox'
-    chown $PROD_USER:$PROD_USER '/usr/local/simox'
-
-    # Ensure nix is in PATH for non-interactive SSH on remote...
-    grep -qxF \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" \"/home/$PROD_USER/.bashrc\" || \
-    echo \". /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh\" >> \"/home/$PROD_USER/.bashrc\"
+    ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
   "
 
   echo "Building packages locally..."
@@ -165,7 +161,7 @@ deploy_nix_packages() {
   local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
   echo "Registering nix store root on remote..."
-  ssh "$PROD_USER@$REMOTE_HOST" "
+  ssh "root@$REMOTE_HOST" "
     nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
   "
   rm -f result
