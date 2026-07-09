@@ -155,8 +155,7 @@ deploy_nix_packages() {
   local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
   ssh "$PROD_USER@$REMOTE_HOST" "
-    set -e
-    ~/.nix-profile/bin/nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
+    /home/$PROD_USER/.nix-profile/bin/nix-store --add-root /usr/local/simox/result --realise \"$REMOTE_STORE_PATH\"
   "
   rm -f result
 }
