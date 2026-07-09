@@ -182,11 +182,10 @@ deploy_composer_dependencies() {
   if [ "$DEPLOY_VENDOR" = "true" ] || [ "$INIT" = "true" ]; then
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
-      ssh "root@$REMOTE_HOST" "
+      ssh "$PROD_USER@$REMOTE_HOST" "
           TARGET_FILE=\"$REMOTE_TARGET_DIR/vendor/phpcasperjs/phpcasperjs/src/Casper.php\"
-          su - $PROD_USER -c 'cd $REMOTE_TARGET_DIR && composer install' && \\
+          cd \"$REMOTE_TARGET_DIR\" && composer install && \\
           sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
-          chown -R $PROD_USER:$PROD_USER \"$REMOTE_TARGET_DIR/vendor\"
       "
   else
       echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
