@@ -195,7 +195,7 @@ deploy_composer_dependencies() {
 git_target_changed() {
   local PREVIOUS_HASH_DEPLOYED="$1"
   local CURRENT_HASH_DEPLOYED="$2"
-  local TARGET="$3"  # file (or directory) path
+  local TARGET="$3"  # file (or directory) relative path
 
   if [ -n "$PREVIOUS_HASH_DEPLOYED" ] && git diff --quiet "$PREVIOUS_HASH_DEPLOYED" "$CURRENT_HASH_DEPLOYED" -- "$TARGET"; then
     echo "false"
@@ -210,12 +210,13 @@ deploy_website() {
   local REMOTE_TARGET_DIR="$3"
   local PREVIOUS_HASH_DEPLOYED="$4"
   local CURRENT_HASH_DEPLOYED="$5"
-  local PUBLIC_DIR="${REMOTE_TARGET_DIR}/public"
-  local DEPLOY_WEB=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $PUBLIC_DIR)
+  local REMOTE_ABS_PUBLIC_DIR="${REMOTE_TARGET_DIR}/public"
+  local LOCAL_REL_PUBLIC_DIR="public"
+  local DEPLOY_WEB=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $LOCAL_REL_PUBLIC_DIR)
 
   if [ "$DEPLOY_WEB" = "true" ] || [ "$INIT" = "true" ]; then
     ssh "root@$REMOTE_HOST" "
-      SOURCE_DIR=\"$PUBLIC_DIR\"
+      SOURCE_DIR=\"$REMOTE_ABS_PUBLIC_DIR\"
       DEST_DIR='/var/www/html/simox'
       echo 'Checking for website changes and deploying...'
       if [ ! -d \"\$SOURCE_DIR\" ]; then
