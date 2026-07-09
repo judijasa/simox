@@ -155,6 +155,7 @@ deploy_nix_packages() {
     mkdir -p '/usr/local/simox'
     nix-store --add-root /usr/local/simox/result --realise "$REMOTE_STORE_PATH"
   "
+  rm -f result
 }
 
 deploy_composer_dependencies() {
