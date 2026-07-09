@@ -177,7 +177,7 @@ deploy_composer_dependencies() {
   local COMPOSER_LOCK="composer.lock"
   local DEPLOY_VENDOR=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $COMPOSER_JSON)
 
-  if [ "$DEPLOY_VENDOR" = "true" || "$INIT" = "true" ]; then
+  if [ "$DEPLOY_VENDOR" = "true" ] || [ "$INIT" = "true" ]; then
       echo "File $COMPOSER_LOCK has changed. Running composer install and system level updates in remote host..."
       # TO DO: Add minimal test for modified vendor/
       ssh "root@$REMOTE_HOST" "
@@ -213,7 +213,7 @@ deploy_website() {
   local PUBLIC_DIR="${REMOTE_TARGET_DIR}/public"
   local DEPLOY_WEB=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $PUBLIC_DIR)
 
-  if [ "$DEPLOY_WEB" = "true" || "$INIT" = "true" ]; then
+  if [ "$DEPLOY_WEB" = "true" ] || [ "$INIT" = "true" ]; then
     ssh "root@$REMOTE_HOST" "
       SOURCE_DIR=\"$PUBLIC_DIR\"
       DEST_DIR='/var/www/html/simox'
