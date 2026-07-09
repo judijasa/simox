@@ -134,6 +134,13 @@ install_nix_remotely() {
 }
 
 deploy_nix_packages() {
+  # - Shipping binaries instead of bulding from server is convenient
+  #   if server is hardware limited, as it needs build resources:
+  #   compilers, -dev packages, 20GB of disk, etc.
+  # - Ship Nix store folder structure (i.e. the symlinks to nix/store)
+  # - Keep it consistent with NIX_BIN value at etc/cron.d/orchestrator.
+  # - Keep NIX_BIN root owned, PROD_USER only needs to read/exec Nix binaries.
+  #   If PROD_USER writes here, could inject malicious executables.
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
 
@@ -141,10 +148,6 @@ deploy_nix_packages() {
   nix build
   nix copy --to ssh://$PROD_USER@$REMOTE_HOST ./result
 
-  # Ship Nix store folder structure (i.e. the symlinks to nix/store)
-  # Must be kept consistent with NIX_BIN value at etc/cron.d/orchestrator
-  # Keep NIX_BIN root owned, PROD_USER only needs to read/exec Nix binaries.
-  # If PROD_USER writes here, could inject malicious executables.
   REMOTE_STORE_PATH=$(readlink -f ./result)
   ssh "root@$REMOTE_HOST" "
     NIX_BIN='/usr/local/simox/result/bin'
