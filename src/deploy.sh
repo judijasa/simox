@@ -108,9 +108,12 @@ deploy_repo_remotely() {
 
       # Piggyback: Check if nix is in the user's path or standard profile
       if su - \"$PROD_USER\" -c 'command -v nix' &>/dev/null; then
-          NIX_INSTALLED='true'
+        NIX_INSTALLED='true'
       else
-          NIX_INSTALLED='false'
+        NIX_INSTALLED='false'
+        # Piggyback: sudo privileged pre-installation step
+        mkdir -p /nix
+        chown $PROD_USER:$PROD_USER /nix
       fi
 
       # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
