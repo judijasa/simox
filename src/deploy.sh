@@ -155,6 +155,7 @@ deploy_nix_packages() {
   local REMOTE_STORE_PATH
   REMOTE_STORE_PATH=$(readlink -f ./result)
   ssh "root@$REMOTE_HOST" "
+    set -e
     # source PROD_USER nix env before running nix-store command
     . /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh
     mkdir -p '/usr/local/simox'
