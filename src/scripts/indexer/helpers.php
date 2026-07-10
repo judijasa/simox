@@ -46,7 +46,7 @@ function get_max_page($target_site){
 }
 
 function get_api_data($base_url, $page){
-    // Example (includes search by departamento)
+    // Example of url (includes search by departamento):
     // https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
 
     $url = $base_url . '&page=' . $page;
