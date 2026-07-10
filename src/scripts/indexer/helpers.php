@@ -10,7 +10,7 @@ function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
     foreach($new_jobs as $job){
         $job_id = $job['id'];
         if (!in_array($job_id, $batch_job_ids, true)){
-            $new_batch_jobs[] = $job;
+            $new_batch[] = $job;
             $new_batch_job_ids[] = $job_id;
             $added_jobs_n++;
         }
@@ -49,8 +49,8 @@ function get_api_data($base_url, $page){
     // Example of url (includes search by departamento):
     // https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
 
-    $url = $base_url . '&page=' . $page;
-
+    $url = $base_url . '&page=' . "$page";
+    echo "url: ". $url. PHP_EOL;
     // Initialize cURL session
     $ch = curl_init();
 
