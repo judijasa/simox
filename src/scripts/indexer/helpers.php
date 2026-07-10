@@ -108,7 +108,7 @@ function persist_snapshots($conn, $jobs){
     $_str = '(?,?,?,?,?,?)'; // number of columns
     $placeholders = implode(',', array_fill(0, count($jobs), $_str));
     $sql = <<<EOD
-        INSERT INTO empleo_snapshot (
+        INSERT INTO job_offers_snapshot (
             simo_id,
             empleo,
             estado_inscripcion,
