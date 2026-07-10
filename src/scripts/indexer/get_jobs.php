@@ -50,7 +50,7 @@ function indexer($conn, $api_endpoint){
         $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
 
         if (count($new_jobs) > 0) {
-            output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
+            $output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
             [$batch, $batch_job_ids, $added_jobs_n] = $output;
             $batch_size = $batch_size + $added_jobs_n;
         }
