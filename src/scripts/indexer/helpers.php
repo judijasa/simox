@@ -58,6 +58,8 @@ function get_api_data($base_url, $page){
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    // Do not verify certificates; the target site (simo.cnsc.gov.co)
+    // is misconfigured; it returns incomplete certificates.
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Accept: application/json',
