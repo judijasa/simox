@@ -13,14 +13,19 @@ repos:
 
   - repo: local
     hooks:
-      # 1. Your Custom Shell Script
       - id: general
         name: My Custom Generic Format Pre-Commit Logic
         entry: ./hooks/pre-commit-general.sh
         language: script
         files: .* ```
       
-      # 2. Your Standard Linter
+      - id: composer
+        name: My Custom Composer Pre-Commit Logic
+        entry: ./hooks/pre-commit-composer.sh
+        language: script
+        files: .* ```
+      
+      # PHP Linter
       - id: phpstan
         name: phpstan
         entry: phpstan analyse --memory-limit=512M
