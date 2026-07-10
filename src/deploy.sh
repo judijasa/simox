@@ -116,11 +116,11 @@ deploy_repo_remotely() {
         chown $PROD_USER:$PROD_USER '/nix'
       fi
 
-      # Output previous hash and NIX_INSTALLED to stdout (separated by a space)
+      # Output previous hash, NIX_INSTALLED, and arch to stdout (separated by spaces)
       if [ -s \"\$LOG_FILE\" ]; then
-          echo \"\$(tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}') \$NIX_INSTALLED\"
+          echo \"\$(tail -n 1 \"\$LOG_FILE\" | awk '{print \$NF}') \$NIX_INSTALLED \$(uname -m)\"
       else
-          echo \"None \$NIX_INSTALLED\"
+          echo \"None \$NIX_INSTALLED \$(uname -m)\"
       fi
   "
 }
@@ -149,41 +149,25 @@ deploy_nix_packages() {
   local PROD_USER="$2"
   local REMOTE_TARGET_DIR="$3"
 
-  local REMOTE_ARCH
-  REMOTE_ARCH=$(ssh "root@$REMOTE_HOST" "
+  ssh "root@$REMOTE_HOST" "
     set -e
     mkdir -p '/usr/local/simox' '/home/$PROD_USER/.nix-gcroots'
     chown $PROD_USER:$PROD_USER '/home/$PROD_USER/.nix-gcroots'
     ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
-    uname -m
-  ")
+  "
 
-  local LOCAL_ARCH REMOTE_STORE_PATH
-  LOCAL_ARCH=$(uname -m)
-
-  if ! nix eval ".#packages.${REMOTE_ARCH}-linux.default" &>/dev/null; then
-    echo "WARNING: No nix package for ${REMOTE_ARCH}-linux in flake. Skipping nix package deployment."
+  if ! nix eval ".#packages.x86_64-linux.default" &>/dev/null; then
+    echo "WARNING: No nix package for x86_64-linux in flake. Skipping nix package deployment."
     return 0
   fi
 
-  if [ "$LOCAL_ARCH" = "$REMOTE_ARCH" ]; then
-    echo "Building packages locally..."
-    nix build
-    echo "Copying nix closure to remote..."
-    nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
-    REMOTE_STORE_PATH=$(readlink -f ./result)
-    rm -f result
-  else
-    echo "Building packages on remote (local=$LOCAL_ARCH, remote=$REMOTE_ARCH)..."
-    REMOTE_STORE_PATH=$(ssh "$PROD_USER@$REMOTE_HOST" "
-        set -e
-        . /home/$PROD_USER/.nix-profile/etc/profile.d/nix.sh
-        cd '$REMOTE_TARGET_DIR'
-        nix --extra-experimental-features 'nix-command flakes' build >&2
-        readlink -f result
-        rm -f result
-    ")
-  fi
+  local REMOTE_STORE_PATH
+  echo "Building packages locally..."
+  nix build
+  echo "Copying nix closure to remote..."
+  nix copy --to "ssh://$PROD_USER@$REMOTE_HOST" ./result || return 1
+  REMOTE_STORE_PATH=$(readlink -f ./result)
+  rm -f result
 
   echo "Registering nix store root on remote..."
   ssh "root@$REMOTE_HOST" "
@@ -339,7 +323,11 @@ main() {
     echo "Failed to deploy repository."
     exit 1
   fi
-  read -r PREVIOUS_REV NIX_EXISTS <<< "$OUTPUT"
+  read -r PREVIOUS_REV NIX_EXISTS REMOTE_ARCH <<< "$OUTPUT"
+  if [ "$REMOTE_ARCH" != "x86_64" ] || [ "$(uname -m)" != "x86_64" ]; then
+    echo "ERROR: Both local ($(uname -m)) and remote ($REMOTE_ARCH) must be x86_64."
+    exit 1
+  fi
   [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER" || true
   deploy_nix_packages "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"  # keep it before deploying composer
   deploy_composer_dependencies "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
