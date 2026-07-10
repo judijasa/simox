@@ -50,25 +50,28 @@ function indexer($conn, $api_endpoint){
         echo "base_url: ". $base_url. PHP_EOL;
         echo "page: ". $page. PHP_EOL;
         $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
-        if (count($new_jobs) > 0) {
-            $output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
-            [$batch, $batch_job_ids, $added_jobs_n] = $output;
-            $batch_size = $batch_size + $added_jobs_n;
+        if (count($new_jobs) == 0) {
+            break; // no more results
         }
+        $output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
+        [$batch, $batch_job_ids, $added_jobs_n] = $output;
+        $batch_size = $batch_size + $added_jobs_n;
+
         $cond1 = $batch_size > $batch_size_limit;
         $cond2a = $batch_size > 0;
         $cond2b = time() - $start_time > $timeout;
         if ($cond1 || ($cond2a && $cond2b)) {
             persist_snapshots($conn, $batch);
             $cursorseq->set_cursor($page);
-            $batch_size = 0;
-        } else {
-            echo date('Y-m-d H:i:s') . " - Nothing to save. Skipping db insertion.\n";
-            exit;
+            break;
         }
 
         // go to next page or page 1
         $page = ($page > $max_page)? 1 : $page + 1;
+    }
+
+    if ($batch_size == 0) {
+        echo date('Y-m-d H:i:s') . " - Nothing to save. Skipping db insertion.\n";
     }
 }
 
