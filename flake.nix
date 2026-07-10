@@ -15,7 +15,7 @@
   };
 
   outputs = { self, nixpkgs, utils }:
-    utils.lib.eachSystem (utils.lib.defaultSystems ++ [ "armv6l-linux" ]) (system:
+    utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         # Pinned packages evaluated strictly from our historical commit input
