@@ -3,7 +3,7 @@ require 'vendor/autoload.php';
 
 use Utils\Crawler\CasperTrio;
 
-function add_new_jobs($batch_jobs, $batch_pkeys, $new_jobs){
+function batch_with_new_jobs($batch_jobs, $batch_pkeys, $new_jobs){
     $new_batch_jobs = $batch_jobs;
     $new_batch_job_ids = $batch_pkeys;
     $added_jobs_n = 0;
