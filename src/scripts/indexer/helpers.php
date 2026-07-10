@@ -100,13 +100,6 @@ function get_api_data($base_url, $page){
 }
 
 function persist_snapshots($conn, $jobs){
-    // Snapshot table for historical integrity and "as it is" integrity
-    // $jobs = [
-    //     ['r1c1', 'r1c2', 'r1c3', 'r1c4', 'r1c5', 'r1c6'],
-    //     ['r2c1', 'r2c2', 'r2c3', 'r2c4', 'r2c5', 'r2c6'],
-    // ];
-    $_str = '(?,?,?,?,?,?)'; // number of columns
-    $placeholders = implode(',', array_fill(0, count($jobs), $_str));
     $sql = <<<EOD
         INSERT INTO job_offer_snapshot (
             opec,
@@ -115,10 +108,25 @@ function persist_snapshots($conn, $jobs){
             fecha_inscripcion,
             nivel_nombre,
             acceso
-        ) VALUES $placeholders
+        ) VALUES (
+            :opec,
+            :empleo,
+            :estado_inscripcion,
+            :fecha_inscripcion,
+            :nivel_nombre,
+            :acceso
+        )
         EOD;
     $stmt = $conn->prepare($sql);
-    $flatData = array_merge(...$jobs); // ... is the flatten operator
-    $stmt->execute($flatData);
+    foreach ($jobs as $job) {
+        $stmt->execute([
+            ':opec'               => $job['id'],
+            ':empleo'             => json_encode($job['empleo']),
+            ':estado_inscripcion' => $job['estadoInscripcion'],
+            ':fecha_inscripcion'  => $job['fechaInscripcion'],
+            ':nivel_nombre'       => $job['nivelNombre'],
+            ':acceso'             => json_encode($job['access']),
+        ]);
+    }
 }
 
