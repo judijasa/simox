@@ -29,17 +29,26 @@
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
         # phpPkg = pkgs.php84;  # without extensions
-        phpPkg = pkgs.php84.withExtensions ({ all, enabled }: 
+        phpBase = pkgs.php84.withExtensions ({ all, enabled }:
           enabled ++ [
-            all.mysqli 
+            all.mysqli
             all.pdo_mysql
             all.bz2  # required by jerome-breton composer dependency
           ]
         );
+        phpPkg = pkgs.symlinkJoin {
+          name = "php-with-ssl";
+          paths = [ phpBase ];
+          buildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/php \
+              --set SSL_CERT_FILE "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+          '';
+        };
         # Make sure Composer uses this php, as it has the required extensions.
         # phpComposer = pkgs.php84Packages.composer; (discarded)
         phpComposer = pkgs.php84Packages.composer.override {
-          php = phpPkg;
+          php = phpBase;
         };
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
