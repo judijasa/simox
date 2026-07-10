@@ -25,8 +25,6 @@
         bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
         # gnumakePkg = pkgs.gnumake; # reproducible makefiles
-        # Including jq in nix store wihout bash in nix store
-        # requires modification to jq calls.
         # jqPkg = pkgsPinned.jq;
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
