@@ -109,7 +109,7 @@ function persist_snapshots($conn, $jobs){
     $placeholders = implode(',', array_fill(0, count($jobs), $_str));
     $sql = <<<EOD
         INSERT INTO job_offer_snapshot (
-            simo_id,
+            opec,
             empleo,
             estado_inscripcion,
             fecha_inscripcion,
