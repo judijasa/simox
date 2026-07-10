@@ -24,7 +24,7 @@ function indexer($conn, $api_endpoint){
 
     // Batch settings
     $batch = array();
-    $batch_ids = array();
+    $batch_job_ids = array();
     $batch_size = 0;
     $batch_size_limit = 5; // 200
 
@@ -50,7 +50,8 @@ function indexer($conn, $api_endpoint){
         $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
 
         if (count($new_jobs) > 0) {
-            [$batch, $batch_ids, $added_jobs_n] = batch_with_new_jobs($batch, $batch_ids, $new_jobs);
+            output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
+            [$batch, $batch_job_ids, $added_jobs_n] = $output;
             $batch_size = $batch_size + $added_jobs_n;
         }
         $cond1 = $batch_size > $batch_size_limit;
