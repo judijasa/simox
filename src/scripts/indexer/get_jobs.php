@@ -41,7 +41,7 @@ function indexer($conn, $api_endpoint){
 
     // Prepare API request
     $jobs_per_page = 3; // 50
-    $base_url = '/empleos/ofertaPublica/?&size='. "$jobs_per_page";
+    $base_url = $api_endpoint. '/empleos/ofertaPublica/?&size='. "$jobs_per_page";
 
     $start_time = time();
     $timeout = 30; // seconds
