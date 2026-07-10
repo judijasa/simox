@@ -7,6 +7,15 @@
 #   deploy <target_host>
 # For initial deployment:
 #   deploy --init <target_host>
+#
+# Notes:
+# - Processes that belong to initial deployment,
+#   but are not part of continuous development are meant
+#   to be in the Makefile file, under the target prod-init.
+#   They are called in this script through `make prod-init`
+#   whenever the --init option is used while calling deploys.sh
+# - Processes that can be required for continuous deployment are
+#   written directly in the deploy.sh file instead of in Makefile.
 
 set -euo pipefail
 
