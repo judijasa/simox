@@ -47,8 +47,9 @@ function indexer($conn, $api_endpoint){
     $start_time = time();
     $timeout = 30; // seconds
     while(true){
+        echo "base_url: ". $base_url. PHP_EOL;
+        echo "page: ". $page. PHP_EOL;
         $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
-
         if (count($new_jobs) > 0) {
             $output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
             [$batch, $batch_job_ids, $added_jobs_n] = $output;
@@ -63,10 +64,11 @@ function indexer($conn, $api_endpoint){
             $batch_size = 0;
         } else {
             echo date('Y-m-d H:i:s') . " - Nothing to save. Skipping db insertion.\n";
+            exit;
         }
 
         // go to next page or page 1
-        $page = ($page > $max_page)? 1 : $page++;
+        $page = ($page > $max_page)? 1 : $page + 1;
     }
 }
 
