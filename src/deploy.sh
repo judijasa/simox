@@ -161,6 +161,11 @@ deploy_nix_packages() {
   local LOCAL_ARCH REMOTE_STORE_PATH
   LOCAL_ARCH=$(uname -m)
 
+  if ! nix eval ".#packages.${REMOTE_ARCH}-linux.default" &>/dev/null; then
+    echo "WARNING: No nix package for ${REMOTE_ARCH}-linux in flake. Skipping nix package deployment."
+    return 0
+  fi
+
   if [ "$LOCAL_ARCH" = "$REMOTE_ARCH" ]; then
     echo "Building packages locally..."
     nix build
