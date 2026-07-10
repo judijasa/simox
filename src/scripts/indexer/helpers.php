@@ -3,19 +3,19 @@ require 'vendor/autoload.php';
 
 use Utils\Crawler\CasperTrio;
 
-function batch_with_new_jobs($batch_jobs, $batch_pkeys, $new_jobs){
-    $new_batch_jobs = $batch_jobs;
-    $new_batch_job_ids = $batch_pkeys;
+function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
+    $new_batch = $batch;
+    $new_batch_job_ids = $batch_job_ids;
     $added_jobs_n = 0;
     foreach($new_jobs as $job){
         $job_id = $job['id'];
-        if (!in_array($job_id, $batch_pkeys, true)){
+        if (!in_array($job_id, $batch_job_ids, true)){
             $new_batch_jobs[] = $job;
             $new_batch_job_ids[] = $job_id;
             $added_jobs_n++;
         }
     }
-    return [$new_batch_jobs, $new_batch_job_ids, $added_jobs_n];
+    return [$new_batch, $new_batch_job_ids, $added_jobs_n];
 }
 
 function get_max_page($target_site){
