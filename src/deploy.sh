@@ -16,6 +16,15 @@
 #   whenever the --init option is used while calling deploys.sh
 # - Processes that can be required for continuous deployment are
 #   written directly in the deploy.sh file instead of in Makefile.
+# - Deployment of nix packages is based on local building to reduce
+#   resources requirements on the server side; it is executed
+#   only if client and server have x86_64 architecture.
+#   If in the future you want to support multiple architectures,
+#   build remotely instead of using cross-compilation, in order to
+#   the script simple (readability is a project priority).
+#   Another reason to restrict to x86_64 is because one PHP Composer
+#   dependency (Casper crawler) supports only two architectures and
+#   x86_64 is one of them.
 
 set -euo pipefail
 
