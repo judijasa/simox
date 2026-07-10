@@ -6,14 +6,12 @@ if [[ ! -n $IN_NIX_SHELL ]]; then
   source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
 fi
 
-if [ "$IS_CRON_JOB" = "true" ]; then
+parent=$(ps -o comm= -p "$PPID")
+if [[ "$parent" == "cron" || "$parent" == "crond" ]]; then
   cd $SIMO_REPO_PATH
-else
-  if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
-  then
-    echo "This command must be executed from the repository's root directory."
-    exit
-  fi
+elif [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
+  echo "This command must be executed from the repository's root directory."
+  exit 1
 fi
 
 # fix phpcasperjs bug
