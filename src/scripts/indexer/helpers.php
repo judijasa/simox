@@ -50,7 +50,7 @@ function get_api_data($base_url, $page){
     // https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
 
     $url = $base_url . '&page=' . "$page";
-    echo "url: ". $url. PHP_EOL;
+
     // Initialize cURL session
     $ch = curl_init();
 

@@ -47,8 +47,6 @@ function indexer($conn, $api_endpoint){
     $start_time = time();
     $timeout = 30; // seconds
     while(true){
-        echo "base_url: ". $base_url. PHP_EOL;
-        echo "page: ". $page. PHP_EOL;
         $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
         if (count($new_jobs) == 0) {
             break; // no more results
