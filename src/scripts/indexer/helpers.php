@@ -114,7 +114,7 @@ function persist_snapshots($conn, $jobs){
             estado_inscripcion,
             fecha_inscripcion,
             nivel_nombre,
-            access
+            acceso
         ) VALUES $placeholders
         EOD;
     $stmt = $conn->prepare($sql);
