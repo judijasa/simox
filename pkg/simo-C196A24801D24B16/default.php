@@ -22,6 +22,8 @@ $dependencies = array(
     'departamento-BD672733D7AA455F',
     'dependencia-J31Y7UXN1J2K9W4L',
     'cursorseq-A8FEE4C088E5419C',
+    'convocatoria-CP5LH0NIV4WY9J5B',
     'activity_monitor-A170276C72D14319'
 );
 ?>
+
