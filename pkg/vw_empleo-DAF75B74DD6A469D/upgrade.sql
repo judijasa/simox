@@ -1,12 +1,16 @@
 CREATE OR REPLACE VIEW vw_empleo AS
 SELECT
+    'hello',
+    'bye'
+    /*
     (
       SELECT n.nombre
       FROM nivel n
-      WHERE n.id = jo.nivel_id
+      WHERE n.id = e.nivel_id
     ) AS nivel,
-    jo.cierre,
-    jo.salario,
+    e.cierre,
+    e.salario,
+    */
     /*
     (
         SELECT GROUP_CONCAT(nombre SEPARATOR ', ')
@@ -66,13 +70,16 @@ SELECT
         FROM location_agg la
     ) AS municipio, -- use when in search by departamento
     */
-    jo.opec,
-    jo.keywords,
+    -- e.opec,
+    -- e.keywords,
+    /*
     (
         SELECT d.nombre
         FROM denominacion d
         WHERE d.id = jo.denominacion_id
-    ) AS denominacion,
+    ) AS denominacion
+    */
+    /* ,
     (
         SELECT e.descripcion -- TODO: replace by more succint
         FROM estudio e
@@ -82,6 +89,7 @@ SELECT
             WHERE r.id = jo.vacante_id
         )
     ) AS estudio
-FROM job_offer jo;
+    */
+FROM empleo e;
 
 GRANT SELECT ON {{dbname}}.vw_job_offer TO 'public'@'{{servername}}';
