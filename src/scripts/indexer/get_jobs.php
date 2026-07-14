@@ -45,6 +45,7 @@ function indexer($conn, $api_endpoint){
     $jobs_per_page = 3; // 50
     $base_url = $api_endpoint. '/empleos/ofertaPublica/?size='. $jobs_per_page;
 
+    $total_saved = 0;
     $start_time = time();
     $timeout = 30; // seconds
     while(true){
@@ -62,12 +63,16 @@ function indexer($conn, $api_endpoint){
         if ($cond1) {
             persist_snapshots($conn, $batch);
             $cursorseq->set_cursor($page);
+            $total_saved += $batch_size;
+            Logger::info("Saved $batch_size jobs ($total_saved total, page $page).");
             $batch = [];
             $batch_job_ids = [];
             $batch_size = 0;
         } elseif ($cond2a && $cond2b) {
             persist_snapshots($conn, $batch);
             $cursorseq->set_cursor($page);
+            $total_saved += $batch_size;
+            Logger::info("Saved $batch_size jobs ($total_saved total, page $page).");
             break;
         }
 
@@ -75,10 +80,8 @@ function indexer($conn, $api_endpoint){
         $page = ($page > $max_page)? 1 : $page + 1;
     }
 
-    if ($batch_size == 0) {
+    if ($total_saved == 0) {
         Logger::info("Nothing to save. Skipping db insertion.");
-    } else {
-        Logger::info("Saved $batch_size jobs.");
     }
 }
 
