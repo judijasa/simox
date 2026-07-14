@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ ! -v IN_NIX_SHELL ]]; then
+    source /etc/environment
+fi
+
+if [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
+    echo "This command must be executed from the repository's root directory." >&2
+    exit 1
+fi
+
+SCRIPT="${1:?Usage: phprun <script.php>}"
+
+SCRIPT_NAME=$(basename "$SCRIPT")
+DIR_PREFIX=$(dirname "$SCRIPT" | tr '/' '_')
+LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME%.php}.log"
+
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE"
+fi
+
+if [ -t 1 ]; then
+    exec > >(tee -a "$LOG_FILE") 2>&1
+else
+    exec >> "$LOG_FILE" 2>&1
+fi
+
+php "$SCRIPT"
