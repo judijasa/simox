@@ -127,7 +127,8 @@ function persist_snapshots($conn, $jobs){
             ':opec'               => $job['id'],
             ':empleo'             => json_encode($job['empleo']),
             ':estado_inscripcion' => $job['estadoInscripcion'],
-            ':favorito' => $job['favorito'] === '' ? null : $job['favorito'],
+            // cast boolean to int, otherwise PHP convert false to empty string
+            ':favorito'           => (int)$job['favorito'],
             ':inscripcion_id'     => json_encode($job['inscripcionId']),
             ':fecha_inscripcion'  => $job['fechaInscripcion'],
             ':nivel_nombre'       => $job['nivelNombre'],
