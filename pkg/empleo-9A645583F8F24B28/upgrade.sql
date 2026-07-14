@@ -24,7 +24,7 @@ CREATE OR REPLACE TABLE empleo (
     estado_inscripcion VARCHAR(100),
     favorito BOOL,
     inscripcion_id JSON,
-    fecha_inscripcion VARCHAR(100),
+    fecha_inscripcion DATE,
     nivel_nombre VARCHAR(100),
     `access` JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -33,7 +33,7 @@ CREATE OR REPLACE TABLE empleo (
     PRIMARY KEY(id),
     UNIQUE INDEX(opec),
     INDEX ix_empleo_created_at(created_at),
-    INDEX ix_empleo_cierre(cierre),
+    INDEX ix_empleo_fecha_inscripcion(fecha_inscripcion),
     /* You can't make a foreign key from a col
     that's not unique in its parent tbl*/
     FOREIGN KEY fk_empleo_nivel_id(nivel_id)
