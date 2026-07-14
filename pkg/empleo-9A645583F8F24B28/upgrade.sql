@@ -40,9 +40,7 @@ CREATE OR REPLACE TABLE empleo (
     FOREIGN KEY fk_empleo_requisito_id(requisito_id)
         REFERENCES requisito(id),
     FOREIGN KEY fk_empleo_vacante_id(vacante_id)
-        REFERENCES vacante(id),
-    FOREIGN KEY fk_empleo_max_snap_id(max_snap_id)
-        REFERENCES empleo_snapshot(id)
+        REFERENCES vacante(id)
 );
 
 GRANT SELECT ON {{dbname}}.empleo TO 'public'@'{{servername}}';
