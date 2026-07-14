@@ -34,23 +34,15 @@ CREATE OR REPLACE TABLE empleo (
     UNIQUE INDEX(opec),
     INDEX ix_empleo_created_at(created_at),
     INDEX ix_empleo_fecha_inscripcion(fecha_inscripcion),
-    /* You can't make a foreign key from a col
-    that's not unique in its parent tbl*/
-    FOREIGN KEY fk_empleo_nivel_id(nivel_id)
-        REFERENCES nivel(id),
-        -- ON UPDATE CASCADE ON DELETE RESTRICT,
     FOREIGN KEY fk_empleo_denominacion_id(denominacion_id)
         REFERENCES denominacion(id),
         -- ON UPDATE CASCADE ON DELETE RESTRICT,
     FOREIGN KEY fk_empleo_requisito_id(requisito_id)
         REFERENCES requisito(id),
-        -- ON UPDATE CASCADE ON DELETE RESTRICT,
     FOREIGN KEY fk_empleo_vacante_id(vacante_id)
         REFERENCES vacante(id),
-        -- ON UPDATE CASCADE ON DELETE RESTRICT,
     FOREIGN KEY fk_empleo_max_snap_id(max_snap_id)
         REFERENCES empleo_snapshot(id)
-        -- ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 GRANT SELECT ON {{dbname}}.empleo TO 'public'@'{{servername}}';
