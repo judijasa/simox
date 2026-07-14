@@ -1,6 +1,7 @@
+-- data taken from empleo.denominacion.nivel
 CREATE OR REPLACE TABLE nivel (
     id SMALLINT UNSIGNED AUTO_INCREMENT,
-    grado SMALLINT UNSIGNED,
+    code SMALLINT UNSIGNED,
     nombre VARCHAR(100) UNIQUE NOT NULL,
 
     PRIMARY KEY(id),
