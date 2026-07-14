@@ -4,7 +4,7 @@ CREATE OR REPLACE TABLE nivel (
     code SMALLINT UNSIGNED,
     nombre VARCHAR(100) UNIQUE NOT NULL,
 
-    PRIMARY KEY(id),
+    PRIMARY KEY pk_nivel_id(id),
     UNIQUE KEY uk_nivel_nombre (nombre)
 );
 
