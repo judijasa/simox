@@ -41,7 +41,7 @@ function insert_denominaciones(PDO $conn, array $rows): void
         $nivel = $den['nivel'] ?? null;
         $lookup->execute([
             ':code'   => $nivel['id'] ?? null,
-            ':nombre' => $nivel['nombre'] ?? $row['nivel_nombre'],
+            ':nombre' => $nivel['nombre'] ?? null,
         ]);
         $nivel_id = $lookup->fetchColumn() ?: null;
         $stmt->execute([':code' => $den['id'], ':nivel_id' => $nivel_id, ':nombre' => $den['nombre']]);
@@ -152,7 +152,7 @@ function main(): void
 {
     $conn = Database::admin('simo');
 
-    $query = 'SELECT id, empleo, nivel_nombre
+    $query = 'SELECT id, empleo
               FROM empleo_snapshot
               WHERE id >= :curr_id AND id < :next_id
                 AND ABS(id) % :div = :mod';
