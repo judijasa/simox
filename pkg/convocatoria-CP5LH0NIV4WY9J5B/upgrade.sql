@@ -10,4 +10,4 @@ CREATE OR REPLACE TABLE convocatoria (
     INDEX idx_job_offer_agno(agno)
 );
 
-GRANT SELECT ON {{dbname}}.job_offer TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.convocatoria TO 'public'@'{{servername}}';
