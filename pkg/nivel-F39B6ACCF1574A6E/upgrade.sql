@@ -1,8 +1,3 @@
-/*
-To DROP a parent tbl, first you need to DROP its child tbls,
-that is why we make sure job_offer is dropped before
-replacing the nivel table.
-*/
 CREATE OR REPLACE TABLE nivel (
     id SMALLINT UNSIGNED AUTO_INCREMENT,
     grado SMALLINT UNSIGNED,

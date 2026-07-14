@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW vw_job_offer AS
+CREATE OR REPLACE VIEW vw_empleo AS
 SELECT
     (
       SELECT n.nombre
