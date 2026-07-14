@@ -7,8 +7,8 @@ CREATE OR REPLACE TABLE vacante (
     id INT AUTO_INCREMENT,
     code INT NOT NULL, -- id at simo
     cantidad_ascensos SMALLINT UNSIGNED,
-    municipio_code SMALLINT UNSIGNED,
-    dependencia_code INT,
+    municipio_id SMALLINT UNSIGNED,
+    dependencia_id INT,
     fecha_generada TIMESTAMP,
     cantidad SMALLINT UNSIGNED,
     disponible SMALLINT UNSIGNED,
@@ -17,10 +17,10 @@ CREATE OR REPLACE TABLE vacante (
 
     PRIMARY KEY(id),
     UNIQUE KEY uk_vacante_code(code),
-    FOREIGN KEY fk_vacante_municipio_code(municipio_code)
-        REFERENCES municipio(code),
-    FOREIGN KEY fk_vacante_dependencia_code(dependencia_code)
-        REFERENCES dependencia(code)
+    FOREIGN KEY fk_vacante_municipio_id(municipio_id)
+        REFERENCES municipio(id),
+    FOREIGN KEY fk_vacante_dependencia_id(dependencia_id)
+        REFERENCES dependencia(id)
 );
 
 GRANT SELECT ON {{dbname}}.vacante TO 'public'@'{{servername}}';
