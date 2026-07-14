@@ -1,6 +1,6 @@
 <?php
 $dependencies = array(
-    'vw_job_offer-DAF75B74DD6A469D',
+    'vw_empleo-DAF75B74DD6A469D',
     'vacante-WZ0T87MRR815E49Y',
     'requisito-7SACLUK8T6IU4BP3',
     // 'otras_habilidades_variaciones-849D717DCE0B4981',
