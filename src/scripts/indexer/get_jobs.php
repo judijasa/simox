@@ -5,6 +5,7 @@ require 'src/utils/indexing.php';
 
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\CursorSeq;
+use Utils\Logger;
 
 function main(){
     $api_endpoint = "https://simo.cnsc.gov.co";
@@ -58,7 +59,13 @@ function indexer($conn, $api_endpoint){
         $cond1 = $batch_size > $batch_size_limit;
         $cond2a = $batch_size > 0;
         $cond2b = time() - $start_time > $timeout;
-        if ($cond1 || ($cond2a && $cond2b)) {
+        if ($cond1) {
+            persist_snapshots($conn, $batch);
+            $cursorseq->set_cursor($page);
+            $batch = [];
+            $batch_job_ids = [];
+            $batch_size = 0;
+        } elseif ($cond2a && $cond2b) {
             persist_snapshots($conn, $batch);
             $cursorseq->set_cursor($page);
             break;
@@ -69,7 +76,9 @@ function indexer($conn, $api_endpoint){
     }
 
     if ($batch_size == 0) {
-        echo date('Y-m-d H:i:s') . " - Nothing to save. Skipping db insertion.\n";
+        Logger::info("Nothing to save. Skipping db insertion.");
+    } else {
+        Logger::info("Saved $batch_size jobs.");
     }
 }
 
