@@ -1,8 +1,3 @@
-/*
-To DROP a parent tbl, first you need to DROP its child tbls,
-that is why we make sure job_offer is dropped before
-replacing the dependencia table.
-*/
 CREATE OR REPLACE TABLE dependencia (
     id INT AUTO_INCREMENT,
     code INT, -- simo id
