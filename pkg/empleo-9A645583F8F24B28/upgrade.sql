@@ -16,7 +16,7 @@ CREATE OR REPLACE TABLE empleo (
     discapacidades JSON,
     documento_id INT,
     entidad_id SMALLINT,
-    identificador VAR(100),
+    identificador VARCHAR(100),
     vigencia_salarial YEAR,
     urbano BOOL,
     aeronautico BOOL,
