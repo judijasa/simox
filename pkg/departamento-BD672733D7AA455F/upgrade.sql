@@ -1,10 +1,12 @@
 /* To DROP a parent tbl, first you need to DROP its child tbls */
 CREATE OR REPLACE TABLE departamento (
     id TINYINT AUTO_INCREMENT,
-    nombre VARCHAR(75) UNIQUE NOT NULL,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
     iso VARCHAR(5) UNIQUE NOT NULL,
 
-    PRIMARY KEY(id)
+    PRIMARY KEY pk_departamento_id(id),
+    UNIQUE KEY uk_departamento(nombre)
+
 );
 
 INSERT INTO departamento (
