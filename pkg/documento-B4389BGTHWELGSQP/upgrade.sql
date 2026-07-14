@@ -13,4 +13,4 @@ CREATE OR REPLACE TABLE documento (
     UNIQUE INDEX uk_documento_codigo(codigo)
 );
 
-GRANT SELECT ON {{dbname}}.job_offer TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.documento TO 'public'@'{{servername}}';
