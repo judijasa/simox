@@ -1,10 +1,8 @@
 <?php
 
 require 'vendor/autoload.php';
-require 'src/utils/DatabaseOps/BatchScan.php';
-
 use Utils\Connectivity\Database;
-use Utils\DatabaseOps;
+use Utils\DatabaseOps\BatchScan;
 
 function insert_niveles(PDO $conn, array $rows): void
 {
@@ -159,7 +157,7 @@ function main(): void
               WHERE id >= :curr_id AND id < :next_id
                 AND ABS(id) % :div = :mod';
 
-    DatabaseOps\scan_table_in_batches(
+    BatchScan::scan(
         $conn,
         'empleo_snapshot',
         $query,
