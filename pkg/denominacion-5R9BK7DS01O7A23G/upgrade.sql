@@ -6,7 +6,8 @@ CREATE OR REPLACE TABLE denominacion (
 
     PRIMARY KEY(id),
     UNIQUE KEY uk_denominacion_code (code),
-    INDEX ix_denominacion_nivel_code(nivel_code)
+    FOREIGN KEY fk_denominacion_nivel_code(nivel_code)
+        REFERENCES nivel(code)
 );
 
 GRANT SELECT ON {{dbname}}.denominacion TO 'public'@'{{servername}}';
