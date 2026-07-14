@@ -127,7 +127,7 @@ function persist_snapshots($conn, $jobs){
             ':opec'               => $job['id'],
             ':empleo'             => json_encode($job['empleo']),
             ':estado_inscripcion' => $job['estadoInscripcion'],
-            ':favorito'           => $job['favorito'],
+            ':favorito' => $job['favorito'] === '' ? null : $job['favorito'],
             ':inscripcion_id'     => json_encode($job['inscripcionId']),
             ':fecha_inscripcion'  => $job['fechaInscripcion'],
             ':nivel_nombre'       => $job['nivelNombre'],
