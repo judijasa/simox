@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Utils\Logger;
+namespace Utils;
 
-function debug(string $message) {
-// Usage: debug("This only prints in terminal");
-    if (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') {
-        // Only runs when executed from terminal
-        echo "[DEBUG] " . $message . PHP_EOL;
+class Logger
+{
+    public static function info(string $message): void
+    {
+        echo '[' . date('Y-m-d H:i:s') . '] [INFO] ' . $message . PHP_EOL;
+    }
+
+    public static function debug(string $message): void
+    {
+        echo '[DEBUG] ' . $message . PHP_EOL;
     }
 }
-?>
-
