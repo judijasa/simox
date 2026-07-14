@@ -36,7 +36,7 @@
         SELECT
             count(*),
             cierre
-        FROM job_offer
+        FROM empleo
         WHERE id > (
             SELECT value FROM cursorseq WHERE `key` = 'update_job_offer_id_seq'
         ) ORDER BY cierre;
@@ -51,7 +51,7 @@
         SELECT
             opec,
             cierre
-        FROM job_offer
+        FROM empleo
         WHERE id > (
             SELECT value FROM cursorseq WHERE key='max_old_job_offer_id_seq'
         ) ORDER BY cierre, opec LIMIT 5;
@@ -63,7 +63,7 @@
 
         $sql = <<<SQL
         UPDATE cursorseq SET value = (
-            SELECT max(id) FROM job_offer;
+            SELECT max(id) FROM empleo;
         ) WHERE key = 'get_new_jobs_job_offer_id_seq';
         SQL;
         $stmt = $conn->prepare($sql);

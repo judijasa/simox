@@ -1,15 +1,15 @@
 <?php
 // Keyword Generator:
-// Extrae palabras clave (carreras, estudios, oficios, etc.) de la lista 'Estudios' de la tabla 'job_offer_snapshot'.
+// Extrae palabras clave (carreras, estudios, oficios, etc.) de la lista 'Estudios' de la tabla 'empleo_snapshot'.
 
 require 'src/utils/connectivity.php';
 require 'src/utils/string_ops.php';
 
 
-function find_departamento($k, $job_offer_obj, $departamento_obj){
-        $municipio = $job_offer_obj[$k]['municipio'];
-        $convocatoria = $job_offer_obj[$k]['convocatoria'];
-        // job_offer.municipio can have more than one municipio, e.g., `Roldanillo, Cartago, Bugalagrande`.
+function find_departamento($k, $empleo_obj, $departamento_obj){
+        $municipio = $empleo_obj[$k]['municipio'];
+        $convocatoria = $empleo_obj[$k]['convocatoria'];
+        // empleo.municipio can have more than one municipio, e.g., `Roldanillo, Cartago, Bugalagrande`.
         // Assuming that `Bogota DC` is unique per OPEC.
         if(contains($municipio, 'Bogotá D.C.')){
             return 'Bogotá D.C.';
@@ -22,9 +22,9 @@ function find_departamento($k, $job_offer_obj, $departamento_obj){
         }
 }
 
-function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj) {
+function find_keywords($k, $empleo_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj) {
     // Remove 'EDUCACIÓN' here, otherwise wrongly taken as career 'Educación'
-    $v = str_replace('EDUCACIÓN','',$job_offer_obj[$k]['estudio']);
+    $v = str_replace('EDUCACIÓN','',$empleo_obj[$k]['estudio']);
     // Remove space between words to bypass
     // the bug of unexpected missing spaces
     // in the scraping of Estudios info.
@@ -194,7 +194,7 @@ function find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_esp
         //if($k == 66){echo $v. PHP_EOL.PHP_EOL.PHP_EOL;}
         //****** END: only for testing *********
 
-        echo "OPEC: ". $job_offer_obj[$k]["opec"]. PHP_EOL. $reduce_v. '"'. PHP_EOL. PHP_EOL;
+        echo "OPEC: ". $empleo_obj[$k]["opec"]. PHP_EOL. $reduce_v. '"'. PHP_EOL. PHP_EOL;
     } // if
     //***************************
     // END: Detect new careers
@@ -209,14 +209,14 @@ try {
     // Use $conn->exec() if no results are returned
     // Use $conn->prepare() if using bindValue()
 
-    // Query "SELECT Estudio FROM job_offer LIMIT n OFFSET m"
+    // Query "SELECT Estudio FROM empleo LIMIT n OFFSET m"
     // returns only n records, starting from record m (1st item m = 0)
-    $stmt = $conn->prepare("SELECT id, max_snap_id, municipio, convocatoria, estudio, opec FROM job_offer WHERE id > (SELECT value FROM cursorseq WHERE `key` = 'update_job_offer_id_seq')");
+    $stmt = $conn->prepare("SELECT id, max_snap_id, municipio, convocatoria, estudio, opec FROM empleo WHERE id > (SELECT value FROM cursorseq WHERE `key` = 'update_empleo_id_seq')");
     $stmt->execute();
     $stmt->setFetchMode(PDO::FETCH_ASSOC);
-    $job_offer_obj = $stmt->fetchAll();
+    $empleo_obj = $stmt->fetchAll();
 
-    // To update job_offer.departamento
+    // To update empleo.departamento
 
     $stmt = $conn->prepare("SELECT nombre FROM departamento");
     $stmt->execute();
@@ -224,7 +224,7 @@ try {
     $res = new RecursiveArrayIterator($stmt->fetchAll());
     $departamento_obj = new RecursiveIteratorIterator($res);
 
-    // To update job_offer.keywords
+    // To update empleo.keywords
 
     $stmt = $conn->prepare("SELECT nombre FROM estudio_basico_variaciones");
     $stmt->execute();
@@ -249,8 +249,8 @@ try {
     $upper_bound = 5; // Detect new careers
     $flag = True; // Detect new careers
 
-    $kmax = count($job_offer_obj)-1;
-    if(empty($job_offer_obj)){
+    $kmax = count($empleo_obj)-1;
+    if(empty($empleo_obj)){
         $message = "WARNING: Nothing to update.";
         #error_log($message, E_WARNING);
         echo $message. PHP_EOL;
@@ -259,14 +259,14 @@ try {
             $sql = <<<SQL
             START TRANSACTION;
 
-            UPDATE job_offer
+            UPDATE empleo
             SET
                 -- departamento_id = (SELECT id FROM departamento WHERE nombre = :dpto_nombre), -- old
                 keywords = :keywords,
-                nivel_id = (SELECT id FROM nivel WHERE nombre = (SELECT nivel FROM job_offer_snapshot WHERE id = :max_snap_id))
+                nivel_id = (SELECT id FROM nivel WHERE nombre = (SELECT nivel FROM empleo_snapshot WHERE id = :max_snap_id))
             WHERE id = :id;
 
-            /* UPDATE cursorseq SET value = :id WHERE `key` = 'update_job_offer_id_seq'; */
+            /* UPDATE cursorseq SET value = :id WHERE `key` = 'update_empleo_id_seq'; */
 
             COMMIT;
 
@@ -274,14 +274,14 @@ try {
             SQL;
             $stmt = $conn->prepare($sql);
             // Use bindValue() with prepare() instead of exec().
-            $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
-            $stmt->bindValue(':max_snap_id', $job_offer_obj[$k]["max_snap_id"]);
-            // $stmt->bindValue(':dpto_nombre', find_departamento($k, $job_offer_obj, $departamento_obj)); // old
-            $stmt->bindValue(':keywords', find_keywords($k, $job_offer_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
+            $stmt->bindValue(':id', $empleo_obj[$k]["id"]);
+            $stmt->bindValue(':max_snap_id', $empleo_obj[$k]["max_snap_id"]);
+            // $stmt->bindValue(':dpto_nombre', find_departamento($k, $empleo_obj, $departamento_obj)); // old
+            $stmt->bindValue(':keywords', find_keywords($k, $empleo_obj, $estudio_basico_var_obj, $estudio_especializado_var_obj, $otras_habilidades_var_obj));
             $stmt->execute();
         } // foreach
-        $stmt = $conn->prepare("UPDATE cursorseq SET value = :id WHERE `key` = 'update_job_offer_id_seq'");
-        $stmt->bindValue(':id', $job_offer_obj[$k]["id"]);
+        $stmt = $conn->prepare("UPDATE cursorseq SET value = :id WHERE `key` = 'update_empleo_id_seq'");
+        $stmt->bindValue(':id', $empleo_obj[$k]["id"]);
         $stmt->execute();
     } // if
 } catch(PDOException $e) {

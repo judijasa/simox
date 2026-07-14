@@ -101,20 +101,24 @@ function get_api_data($base_url, $page){
 
 function persist_snapshots($conn, $jobs){
     $sql = <<<EOD
-        INSERT INTO job_offer_snapshot (
+        INSERT INTO empleo_snapshot (
             opec,
             empleo,
             estado_inscripcion,
+            favorito,
+            inscripcion_id,
             fecha_inscripcion,
             nivel_nombre,
-            acceso
+            `access`
         ) VALUES (
             :opec,
             :empleo,
             :estado_inscripcion,
+            :favorito,
+            :inscripcion_id,
             :fecha_inscripcion,
             :nivel_nombre,
-            :acceso
+            :access
         )
         EOD;
     $stmt = $conn->prepare($sql);
@@ -123,9 +127,11 @@ function persist_snapshots($conn, $jobs){
             ':opec'               => $job['id'],
             ':empleo'             => json_encode($job['empleo']),
             ':estado_inscripcion' => $job['estadoInscripcion'],
+            ':favorito'           => $job['favorito'],
+            ':inscripcion_id'     => json_encode($job['inscripcionId']),
             ':fecha_inscripcion'  => $job['fechaInscripcion'],
             ':nivel_nombre'       => $job['nivelNombre'],
-            ':acceso'             => json_encode($job['access']),
+            ':access'             => json_encode($job['access']),
         ]);
     }
 }
