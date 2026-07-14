@@ -47,7 +47,11 @@ do
 done
 
 # Replace placeholders in the SQL file with actual values
-sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pseudo_sql_file" > "$agg_upgrades_sql_file"
+# Wrap with FK checks disabled so CREATE OR REPLACE on parent tables doesn't fail
+# when child tables with FKs already exist in the DB from a previous run.
+{ echo "SET FOREIGN_KEY_CHECKS=0;"; \
+  sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g;" "$agg_upgrades_pseudo_sql_file"; \
+  echo "SET FOREIGN_KEY_CHECKS=1;"; } > "$agg_upgrades_sql_file"
 
 "$DBMS" -u root "$DBNAME" 2>/dev/null < $agg_upgrades_sql_file || \
 sudo env PATH="$PATH" MYSQL_UNIX_PORT="$MYSQL_UNIX_PORT" "$DBMS" "$DBNAME" < $agg_upgrades_sql_file
