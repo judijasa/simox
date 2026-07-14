@@ -39,10 +39,10 @@ sed "s/{{dbname}}/${DBNAME}/g; s/{{servername}}/${SERVER}/g; s/{{admin_password}
 
 # Execute SQL
 "$DBMS" -u root < "$agg_upgrades_sql_file" 2>/dev/null || \
-sudo "$DBMS" < $agg_upgrades_sql_file 
+sudo env PATH="$PATH" "$DBMS" < $agg_upgrades_sql_file
 
 rm -r $workdir
 
-"$DBMS" -u root "${DBNAME}" 2>/dev/null || sudo "$DBMS" "${DBNAME}" 
+"$DBMS" -u root "${DBNAME}" 2>/dev/null || sudo env PATH="$PATH" "$DBMS" "${DBNAME}"
 
 exit 0
