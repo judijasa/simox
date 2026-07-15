@@ -8,12 +8,6 @@ $arg = $argv[1] ?? null;
 $func      = substr($func_call, 0, strpos($func_call, '('));
 $func_args = rtrim(substr($func_call, strpos($func_call, '(') + 1), ')');
 
-$repo_root = getenv('SIMO_REPO_PATH');
-if (!$repo_root || getcwd() !== $repo_root) {
-    fwrite(STDERR, "Error: must be run from the repository's root directory.\n");
-    exit(1);
-}
-
 require getenv('SIMO_REPO_PATH') . '/src/utils/attributes.php';
 require $script;
 
