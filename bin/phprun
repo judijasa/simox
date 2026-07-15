@@ -6,20 +6,12 @@ if [[ ! -v IN_NIX_SHELL ]]; then
     source /etc/environment
 fi
 
-if [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
-    echo "This command must be executed from the repository's root directory." >&2
-    exit 1
-fi
-
-SCRIPT="${1:?Usage: phprun <script.php>}"
-
-SCRIPT_NAME=$(basename "$SCRIPT")
+SCRIPT="${1%%:*}"
+SCRIPT_NAME=$(basename "$SCRIPT" .php)
 DIR_PREFIX=$(dirname "$SCRIPT" | tr '/' '_')
-LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME%.php}.log"
+LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
 
-if [ ! -f "$LOG_FILE" ]; then
-    touch "$LOG_FILE"
-fi
+touch -a "$LOG_FILE"
 
 if [ -t 1 ]; then
     exec > >(tee -a "$LOG_FILE") 2>&1
@@ -27,4 +19,4 @@ else
     exec >> "$LOG_FILE" 2>&1
 fi
 
-php "$SCRIPT"
+php "$(dirname "$0")/phprun.php" "$1"
