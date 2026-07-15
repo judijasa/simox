@@ -124,6 +124,13 @@ deploy_repo_remotely() {
       echo \"Deploy complete: $REV\" > \"\$FINAL_DIR/.deploy_version\"
       chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.deploy_version\"
 
+      # Piggyback: Update cron jobs from #[CronJob] attributes in source
+      echo 'Updating cron jobs...' >&2
+      SIMO_REPO_PATH=\"\$FINAL_DIR\" php \"\$FINAL_DIR/bin/update-cron-manifest\" > /etc/cron.d/simo-orchestrator
+      chmod 644 /etc/cron.d/simo-orchestrator
+      systemctl restart cron || systemctl restart crond
+      echo 'Cron jobs updated.' >&2
+
       # Piggyback: Check if nix is in the user's path or standard profile
       if su - \"$PROD_USER\" -c 'command -v nix' &>/dev/null; then
         NIX_INSTALLED='true'
@@ -262,60 +269,6 @@ deploy_website() {
   fi
 }
 
-deploy_cron_jobs() {
-  local REMOTE_HOST="$1"
-  local PROD_USER="$2"
-  local SOURCE_BASE_DIR="$3"
-
-  # Keep /etc/simo-cron.* root-owned. They will be used by Cron deamon, which runs as root.
-  ssh "root@$REMOTE_HOST" "
-    REPO_ORCHEST=\"$SOURCE_BASE_DIR/etc/cron.d/orchestrator\"
-    SYS_ORCHEST='/etc/cron.d/simo-orchestrator'
-    CHANGES_DETECTED=0
-
-    echo 'Syncing cron configurations...'
-
-    mkdir -p '/etc/simo-cron.5min' '/etc/simo-cron.monthly' '/etc/simo-cron.hourly'
-    declare -A CRON_MAP=( \
-      ['src/scripts/maintenance/memory_cleaning.sh']='/etc/simo-cron.5min' \
-      ['src/scripts/maintenance/trim_log_files.sh']='/etc/simo-cron.monthly' \
-      ['src/scripts/indexer/main.sh']='/etc/simo-cron.hourly')
-    for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-      if [ ! -f \"$SOURCE_BASE_DIR/\$SRC_REL\" ]; then
-          echo \"Error: Source file \$SRC_REL missing on remote!\"
-          exit 1
-      fi
-    done
-    for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-      SRC=\"$SOURCE_BASE_DIR/\$SRC_REL\"
-      DIR=\"\${CRON_MAP[\$SRC_REL]}\"
-      BASE=\$(basename \"\$SRC\")
-      TARGET=\"\$DIR/\$BASE\"
-      if [ ! -f \"\$TARGET\" ] || ! cmp -s \"\$SRC\" \"\$TARGET\"; then
-          CHANGES_DETECTED=1
-      fi
-    done
-    if [ ! -f \"\$SYS_ORCHEST\" ] || ! cmp -s \"\$REPO_ORCHEST\" \"\$SYS_ORCHEST\"; then
-        CHANGES_DETECTED=1
-    fi
-    if [ \$CHANGES_DETECTED -eq 1 ]; then
-        echo 'Changes detected in cron specifications. Deploying updates...'
-        for SRC_REL in \"\${!CRON_MAP[@]}\"; do
-          SRC=\"$SOURCE_BASE_DIR/\$SRC_REL\"
-          DIR=\"\${CRON_MAP[\$SRC_REL]}\"
-          BASE=\$(basename \"\$SRC\")
-          TARGET=\"\$DIR/simo_\${BASE%.sh}\"
-          install -m 755 -o \"$PROD_USER\" -g \"$PROD_USER\" \"\$SRC\" \"\$TARGET\"
-        done
-        install -m 644 -o root -g root \"\$REPO_ORCHEST\" \"\$SYS_ORCHEST\"
-        echo 'Restarting cron daemon...'
-        systemctl restart cron  || systemctl restart crond
-    else
-        echo 'Cron systems are up to date. Skipping deployment and restart.'
-    fi
-  "
-}
-
 INIT=false
 ARGS=()
 
@@ -350,7 +303,6 @@ main() {
   deploy_nix_packages "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"  # keep it before deploying composer
   deploy_composer_dependencies "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
   deploy_website "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
-  deploy_cron_jobs "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"
   if [ "$INIT" = "true" ]; then
     # prod-init is for execute only once workflows in prod server
     make prod-init

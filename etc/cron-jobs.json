@@ -1,0 +1,12 @@
+[
+    {
+        "script": "src\/scripts\/indexer\/get_jobs.php",
+        "agent": "main",
+        "schedule": "daily"
+    },
+    {
+        "script": "src\/scripts\/pipeline\/pipeline.php",
+        "agent": "main",
+        "schedule": "daily"
+    }
+]

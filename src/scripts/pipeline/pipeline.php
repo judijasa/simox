@@ -1,6 +1,7 @@
 <?php
 
 require 'vendor/autoload.php';
+require 'src/utils/attributes.php';
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 
@@ -148,6 +149,8 @@ function process_batch(PDO $conn, array $rows): void
     insert_vacantes($conn, $rows);
 }
 
+#[CronJob(schedule: 'daily')]
+#[Agent]
 function main(): void
 {
     $conn = Database::admin('simo');

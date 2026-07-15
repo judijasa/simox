@@ -1,5 +1,6 @@
 <?php
 require 'vendor/autoload.php';
+require 'src/utils/attributes.php';
 require 'src/scripts/indexer/helpers.php';
 require 'src/utils/indexing.php';
 
@@ -7,6 +8,8 @@ use Utils\Connectivity\Database;
 use Utils\DatabaseOps\CursorSeq;
 use Utils\Logger;
 
+#[CronJob(schedule: 'daily')]
+#[Agent]
 function main(){
     $api_endpoint = "https://simo.cnsc.gov.co";
     $dbname = 'simo';
