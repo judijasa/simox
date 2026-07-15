@@ -6,6 +6,14 @@ if [[ ! -v IN_NIX_SHELL ]]; then
     source /etc/environment
 fi
 
+parent=$(ps -o comm= -p "$PPID")
+if [[ "$parent" == "cron" || "$parent" == "crond" ]]; then
+    cd "$SIMO_REPO_PATH"
+elif [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
+    echo "This command must be executed from the repository's root directory." >&2
+    exit 1
+fi
+
 ARG="${1:-}"
 
 if [[ -z "$ARG" || "$ARG" != *:* ]]; then
