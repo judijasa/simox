@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 $arg = $argv[1] ?? null;
 
-if (!$arg || !str_contains($arg, ':')) {
-    fwrite(STDERR, "Usage: phprun.php <script.php:agent(args)>\n");
-    exit(1);
-}
-
 [$script, $func_call] = explode(':', $arg, 2);
 $func      = substr($func_call, 0, strpos($func_call, '('));
 $func_args = rtrim(substr($func_call, strpos($func_call, '(') + 1), ')');
@@ -19,7 +14,7 @@ if (!$repo_root || getcwd() !== $repo_root) {
     exit(1);
 }
 
-require __DIR__ . '/../src/utils/attributes.php';
+require getenv('SIMO_REPO_PATH') . '/src/utils/attributes.php';
 require $script;
 
 $rf = new ReflectionFunction($func);

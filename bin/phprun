@@ -6,7 +6,14 @@ if [[ ! -v IN_NIX_SHELL ]]; then
     source /etc/environment
 fi
 
-SCRIPT="${1%%:*}"
+ARG="${1:-}"
+
+if [[ -z "$ARG" || "$ARG" != *:* ]]; then
+    echo "Usage: phprun <script.php:agent(args)>" >&2
+    exit 1
+fi
+
+SCRIPT="${ARG%%:*}"
 SCRIPT_NAME=$(basename "$SCRIPT" .php)
 DIR_PREFIX=$(dirname "$SCRIPT" | tr '/' '_')
 LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
@@ -19,4 +26,4 @@ else
     exec >> "$LOG_FILE" 2>&1
 fi
 
-php "$(dirname "$0")/phprun.php" "$1"
+php "$SIMO_REPO_PATH/src/utils/phprun.php" "$ARG"
