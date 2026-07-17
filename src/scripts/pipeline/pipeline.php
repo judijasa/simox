@@ -1,7 +1,9 @@
 <?php
 
 require 'vendor/autoload.php';
-require 'src/utils/attributes.php';
+
+use Utils\Agent;
+use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 
@@ -171,3 +173,4 @@ function main(): void
 }
 
 main();
+

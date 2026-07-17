@@ -1,9 +1,10 @@
 <?php
 require 'vendor/autoload.php';
-require 'src/utils/attributes.php';
 require 'src/scripts/indexer/helpers.php';
 require 'src/utils/indexing.php';
 
+use Utils\Agent;
+use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\CursorSeq;
 use Utils\Logger;
