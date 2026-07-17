@@ -32,3 +32,10 @@ repos:
         language: system
         pass_filenames: false
         files: \.php$
+
+      # PHP attribute consistency
+      - id: php-attributes
+        name: CronJob requires Agent
+        entry: php hooks/check-php-attributes.php
+        language: system
+        files: \.php$
