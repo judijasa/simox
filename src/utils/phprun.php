@@ -14,10 +14,12 @@ require $script;
 use Utils\Agent;
 
 $rf = new ReflectionFunction($func);
-if (empty($rf->getAttributes(Agent::class))) {
+$attrs = $rf->getAttributes(Agent::class);
+if (empty($attrs)) {
     fwrite(STDERR, "Error: '$func' in '$script' is not an #[Agent].\n");
     exit(1);
 }
+$attrs[0]->newInstance();
 
 printf('%s - Starting %s' . PHP_EOL, date('Y-m-d H:i:s'), $arg);
 eval("$func($func_args);");
