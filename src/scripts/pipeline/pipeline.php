@@ -25,7 +25,7 @@ function insert_convocatorias(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO convocatoria (codigo, nombre, agno)
             VALUES (:codigo, :nombre, :agno)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -40,7 +40,7 @@ function insert_denominaciones(PDO $conn, array $rows): void
     $sql_lookup = 'SELECT id FROM nivel WHERE code = :code OR nombre = :nombre LIMIT 1';
     $sql = 'INSERT INTO denominacion (code, nivel_id, nombre)
             VALUES (:code, :nivel_id, :nombre)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $lookup = $conn->prepare($sql_lookup);
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
@@ -61,7 +61,7 @@ function insert_dependencias(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO dependencia (code, nombre)
             VALUES (:code, :nombre)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -77,7 +77,7 @@ function insert_municipios(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO municipio (code, nombre, departamento)
             VALUES (:code, :nombre, :departamento)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -97,7 +97,7 @@ function insert_requisitos(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO requisito (code, estudio, experiencia, otros, alternativas, equivalencias)
             VALUES (:code, :estudio, :experiencia, :otros, :alternativas, :equivalencias)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -124,7 +124,7 @@ function insert_vacantes(PDO $conn, array $rows): void
             VALUES
                 (:code, :cantidad_ascensos, :municipio_id, :dependencia_id,
                  :fecha_generada, :cantidad, :disponible, :cargos_vacantes, :ocupadas_pre_pensionados)
-            ON DUPLICATE KEY id = id';
+            ON DUPLICATE KEY UPDATE id = id';
     $mun_lookup = $conn->prepare($sql_mun);
     $dep_lookup = $conn->prepare($sql_dep);
     $stmt       = $conn->prepare($sql);
