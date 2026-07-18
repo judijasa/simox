@@ -5,7 +5,6 @@ $dependencies = array(
     'requisito-7SACLUK8T6IU4BP3',
     // 'otras_habilidades_variaciones-849D717DCE0B4981',
     //'otras_habilidades-5A260966F7DD497A',
-    'nivel-F39B6ACCF1574A6E',
     'municipio-WK095781S7NA146R',
     // 'job_offer_location-ABF75B82LD6U469H',
     // 'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957',

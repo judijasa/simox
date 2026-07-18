@@ -7,20 +7,6 @@ use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 
-function insert_niveles(PDO $conn, array $rows): void
-{
-    $sql = 'INSERT INTO nivel (code, nombre)
-            VALUES (:code, :nombre)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
-    foreach ($rows as $row) {
-        $empleo = json_decode($row['empleo'], true);
-        $nivel = $empleo['denominacion']['nivel'] ?? null;
-        if ($nivel === null) continue;
-        $stmt->execute([':code' => $nivel['id'], ':nombre' => $nivel['nombre']]);
-    }
-}
-
 function insert_convocatorias(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO convocatoria (codigo, nombre, agno)
@@ -37,23 +23,15 @@ function insert_convocatorias(PDO $conn, array $rows): void
 
 function insert_denominaciones(PDO $conn, array $rows): void
 {
-    $sql_lookup = 'SELECT id FROM nivel WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO denominacion (code, nivel_id, nombre)
-            VALUES (:code, :nivel_id, :nombre)
+    $sql = 'INSERT INTO denominacion (code, nivel, nombre)
+            VALUES (:code, :nivel, :nombre)
             ON DUPLICATE KEY UPDATE id = id';
-    $lookup = $conn->prepare($sql_lookup);
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
         $den = $empleo['denominacion'] ?? null;
         if ($den === null || $den['id'] === null) continue;
-        $nivel = $den['nivel'] ?? null;
-        $lookup->execute([
-            ':code'   => $nivel['id'] ?? null,
-            ':nombre' => $nivel['nombre'] ?? null,
-        ]);
-        $nivel_id = $lookup->fetchColumn() ?: null;
-        $stmt->execute([':code' => $den['id'], ':nivel_id' => $nivel_id, ':nombre' => $den['nombre']]);
+        $stmt->execute([':code' => $den['id'], ':nivel' => $den['nivel'], ':nombre' => $den['nombre']]);
     }
 }
 
@@ -154,7 +132,6 @@ function insert_vacantes(PDO $conn, array $rows): void
 
 function process_batch(PDO $conn, array $rows): void
 {
-    insert_niveles($conn, $rows);
     insert_convocatorias($conn, $rows);
     insert_dependencias($conn, $rows);
     insert_municipios($conn, $rows);
