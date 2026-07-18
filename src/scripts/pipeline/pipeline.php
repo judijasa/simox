@@ -9,15 +9,15 @@ use Utils\DatabaseOps\BatchScan;
 
 function insert_convocatorias(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT INTO convocatoria (codigo, nombre, agno)
-            VALUES (:codigo, :nombre, :agno)
+    $sql = 'INSERT INTO convocatoria (code, codigo, nombre, agno)
+            VALUES (:code, :codigo, :nombre, :agno)
             ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
         $conv = $empleo['convocatoria'] ?? null;
         if ($conv === null) continue;
-        $stmt->execute([':codigo' => $conv['codigo'], ':nombre' => $conv['nombre'], ':agno' => $conv['agno']]);
+        $stmt->execute([':code' => $conv['id'], ':codigo' => $conv['codigo'], ':nombre' => $conv['nombre'], ':agno' => $conv['agno']]);
     }
 }
 
