@@ -11,27 +11,28 @@ use Utils\Logger;
 
 #[CronJob(schedule: 'daily')]
 #[Agent]
-function main(){
+function main($batch_size_limit = 200, $jobs_per_page = 50, $timeout =  60 * 45){
     $base_url = "https://simo.cnsc.gov.co";
     $dbname = 'simo';
     try {
         $conn = Database::admin($dbname);
-        indexer($conn, $base_url);
+        indexer(
+            $conn,
+            $base_url,
+            $batch_size_limit,
+            $jobs_per_page,
+            $timeout);
     } catch (PDOException $e) {
         echo "Error: ". $e->getMessage(). PHP_EOL;
     } finally {
         $conn = null;
     }
-
 }
 
-function indexer($conn, $base_url){
-
-    // Batch settings
+function indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
     $batch = array();
     $batch_job_ids = array();
     $batch_size = 0;
-    $batch_size_limit = 200; // jobs test with 5
 
     $min_page = 1;
 
@@ -40,12 +41,10 @@ function indexer($conn, $base_url){
     $page = $cursorseq->get_cursor($min_page);
 
     // Prepare API request
-    $jobs_per_page = 50; // test with 10
     $base_api_request = $base_url. '/empleos/ofertaPublica/?size='. $jobs_per_page;
 
     $total_saved = 0;
     $start_time = time();
-    $timeout = 60 * 45; // seconds test with 5
     while(true){
         $new_jobs = get_api_data($base_api_request, $page);
         // Catch exactly the output when exceeding max page...
@@ -63,7 +62,7 @@ function indexer($conn, $base_url){
         [$batch, $batch_job_ids, $added_jobs_n] = $output;
         $batch_size = $batch_size + $added_jobs_n;
 
-        $cond1 = $batch_size > $batch_size_limit;
+        $cond1 = $batch_size >= $batch_size_limit;
         $cond2a = $batch_size > 0;
         $cond2b = time() - $start_time > $timeout;
         if ($cond1) {
