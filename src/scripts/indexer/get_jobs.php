@@ -12,11 +12,11 @@ use Utils\Logger;
 #[CronJob(schedule: 'daily')]
 #[Agent]
 function main(){
-    $api_endpoint = "https://simo.cnsc.gov.co";
+    $base_url = "https://simo.cnsc.gov.co";
     $dbname = 'simo';
     try {
         $conn = Database::admin($dbname);
-        indexer($conn, $api_endpoint);
+        indexer($conn, $base_url);
     } catch (PDOException $e) {
         echo "Error: ". $e->getMessage(). PHP_EOL;
     } finally {
@@ -25,37 +25,40 @@ function main(){
 
 }
 
-function indexer($conn, $api_endpoint){
+function indexer($conn, $base_url){
 
     // Batch settings
     $batch = array();
     $batch_job_ids = array();
     $batch_size = 0;
-    $batch_size_limit = 5; // 200
+    $batch_size_limit = 200; // test with 5
 
     $min_page = 1;
-    $max_page = 10; // test
-
-    // get_max_page() is not smart. Conflicting cases:
-    // When called at start of script, get_max_page() returns 100.
-    // During execution of the script max page change.
-    // $max_page = get_max_page($path2casper, $api_endpoint);
 
     $cursor_key = 'simo_indexer_cursorseq';
     $cursorseq = new CursorSeq($conn, $cursor_key);
     $page = $cursorseq->get_cursor($min_page);
+    $page = 480;
 
     // Prepare API request
-    $jobs_per_page = 3; // 50
-    $base_url = $api_endpoint. '/empleos/ofertaPublica/?size='. $jobs_per_page;
+    $jobs_per_page = 50; // test with 10
+    $base_api_request = $base_url. '/empleos/ofertaPublica/?size='. $jobs_per_page;
 
     $total_saved = 0;
     $start_time = time();
-    $timeout = 30; // seconds
+    $timeout = 60 * 45; // seconds test with 5
     while(true){
-        $new_jobs = get_api_data($base_url, $page); # fetch jobs for a given page
-        if (count($new_jobs) == 0) {
-            break; // no more results
+        $new_jobs = get_api_data($base_api_request, $page);
+        // Catch exactly the output when exceeding max page...
+        if ($new_jobs instanceof ArrayObject && count($new_jobs) === 0) {
+            $max_page = intdiv(get_total_job_offers($base_url), $jobs_per_page);
+            if ($page >= $max_page){
+                $page = $min_page;
+                $new_jobs = get_api_data($base_api_request, $page);
+            }else{
+                // Notify anomaly with url and handle it accordingly
+                break;
+            }
         }
         $output = batch_with_new_jobs($batch, $batch_job_ids, $new_jobs);
         [$batch, $batch_job_ids, $added_jobs_n] = $output;
@@ -79,9 +82,7 @@ function indexer($conn, $api_endpoint){
             Logger::info("Saved $batch_size jobs ($total_saved total, page $page).");
             break;
         }
-
-        // go to next page or page 1
-        $page = ($page > $max_page)? 1 : $page + 1;
+        $page++;
     }
 
     if ($total_saved == 0) {
