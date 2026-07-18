@@ -1,6 +1,6 @@
 CREATE OR REPLACE TABLE denominacion (
-    id TINYINT AUTO_INCREMENT,
-    code TINYINT NOT NULL,  -- id at simo
+    id INT AUTO_INCREMENT,
+    code INT NOT NULL,  -- id at simo
     nivel TINYINT UNSIGNED,
     nombre VARCHAR(100) NOT NULL,
 

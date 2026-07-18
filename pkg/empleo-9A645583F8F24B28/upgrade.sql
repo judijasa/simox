@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE empleo (
     asignacion_salarial VARCHAR(50),
     codigo_empleo VARCHAR(10), -- assigned by simo
     sin_codigo BOOL,
-    denominacion_id TINYINT,
+    denominacion_id INT,
     grado_nivel JSON,
     grado_denominacion JSON,
     convocatoria_id INT,
