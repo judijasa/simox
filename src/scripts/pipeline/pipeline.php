@@ -164,5 +164,3 @@ function main(): void
     );
 }
 
-main();
-
