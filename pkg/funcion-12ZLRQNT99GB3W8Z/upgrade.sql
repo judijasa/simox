@@ -1,6 +1,6 @@
 CREATE OR REPLACE TABLE funcion (
-    id INT,
-    code INT,
+    id INT AUTO_INCREMENT,
+    code INT NOT NULL,
     descripcion TEXT
 
     PRIMARY KEY pk_funcion_id(id),
