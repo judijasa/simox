@@ -9,7 +9,9 @@ use Utils\DatabaseOps\BatchScan;
 
 function insert_niveles(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT IGNORE INTO nivel (code, nombre) VALUES (:code, :nombre)';
+    $sql = 'INSERT INTO nivel (code, nombre)
+            VALUES (:code, :nombre)
+            ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -21,7 +23,9 @@ function insert_niveles(PDO $conn, array $rows): void
 
 function insert_convocatorias(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT IGNORE INTO convocatoria (codigo, nombre, agno) VALUES (:codigo, :nombre, :agno)';
+    $sql = 'INSERT INTO convocatoria (codigo, nombre, agno)
+            VALUES (:codigo, :nombre, :agno)
+            ON DUPLICATE KEY id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -34,7 +38,9 @@ function insert_convocatorias(PDO $conn, array $rows): void
 function insert_denominaciones(PDO $conn, array $rows): void
 {
     $sql_lookup = 'SELECT id FROM nivel WHERE code = :code OR nombre = :nombre LIMIT 1';
-    $sql = 'INSERT IGNORE INTO denominacion (code, nivel_id, nombre) VALUES (:code, :nivel_id, :nombre)';
+    $sql = 'INSERT INTO denominacion (code, nivel_id, nombre)
+            VALUES (:code, :nivel_id, :nombre)
+            ON DUPLICATE KEY id = id';
     $lookup = $conn->prepare($sql_lookup);
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
@@ -53,7 +59,9 @@ function insert_denominaciones(PDO $conn, array $rows): void
 
 function insert_dependencias(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT IGNORE INTO dependencia (code, nombre) VALUES (:code, :nombre)';
+    $sql = 'INSERT INTO dependencia (code, nombre)
+            VALUES (:code, :nombre)
+            ON DUPLICATE KEY id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -67,7 +75,9 @@ function insert_dependencias(PDO $conn, array $rows): void
 
 function insert_municipios(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT IGNORE INTO municipio (code, nombre, departamento) VALUES (:code, :nombre, :departamento)';
+    $sql = 'INSERT INTO municipio (code, nombre, departamento)
+            VALUES (:code, :nombre, :departamento)
+            ON DUPLICATE KEY id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -85,8 +95,9 @@ function insert_municipios(PDO $conn, array $rows): void
 
 function insert_requisitos(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT IGNORE INTO requisito (code, estudio, experiencia, otros, alternativas, equivalencias)
-            VALUES (:code, :estudio, :experiencia, :otros, :alternativas, :equivalencias)';
+    $sql = 'INSERT INTO requisito (code, estudio, experiencia, otros, alternativas, equivalencias)
+            VALUES (:code, :estudio, :experiencia, :otros, :alternativas, :equivalencias)
+            ON DUPLICATE KEY id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -107,12 +118,13 @@ function insert_vacantes(PDO $conn, array $rows): void
 {
     $sql_mun = 'SELECT id FROM municipio WHERE code = :code LIMIT 1';
     $sql_dep = 'SELECT id FROM dependencia WHERE code = :code LIMIT 1';
-    $sql = 'INSERT IGNORE INTO vacante
+    $sql = 'INSERT INTO vacante
                 (code, cantidad_ascensos, municipio_id, dependencia_id,
                  fecha_generada, cantidad, disponible, cargos_vacantes, ocupadas_pre_pensionados)
             VALUES
                 (:code, :cantidad_ascensos, :municipio_id, :dependencia_id,
-                 :fecha_generada, :cantidad, :disponible, :cargos_vacantes, :ocupadas_pre_pensionados)';
+                 :fecha_generada, :cantidad, :disponible, :cargos_vacantes, :ocupadas_pre_pensionados)
+            ON DUPLICATE KEY id = id';
     $mun_lookup = $conn->prepare($sql_mun);
     $dep_lookup = $conn->prepare($sql_dep);
     $stmt       = $conn->prepare($sql);
