@@ -146,17 +146,20 @@ function main(): void
 {
     $conn = Database::admin('simo');
 
+    $table_name = 'empleo_snapshot';
     $query = 'SELECT id, empleo
               FROM empleo_snapshot
               WHERE id >= :curr_id AND id < :next_id
                 AND ABS(id) % :div = :mod';
+    $batch_size = 500;
+    $cursor_key= 'pipeline_main';
 
     BatchScan::scan(
         $conn,
-        'empleo_snapshot',
+        $table_name,
         $query,
-        500,
-        'pipeline_main',
+        $batch_size,
+        $cursor_key,
         fn(array $rows) => process_batch($conn, $rows),
     );
 }
