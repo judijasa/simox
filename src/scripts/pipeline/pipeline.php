@@ -37,7 +37,7 @@ function insert_convocatorias(PDO $conn, array $rows): void
 
 function insert_denominaciones(PDO $conn, array $rows): void
 {
-    $sql_lookup = 'SELECT id FROM nivel WHERE code = :code OR nombre = :nombre LIMIT 1';
+    $sql_lookup = 'SELECT id FROM nivel WHERE code = :code LIMIT 1';
     $sql = 'INSERT INTO denominacion (code, nivel_id, nombre)
             VALUES (:code, :nivel_id, :nombre)
             ON DUPLICATE KEY UPDATE id = id';
