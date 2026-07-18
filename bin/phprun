@@ -17,7 +17,7 @@ fi
 ARG="${1:-}"
 
 if [[ -z "$ARG" || "$ARG" != *:* ]]; then
-    echo "Usage: phprun <script.php:agent(args)>" >&2
+    echo "Usage: phprun 'path/to/script.php:my_agent(args)'" >&2
     exit 1
 fi
 
