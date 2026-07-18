@@ -31,7 +31,7 @@ function insert_denominaciones(PDO $conn, array $rows): void
         $empleo = json_decode($row['empleo'], true);
         $den = $empleo['denominacion'] ?? null;
         if ($den === null || $den['id'] === null) continue;
-        $stmt->execute([':code' => $den['id'], ':nivel' => $den['nivel'], ':nombre' => $den['nombre']]);
+        $stmt->execute([':code' => $den['id'], ':nivel' => json_encode($den['nivel'] ?? null), ':nombre' => $den['nombre']]);
     }
 }
 

@@ -1,7 +1,7 @@
 CREATE OR REPLACE TABLE denominacion (
     id INT AUTO_INCREMENT,
     code INT NOT NULL,  -- id at simo
-    nivel TINYINT UNSIGNED,
+    nivel JSON,
     nombre VARCHAR(100) NOT NULL,
 
     PRIMARY KEY(id),
