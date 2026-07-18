@@ -2,6 +2,8 @@
 
 namespace Utils\DatabaseOps;
 
+use Utils\Logger;
+
 class BatchScan
 {
     /*
@@ -31,8 +33,17 @@ class BatchScan
         $stmt = $conn->query("SELECT max(id) FROM {$table_name}");
         $max_id = (int) $stmt->fetchColumn();
 
+        Logger::info("BatchScan [{$cursor_key}]: cursor={$curr_id}, max_id={$max_id}");
+
+        if ($curr_id > $max_id) {
+            Logger::info("BatchScan [{$cursor_key}]: nothing to process (cursor past max_id)");
+            return;
+        }
+
         $is_time_unlimited = ($max_time === null);
         $start_time = microtime(true);
+        $total_rows = 0;
+        $batch_num = 0;
 
         while ($curr_id <= $max_id && ($is_time_unlimited || microtime(true) - $start_time < $max_time)) {
             $next_id = $curr_id + $div * $batch_size;
@@ -42,9 +53,15 @@ class BatchScan
             $stmt->bindValue(':mod', $mod);
             $stmt->bindValue(':div', $div);
             $stmt->execute();
-            $process_batch($stmt->fetchAll());
+            $rows = $stmt->fetchAll();
+            $batch_num++;
+            Logger::info("BatchScan [{$cursor_key}]: batch {$batch_num} (ids {$curr_id}–{$next_id}): " . count($rows) . " rows");
+            $process_batch($rows);
+            $total_rows += count($rows);
             $curr_id = $next_id;
             $cursorseq->set_cursor($curr_id, $mod, $div);
         }
+
+        Logger::info("BatchScan [{$cursor_key}]: done, {$total_rows} total rows across {$batch_num} batches");
     }
 }
