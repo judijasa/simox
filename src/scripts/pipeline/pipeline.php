@@ -108,8 +108,8 @@ function insert_funciones(PDO $conn, array $rows): void
 
 function insert_documentos(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT INTO documento (codigo, ruta_archivo, content_type, version, stage_id, fecha, documento_origen_id)
-            VALUES (:codigo, :ruta_archivo, :content_type, :version, :stage_id, :fecha, :documento_origen_id)
+    $sql = 'INSERT INTO documento (code, ruta_archivo, content_type, version, stage_id, fecha, documento_origen_id)
+            VALUES (:code, :ruta_archivo, :content_type, :version, :stage_id, :fecha, :documento_origen_id)
             ON DUPLICATE KEY UPDATE id = id';
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
@@ -117,7 +117,7 @@ function insert_documentos(PDO $conn, array $rows): void
         $doc = $empleo['documento'] ?? null;
         if ($doc === null) continue;
         $stmt->execute([
-            ':codigo'              => $doc['id'],
+            ':code'                => $doc['id'],
             ':ruta_archivo'        => $doc['rutaArchivo'] ?? null,
             ':content_type'        => $doc['contentType'] ?? null,
             ':version'             => $doc['version'] ?? null,
