@@ -2,6 +2,7 @@
 require 'vendor/autoload.php';
 
 use Utils\Crawler\CasperTrio;
+use Sunra\PhpSimple\HtmlDomParser;
 
 function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
     $new_batch = $batch;
@@ -18,16 +19,22 @@ function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
     return [$new_batch, $new_batch_job_ids, $added_jobs_n];
 }
 
-function get_max_page($target_site){
-    // TODO: Modify this function, currently fetching total jobs
+function get_total_job_offers($base_url){
+    // About MAX_FILE_SIZE:
+    // stackoverflow.com/questions/48098911/the-use-of-the-php-simple-html-dom-parser-when-parsing-large-html-files-result
+    //  stackoverflow.com/questions/30966569/str-get-html-doesnt-work-and-return-blank/30967650
+    define('MAX_FILE_SIZE', 4000000);
     $cnf = parse_ini_file("src/config.sh");
     $path2casper = $cnf["PATH2CASPER"];
+    $target_site = $base_url. '/#ofertaEmpleo';
+
 
     $casper = new CasperTrio($path2casper);
+
+    // Forward options to PhantomJS: ignore SSL errors
     $casper->setOptions(array(
                               'ignore-ssl-errors' => 'yes'
                               ));
-
     $casper->start($target_site);
 
     // Wait for '.itemEmpleo' but fetch '.dgrid-status',
@@ -37,6 +44,7 @@ function get_max_page($target_site){
     // '.dgrid-status' is at bottom left
     $casper->fetchText('.dgrid-status');
 
+    putenv('OPENSSL_CONF=/dev/null');  // fix phpcasperjs bug
     $casper->run();
 
     $text = ($casper->getOutput())[15];
