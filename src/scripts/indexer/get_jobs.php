@@ -31,14 +31,13 @@ function indexer($conn, $base_url){
     $batch = array();
     $batch_job_ids = array();
     $batch_size = 0;
-    $batch_size_limit = 200; // test with 5
+    $batch_size_limit = 200; // jobs test with 5
 
     $min_page = 1;
 
     $cursor_key = 'simo_indexer_cursorseq';
     $cursorseq = new CursorSeq($conn, $cursor_key);
     $page = $cursorseq->get_cursor($min_page);
-    $page = 480;
 
     // Prepare API request
     $jobs_per_page = 50; // test with 10
