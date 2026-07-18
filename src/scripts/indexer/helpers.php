@@ -45,17 +45,17 @@ function get_max_page($target_site){
     return trim(explode('de',explode('resultados', $text)[0])[1]);
 }
 
-function get_api_data($base_url, $page){
+function get_api_data($base_api_request, $page){
     // Example of url (includes search by departamento):
     // https://simo.cnsc.gov.co/empleos/ofertaPublica/?search_departamento=1&page=0&size=10
 
-    $url = $base_url . '&page=' . "$page";
+    $api_request = $base_api_request . '&page=' . "$page";
 
     // Initialize cURL session
     $ch = curl_init();
 
     // Set cURL options
-    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_URL, $api_request);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     // Do not verify certificates; the target site (simo.cnsc.gov.co)
