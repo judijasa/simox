@@ -10,7 +10,6 @@ CREATE OR REPLACE TABLE empleo (
     grado_denominacion JSON,
     convocatoria_id INT,
     funcion_id INT,
-    requisito_id INT,
     vacante_id INT,
     area JSON,
     discapacidades JSON,
@@ -37,8 +36,6 @@ CREATE OR REPLACE TABLE empleo (
     FOREIGN KEY fk_empleo_denominacion_id(denominacion_id)
         REFERENCES denominacion(id),
         -- ON UPDATE CASCADE ON DELETE RESTRICT,
-    FOREIGN KEY fk_empleo_requisito_id(requisito_id)
-        REFERENCES requisito(id),
     FOREIGN KEY fk_empleo_vacante_id(vacante_id)
         REFERENCES vacante(id)
 );
