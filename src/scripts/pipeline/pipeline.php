@@ -92,6 +92,42 @@ function insert_requisitos(PDO $conn, array $rows): void
     }
 }
 
+function insert_funciones(PDO $conn, array $rows): void
+{
+    $sql = 'INSERT INTO funcion (code, descripcion)
+            VALUES (:code, :descripcion)
+            ON DUPLICATE KEY UPDATE id = id';
+    $stmt = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+        foreach ($empleo['funciones'] ?? [] as $funcion) {
+            $stmt->execute([':code' => $funcion['id'], ':descripcion' => $funcion['descripcion']]);
+        }
+    }
+}
+
+function insert_documentos(PDO $conn, array $rows): void
+{
+    $sql = 'INSERT INTO documento (codigo, ruta_archivo, content_type, version, stage_id, fecha, documento_origen_id)
+            VALUES (:codigo, :ruta_archivo, :content_type, :version, :stage_id, :fecha, :documento_origen_id)
+            ON DUPLICATE KEY UPDATE id = id';
+    $stmt = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+        $doc = $empleo['documento'] ?? null;
+        if ($doc === null) continue;
+        $stmt->execute([
+            ':codigo'              => $doc['id'],
+            ':ruta_archivo'        => $doc['rutaArchivo'] ?? null,
+            ':content_type'        => $doc['contentType'] ?? null,
+            ':version'             => $doc['version'] ?? null,
+            ':stage_id'            => $doc['stageId'] ?? null,
+            ':fecha'               => $doc['fecha'] ?? null,
+            ':documento_origen_id' => $doc['documentoOrigenId'] ?? null,
+        ]);
+    }
+}
+
 function insert_vacantes(PDO $conn, array $rows): void
 {
     $sql_mun = 'SELECT id FROM municipio WHERE code = :code LIMIT 1';
@@ -137,6 +173,8 @@ function process_batch(PDO $conn, array $rows): void
     insert_municipios($conn, $rows);
     insert_requisitos($conn, $rows);
     insert_denominaciones($conn, $rows);
+    insert_funciones($conn, $rows);
+    insert_documentos($conn, $rows);
     insert_vacantes($conn, $rows);
 }
 
