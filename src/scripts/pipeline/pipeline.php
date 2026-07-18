@@ -166,6 +166,71 @@ function insert_vacantes(PDO $conn, array $rows): void
     }
 }
 
+function insert_empleo(PDO $conn, array $rows): void
+{
+    $sql_den  = 'SELECT id FROM denominacion WHERE code = :code LIMIT 1';
+    $sql_conv = 'SELECT id FROM convocatoria WHERE code = :code LIMIT 1';
+    $sql_doc  = 'SELECT id FROM documento WHERE code = :code LIMIT 1';
+    $sql = 'INSERT INTO empleo
+                (opec, created_date, asignacion_salarial, codigo_empleo, sin_codigo,
+                 denominacion_id, grado_nivel, grado_denominacion, convocatoria_id,
+                 area, discapacidades, documento_id, entidad, identificador,
+                 vigencia_salarial, urbano, aeronautico, no_cobro_opec,
+                 estado_inscripcion, favorito, inscripcion_id, fecha_inscripcion,
+                 nivel_nombre, `access`)
+            VALUES
+                (:opec, :created_date, :asignacion_salarial, :codigo_empleo, :sin_codigo,
+                 :denominacion_id, :grado_nivel, :grado_denominacion, :convocatoria_id,
+                 :area, :discapacidades, :documento_id, :entidad, :identificador,
+                 :vigencia_salarial, :urbano, :aeronautico, :no_cobro_opec,
+                 :estado_inscripcion, :favorito, :inscripcion_id, :fecha_inscripcion,
+                 :nivel_nombre, :access)
+            ON DUPLICATE KEY UPDATE id = id';
+    $den_lookup  = $conn->prepare($sql_den);
+    $conv_lookup = $conn->prepare($sql_conv);
+    $doc_lookup  = $conn->prepare($sql_doc);
+    $stmt        = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+
+        $den_lookup->execute([':code' => $empleo['denominacion']['id'] ?? null]);
+        $denominacion_id = $den_lookup->fetchColumn() ?: null;
+
+        $conv_lookup->execute([':code' => $empleo['convocatoria']['id'] ?? null]);
+        $convocatoria_id = $conv_lookup->fetchColumn() ?: null;
+
+        $doc_lookup->execute([':code' => $empleo['documento']['id'] ?? null]);
+        $documento_id = $doc_lookup->fetchColumn() ?: null;
+
+        $stmt->execute([
+            ':opec'                => $empleo['id'],
+            ':created_date'        => $empleo['createdDate'] ?? null,
+            ':asignacion_salarial' => $empleo['asignacionSalarial'] ?? null,
+            ':codigo_empleo'       => $empleo['codigoEmpleo'] ?? null,
+            ':sin_codigo'          => $empleo['sinCodigo'] ?? null,
+            ':denominacion_id'     => $denominacion_id,
+            ':grado_nivel'         => json_encode($empleo['gradoNivel'] ?? null),
+            ':grado_denominacion'  => json_encode($empleo['gradoDenominacion'] ?? null),
+            ':convocatoria_id'     => $convocatoria_id,
+            ':area'                => json_encode($empleo['area'] ?? null),
+            ':discapacidades'      => json_encode($empleo['discapacidades'] ?? []),
+            ':documento_id'        => $documento_id,
+            ':entidad'             => json_encode($empleo['entidad'] ?? null),
+            ':identificador'       => $empleo['identificador'] ?? null,
+            ':vigencia_salarial'   => $empleo['vigenciaSalarial'] ?? null,
+            ':urbano'              => $empleo['urbano'] ?? null,
+            ':aeronautico'         => $empleo['aeronautico'] ?? null,
+            ':no_cobro_opec'       => $empleo['noCobroOpec'] ?? null,
+            ':estado_inscripcion'  => $row['estado_inscripcion'],
+            ':favorito'            => $row['favorito'],
+            ':inscripcion_id'      => $row['inscripcion_id'],
+            ':fecha_inscripcion'   => $row['fecha_inscripcion'],
+            ':nivel_nombre'        => $row['nivel_nombre'],
+            ':access'              => $row['access'],
+        ]);
+    }
+}
+
 function process_batch(PDO $conn, array $rows): void
 {
     insert_convocatorias($conn, $rows);
@@ -176,6 +241,7 @@ function process_batch(PDO $conn, array $rows): void
     insert_funciones($conn, $rows);
     insert_documentos($conn, $rows);
     insert_vacantes($conn, $rows);
+    insert_empleo($conn, $rows);
 }
 
 #[CronJob(schedule: 'daily')]
@@ -185,7 +251,8 @@ function main(): void
     $conn = Database::admin('simo');
 
     $table_name = 'empleo_snapshot';
-    $query = 'SELECT id, empleo
+    $query = 'SELECT id, empleo, estado_inscripcion, favorito, inscripcion_id,
+                     fecha_inscripcion, nivel_nombre, `access`
               FROM empleo_snapshot
               WHERE id >= :curr_id AND id < :next_id
                 AND ABS(id) % :div = :mod';
