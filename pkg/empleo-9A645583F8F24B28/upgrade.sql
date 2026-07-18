@@ -9,8 +9,6 @@ CREATE OR REPLACE TABLE empleo (
     grado_nivel JSON,
     grado_denominacion JSON,
     convocatoria_id INT,
-    funcion_id INT,
-    vacante_id INT,
     area JSON,
     discapacidades JSON,
     documento_id INT,
@@ -34,10 +32,8 @@ CREATE OR REPLACE TABLE empleo (
     INDEX ix_empleo_created_at(created_at),
     INDEX ix_empleo_fecha_inscripcion(fecha_inscripcion),
     FOREIGN KEY fk_empleo_denominacion_id(denominacion_id)
-        REFERENCES denominacion(id),
-        -- ON UPDATE CASCADE ON DELETE RESTRICT,
-    FOREIGN KEY fk_empleo_vacante_id(vacante_id)
-        REFERENCES vacante(id)
+        REFERENCES denominacion(id)
+        -- ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 GRANT SELECT ON {{dbname}}.empleo TO 'public'@'{{servername}}';
