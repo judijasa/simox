@@ -1,7 +1,7 @@
 CREATE OR REPLACE TABLE funcion (
     id INT AUTO_INCREMENT,
     code INT NOT NULL,
-    descripcion TEXT
+    descripcion TEXT,
 
     PRIMARY KEY pk_funcion_id(id),
     UNIQUE INDEX uk_funcion_code(code)
