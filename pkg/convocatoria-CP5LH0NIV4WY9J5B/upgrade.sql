@@ -4,6 +4,12 @@ CREATE OR REPLACE TABLE convocatoria (
     nombre VARCHAR(250),
     agno YEAR,
     codigo VARCHAR(10),
+    entidad JSON,
+    es_tipo_fase BOOL,
+    tipo_proceso VARCHAR(100),
+    no_cobro_nivel BOOL,
+    no_cobro_opec BOOL,
+    tipo_proc_sele_id TINYINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY(id),
