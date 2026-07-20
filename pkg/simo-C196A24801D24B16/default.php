@@ -17,6 +17,7 @@ $dependencies = array(
     // 'estudio_especializado-F13DE36C34F84042',
     // 'estudio_basico_variaciones-7D92A6C55A504604',
     // 'estudio_basico-F821B353E42F4D79',
+    'documento-B4389BGTHWELGSQP',
     'departamento-BD672733D7AA455F',
     'denominacion-5R9BK7DS01O7A23G',
     'dependencia-J31Y7UXN1J2K9W4L',
