@@ -10,6 +10,7 @@ $dependencies = array(
     // 'job_offer_snapshot_trg_upsert_job_offer-B5C3E788FABF4957',
     // 'job_offer_snapshot_trg_insert_nivel-8A4EDC8BB9A44C32',
     // 'job_offer_snapshot_trg_insert_job_offer_location-8P2ZDC31BXA46C3G',
+    'funcion-12ZLRQNT99GB3W8Z'
     'empleo_snapshot-00B5FEB6B8B84570',
     'empleo-9A645583F8F24B28',
     // 'estudio_especializado_variaciones-2A7B37AC6E1C446E',
