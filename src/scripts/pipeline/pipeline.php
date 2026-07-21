@@ -133,10 +133,10 @@ function insert_vacantes(PDO $conn, array $rows): void
     $sql_mun = 'SELECT id FROM municipio WHERE code = :code LIMIT 1';
     $sql_dep = 'SELECT id FROM dependencia WHERE code = :code LIMIT 1';
     $sql = 'INSERT INTO vacante
-                (code, cantidad_ascensos, municipio_id, dependencia_id,
+                (code, cantidad_ascensos, municipio, municipio_id, dependencia, dependencia_id,
                  fecha_generada, cantidad, disponible, cargos_vacantes, ocupadas_pre_pensionados)
             VALUES
-                (:code, :cantidad_ascensos, :municipio_id, :dependencia_id,
+                (:code, :cantidad_ascensos, :municipio, :municipio_id, :dependencia, :dependencia_id,
                  :fecha_generada, :cantidad, :disponible, :cargos_vacantes, :ocupadas_pre_pensionados)
             ON DUPLICATE KEY UPDATE id = id';
     $mun_lookup = $conn->prepare($sql_mun);
@@ -154,7 +154,9 @@ function insert_vacantes(PDO $conn, array $rows): void
             $stmt->execute([
                 ':code'                    => $vac['id'],
                 ':cantidad_ascensos'       => $vac['cantidadAscensos'] ?? null,
+                ':municipio'               => json_encode($vac['municipio'] ?? null),
                 ':municipio_id'            => $municipio_id,
+                ':dependencia'             => json_encode($vac['dependencia'] ?? null),
                 ':dependencia_id'          => $dependencia_id,
                 ':fecha_generada'          => $vac['fechaGenerada'] ?? null,
                 ':cantidad'                => $vac['cantidad'] ?? null,
