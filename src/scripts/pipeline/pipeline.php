@@ -7,6 +7,20 @@ use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 
+function insert_niveles(PDO $conn, array $rows): void
+{
+    $sql = 'INSERT INTO nivel (code, nombre)
+            VALUES (:code, :nombre)
+            ON DUPLICATE KEY UPDATE id = id';
+    $stmt = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+        $nivel = $empleo['denominacion']['nivel'] ?? null;
+        if ($nivel === null) continue;
+        $stmt->execute([':code' => $nivel['id'], ':nombre' => $nivel['nombre']]);
+    }
+}
+
 function insert_convocatorias(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO convocatoria (code, codigo, nombre, agno)
@@ -23,14 +37,22 @@ function insert_convocatorias(PDO $conn, array $rows): void
 
 function insert_denominaciones(PDO $conn, array $rows): void
 {
-    $sql = 'INSERT INTO denominacion (code, nivel, nombre)
-            VALUES (:code, :nivel, :nombre)
+    $sql_lookup = 'SELECT id FROM nivel WHERE code = :code LIMIT 1';
+    $sql = 'INSERT INTO denominacion (code, nivel, :nivel_id, nombre)
+            VALUES (:code, :nivel, :nivel_id, :nombre)
             ON DUPLICATE KEY UPDATE id = id';
+    $lookup = $conn->prepare($sql_lookup);
     $stmt = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
         $den = $empleo['denominacion'] ?? null;
         if ($den === null || $den['id'] === null) continue;
+        $nivel = $den['nivel'] ?? null;
+        $lookup->execute([
+            ':code'   => $nivel['id'] ?? null,
+            ':nombre' => $nivel['nombre'] ?? null,
+        ]);
+        $nivel_id = $lookup->fetchColumn() ?: null;
         $stmt->execute([':code' => $den['id'], ':nivel' => json_encode($den['nivel'] ?? null), ':nombre' => $den['nombre']]);
     }
 }
