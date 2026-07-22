@@ -12,7 +12,7 @@ CREATE OR REPLACE TABLE empleo (
     area JSON,
     discapacidades JSON,
     documento_id INT,
-    entidad JSON,
+    entidad_id SMALLINT UNSIGNED,
     identificador VARCHAR(100),
     vigencia_salarial YEAR,
     urbano BOOL,

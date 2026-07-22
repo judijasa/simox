@@ -235,17 +235,18 @@ function insert_empleo(PDO $conn, array $rows): void
     $sql_den  = 'SELECT id FROM denominacion WHERE code = :code LIMIT 1';
     $sql_conv = 'SELECT id FROM convocatoria WHERE code = :code LIMIT 1';
     $sql_doc  = 'SELECT id FROM documento WHERE code = :code LIMIT 1';
+    $sql_ent  = 'SELECT id FROM documento WHERE code = :code LIMIT 1';
     $sql = 'INSERT INTO empleo
                 (opec, created_date, asignacion_salarial, codigo_empleo, sin_codigo,
                  denominacion_id, grado_nivel, grado_denominacion, convocatoria_id,
-                 area, discapacidades, documento_id, entidad, identificador,
+                 area, discapacidades, documento_id, entidad_id, identificador,
                  vigencia_salarial, urbano, aeronautico, no_cobro_opec,
                  estado_inscripcion, favorito, inscripcion_id, fecha_inscripcion,
                  nivel_nombre, `access`)
             VALUES
                 (:opec, :created_date, :asignacion_salarial, :codigo_empleo, :sin_codigo,
                  :denominacion_id, :grado_nivel, :grado_denominacion, :convocatoria_id,
-                 :area, :discapacidades, :documento_id, :entidad, :identificador,
+                 :area, :discapacidades, :documento_id, :entidad_id, :identificador,
                  :vigencia_salarial, :urbano, :aeronautico, :no_cobro_opec,
                  :estado_inscripcion, :favorito, :inscripcion_id, :fecha_inscripcion,
                  :nivel_nombre, :access)
@@ -253,6 +254,7 @@ function insert_empleo(PDO $conn, array $rows): void
     $den_lookup  = $conn->prepare($sql_den);
     $conv_lookup = $conn->prepare($sql_conv);
     $doc_lookup  = $conn->prepare($sql_doc);
+    $ent_lookup  = $conn->prepare($sql_ent);
     $stmt        = $conn->prepare($sql);
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
@@ -265,6 +267,9 @@ function insert_empleo(PDO $conn, array $rows): void
 
         $doc_lookup->execute([':code' => $empleo['documento']['id'] ?? null]);
         $documento_id = $doc_lookup->fetchColumn() ?: null;
+
+        $ent_lookup->execute([':code' => $empleo['entidad']['id'] ?? null]);
+        $entidad_id = $doc_lookup->fetchColumn() ?: null;
 
         $stmt->execute([
             ':opec'                => $empleo['id'],
@@ -279,7 +284,7 @@ function insert_empleo(PDO $conn, array $rows): void
             ':area'                => json_encode($empleo['area'] ?? null),
             ':discapacidades'      => json_encode($empleo['discapacidades'] ?? []),
             ':documento_id'        => $documento_id,
-            ':entidad'             => json_encode($empleo['entidad'] ?? null),
+            ':entidad'             => $entidad_id,
             ':identificador'       => $empleo['identificador'] ?? null,
             ':vigencia_salarial'   => $empleo['vigenciaSalarial'] ?? null,
             ':urbano'              => (int)$empleo['urbano'] ?? null,
