@@ -2,8 +2,10 @@ CREATE OR REPLACE TABLE vacante (
     id INT AUTO_INCREMENT,
     code INT NOT NULL, -- id at simo
     cantidad_ascensos SMALLINT UNSIGNED,
-    municipio_id SMALLINT UNSIGNED,
-    dependencia_id INT,
+    municipio JSON, -- to avoid subqueries of 3rd order in empleo view
+    municipio_id SMALLINT UNSIGNED, -- to search by municipio efficiently
+    dependencia JSON, -- to avoid subqueries of 3rd order in empleo view
+    dependencia_id INT, -- to search by dependencia efficiently
     fecha_generada TIMESTAMP,
     cantidad SMALLINT UNSIGNED,
     disponible SMALLINT UNSIGNED,
