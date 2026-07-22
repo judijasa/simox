@@ -284,7 +284,7 @@ function insert_empleo(PDO $conn, array $rows): void
             ':area'                => json_encode($empleo['area'] ?? null),
             ':discapacidades'      => json_encode($empleo['discapacidades'] ?? []),
             ':documento_id'        => $documento_id,
-            ':entidad'             => $entidad_id,
+            ':entidad_id'             => $entidad_id,
             ':identificador'       => $empleo['identificador'] ?? null,
             ':vigencia_salarial'   => $empleo['vigenciaSalarial'] ?? null,
             ':urbano'              => (int)$empleo['urbano'] ?? null,
