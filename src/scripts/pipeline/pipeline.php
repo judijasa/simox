@@ -7,7 +7,7 @@ use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 
-function insert_niveles(PDO $conn, array $rows): void
+function insert_nivel(PDO $conn, array $rows): void
 {
     $sql = 'INSERT INTO nivel (code, nombre)
             VALUES (:code, :nombre)
@@ -18,6 +18,45 @@ function insert_niveles(PDO $conn, array $rows): void
         $nivel = $empleo['denominacion']['nivel'] ?? null;
         if ($nivel === null) continue;
         $stmt->execute([':code' => $nivel['id'], ':nombre' => $nivel['nombre']]);
+    }
+}
+
+function insert_tipo_entidad(PDO $conn, array $rows): void
+{
+    $sql = 'INSERT INTO tipo_entidad (code, nombre)
+            VALUES (:code, :nombre)
+            ON DUPLICATE KEY UPDATE id = id';
+    $stmt = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+        $tipo_entidad = $empleo['convocatoria']['entidad']['tipoEntidad'] ?? null;
+        if ($tipo_entidad === null) continue;
+        $stmt->execute([':code' => $tipo_entidad['id'], ':nombre' => $tipo_entidad['nombre']]);
+    }
+}
+
+function insert_entidad(PDO $conn, array $rows): void
+{
+    $sql_tipo = 'SELECT id FROM tipo_entidad WHERE code = :code LIMIT 1';
+    $sql = 'INSERT INTO entidad (code, nit, nombre, tipo_entidad, tipo_entidad_id)
+            VALUES (:code, :nit, :nombre, :tipo_entidad, :tipo_entidad_id)
+            ON DUPLICATE KEY UPDATE id = id';
+    $lookup = $conn->prepare($sql_tipo);
+    $stmt = $conn->prepare($sql);
+    foreach ($rows as $row) {
+        $empleo = json_decode($row['empleo'], true);
+        $entidad = $empleo['convocatoria']['entidad'] ?? null;
+        if ($entidad === null) continue;
+
+        $lookup->execute([':code' => $entidad['tipoEntidad']['id'] ?? null]);
+        $tipo_entidad_id = $lookup->fetchColumn() ?: null;
+
+        $stmt->execute([
+            ':code' => $entidad['id'],
+            ':nit' => $entidad['nit'],
+            ':nombre' => $entidad['nombre'],
+            ':tipo_entidad' => json_encode($entidad['tipoEntidad'] ?? null),
+            ':tipo_entidad_id' => $tipo_entidad_id]);
     }
 }
 
@@ -38,7 +77,7 @@ function insert_convocatorias(PDO $conn, array $rows): void
 function insert_denominaciones(PDO $conn, array $rows): void
 {
     $sql_lookup = 'SELECT id FROM nivel WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO denominacion (code, nivel, :nivel_id, nombre)
+    $sql = 'INSERT INTO denominacion (code, nivel, nivel_id, nombre)
             VALUES (:code, :nivel, :nivel_id, :nombre)
             ON DUPLICATE KEY UPDATE id = id';
     $lookup = $conn->prepare($sql_lookup);
@@ -48,12 +87,13 @@ function insert_denominaciones(PDO $conn, array $rows): void
         $den = $empleo['denominacion'] ?? null;
         if ($den === null || $den['id'] === null) continue;
         $nivel = $den['nivel'] ?? null;
-        $lookup->execute([
-            ':code'   => $nivel['id'] ?? null,
-            ':nombre' => $nivel['nombre'] ?? null,
-        ]);
+        $lookup->execute([':code'   => $nivel['id'] ?? null]);
         $nivel_id = $lookup->fetchColumn() ?: null;
-        $stmt->execute([':code' => $den['id'], ':nivel' => json_encode($den['nivel'] ?? null), ':nombre' => $den['nombre']]);
+        $stmt->execute([
+            ':code' => $den['id'],
+            ':nivel' => json_encode($den['nivel'] ?? null),
+            ':nivel_id' => $nivel_id,
+            ':nombre' => $den['nombre']]);
     }
 }
 
@@ -257,6 +297,9 @@ function insert_empleo(PDO $conn, array $rows): void
 
 function process_batch(PDO $conn, array $rows): void
 {
+    insert_nivel($conn, $rows);
+    insert_tipo_entidad($conn, $rows);
+    insert_entidad($conn, $rows);
     insert_convocatorias($conn, $rows);
     insert_dependencias($conn, $rows);
     insert_municipios($conn, $rows);
