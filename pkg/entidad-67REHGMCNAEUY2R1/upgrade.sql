@@ -12,5 +12,5 @@ CREATE OR REPLACE TABLE entidad (
     REFERENCES tipo_entidad(id)
 );
 
-GRANT SELECT ON {{dbname}}.nivel TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.entidad TO 'public'@'{{servername}}';
 

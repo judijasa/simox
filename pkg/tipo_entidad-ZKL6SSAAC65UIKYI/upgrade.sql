@@ -7,5 +7,5 @@ CREATE OR REPLACE TABLE tipo_entidad (
     UNIQUE KEY uk_tipo_entidad_code(code)
 );
 
-GRANT SELECT ON {{dbname}}.nivel TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.tipo_entidad TO 'public'@'{{servername}}';
 
