@@ -1,310 +1,295 @@
 <?php
 
 require 'vendor/autoload.php';
+require_once __DIR__ . '/helper.php';
 
 use Utils\Agent;
 use Utils\CronJob;
 use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
+use Utils\DatabaseOps\BatchInsert;
 
-function insert_nivel(PDO $conn, array $empleos): void
+function insert_niveles(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO nivel (code, nombre)
-            VALUES (:code, :nombre)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $niveles = [];
     foreach ($empleos as $empleo) {
         $nivel = $empleo['denominacion']['nivel'] ?? null;
-        if ($nivel === null) continue;
-        $stmt->execute([':code' => $nivel['id'], ':nombre' => $nivel['nombre']]);
+        if ($nivel !== null) $niveles[] = $nivel;
     }
+    $niveles = deduplicate_by($niveles, 'id');
+    $rows    = array_map(fn($n) => [$n['id'], $n['nombre']], $niveles);
+    BatchInsert::insert($conn, 'nivel', ['code', 'nombre'], $rows, $batch_size);
 }
 
-function insert_tipo_entidad(PDO $conn, array $empleos): void
+function insert_tipo_entidades(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO tipo_entidad (code, nombre)
-            VALUES (:code, :nombre)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $tipos = [];
     foreach ($empleos as $empleo) {
-        $tipo_entidad = $empleo['convocatoria']['entidad']['tipoEntidad'] ?? null;
-        if ($tipo_entidad === null) continue;
-        $stmt->execute([':code' => $tipo_entidad['id'], ':nombre' => $tipo_entidad['nombre']]);
+        $tipo = $empleo['convocatoria']['entidad']['tipoEntidad'] ?? null;
+        if ($tipo !== null) $tipos[] = $tipo;
     }
+    $tipos = deduplicate_by($tipos, 'id');
+    $rows  = array_map(fn($t) => [$t['id'], $t['nombre']], $tipos);
+    BatchInsert::insert($conn, 'tipo_entidad', ['code', 'nombre'], $rows, $batch_size);
 }
 
-function insert_entidad(PDO $conn, array $empleos): void
+function insert_entidades(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql_tipo = 'SELECT id FROM tipo_entidad WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO entidad (code, nit, nombre, tipo_entidad, tipo_entidad_id)
-            VALUES (:code, :nit, :nombre, :tipo_entidad, :tipo_entidad_id)
-            ON DUPLICATE KEY UPDATE id = id';
-    $lookup = $conn->prepare($sql_tipo);
-    $stmt = $conn->prepare($sql);
+    $lookup = $conn->prepare('SELECT id FROM tipo_entidad WHERE code = :code LIMIT 1');
+
+    $entidades = [];
     foreach ($empleos as $empleo) {
         $entidad = $empleo['convocatoria']['entidad'] ?? null;
-        if ($entidad === null) continue;
-
-        $lookup->execute([':code' => $entidad['tipoEntidad']['id'] ?? null]);
-        $tipo_entidad_id = $lookup->fetchColumn() ?: null;
-
-        $stmt->execute([
-            ':code' => $entidad['id'],
-            ':nit' => $entidad['nit'],
-            ':nombre' => $entidad['nombre'],
-            ':tipo_entidad' => json_encode($entidad['tipoEntidad'] ?? null),
-            ':tipo_entidad_id' => $tipo_entidad_id]);
+        if ($entidad !== null) $entidades[] = $entidad;
     }
+    $entidades = deduplicate_by($entidades, 'id');
+
+    $rows = [];
+    foreach ($entidades as $entidad) {
+        $lookup->execute([':code' => $entidad['tipoEntidad']['id'] ?? null]);
+        $rows[] = [
+            $entidad['id'],
+            $entidad['nit'],
+            $entidad['nombre'],
+            json_encode($entidad['tipoEntidad'] ?? null),
+            $lookup->fetchColumn() ?: null,
+        ];
+    }
+    $columns = ['code', 'nit', 'nombre', 'tipo_entidad', 'tipo_entidad_id'];
+    BatchInsert::insert($conn, 'entidad', $columns, $rows, $batch_size);
 }
 
-function insert_convocatorias(PDO $conn, array $empleos): void
+function insert_convocatorias(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO convocatoria (code, codigo, nombre, agno)
-            VALUES (:code, :codigo, :nombre, :agno)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $convs = [];
     foreach ($empleos as $empleo) {
         $conv = $empleo['convocatoria'] ?? null;
-        if ($conv === null) continue;
-        $stmt->execute([':code' => $conv['id'], ':codigo' => $conv['codigo'], ':nombre' => $conv['nombre'], ':agno' => $conv['agno']]);
+        if ($conv !== null) $convs[] = $conv;
     }
+    $convs = deduplicate_by($convs, 'id');
+    $rows  = array_map(fn($c) => [$c['id'], $c['codigo'], $c['nombre'], $c['agno']], $convs);
+    $columns = ['code', 'codigo', 'nombre', 'agno'];
+    BatchInsert::insert($conn, 'convocatoria', $columns, $rows, $batch_size);
 }
 
-function insert_denominaciones(PDO $conn, array $empleos): void
+function insert_denominaciones(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql_lookup = 'SELECT id FROM nivel WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO denominacion (code, nivel, nivel_id, nombre)
-            VALUES (:code, :nivel, :nivel_id, :nombre)
-            ON DUPLICATE KEY UPDATE id = id';
-    $lookup = $conn->prepare($sql_lookup);
-    $stmt = $conn->prepare($sql);
+    $lookup = $conn->prepare('SELECT id FROM nivel WHERE code = :code LIMIT 1');
+
+    $dens = [];
     foreach ($empleos as $empleo) {
         $den = $empleo['denominacion'] ?? null;
-        if ($den === null || $den['id'] === null) continue;
-        $nivel = $den['nivel'] ?? null;
-        $lookup->execute([':code'   => $nivel['id'] ?? null]);
-        $nivel_id = $lookup->fetchColumn() ?: null;
-        $stmt->execute([
-            ':code' => $den['id'],
-            ':nivel' => json_encode($den['nivel'] ?? null),
-            ':nivel_id' => $nivel_id,
-            ':nombre' => $den['nombre']]);
+        if ($den !== null && $den['id'] !== null) $dens[] = $den;
     }
+    $dens = deduplicate_by($dens, 'id');
+
+    $rows = [];
+    foreach ($dens as $den) {
+        $nivel = $den['nivel'] ?? null;
+        $lookup->execute([':code' => $nivel['id'] ?? null]);
+        $rows[] = [
+            $den['id'],
+            json_encode($nivel),
+            $lookup->fetchColumn() ?: null,
+            $den['nombre'],
+        ];
+    }
+    $columns = ['code', 'nivel', 'nivel_id', 'nombre'];
+    BatchInsert::insert($conn, 'denominacion', $columns, $rows, $batch_size);
 }
 
-function insert_dependencias(PDO $conn, array $empleos): void
+function insert_dependencias(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO dependencia (code, nombre)
-            VALUES (:code, :nombre)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $deps = [];
     foreach ($empleos as $empleo) {
         foreach ($empleo['vacantes'] ?? [] as $vacante) {
             $dep = $vacante['dependencia'] ?? null;
-            if ($dep === null) continue;
-            $stmt->execute([':code' => $dep['id'], ':nombre' => $dep['nombre']]);
+            if ($dep !== null) $deps[] = $dep;
         }
     }
+    $deps = deduplicate_by($deps, 'id');
+    $rows = array_map(fn($d) => [$d['id'], $d['nombre']], $deps);
+    BatchInsert::insert($conn, 'dependencia', ['code', 'nombre'], $rows, $batch_size);
 }
 
-function insert_municipios(PDO $conn, array $empleos): void
+function insert_municipios(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO municipio (code, nombre, departamento)
-            VALUES (:code, :nombre, :departamento)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $muns = [];
     foreach ($empleos as $empleo) {
         foreach ($empleo['vacantes'] ?? [] as $vacante) {
             $mun = $vacante['municipio'] ?? null;
-            if ($mun === null) continue;
-            $stmt->execute([
-                ':code'        => $mun['id'],
-                ':nombre'      => $mun['nombre'],
-                ':departamento' => $mun['departamento']['nombre'] ?? null,
-            ]);
+            if ($mun !== null) $muns[] = $mun;
         }
     }
+    $muns = deduplicate_by($muns, 'id');
+    $rows = array_map(fn($m) => [$m['id'], $m['nombre'], $m['departamento']['nombre'] ?? null], $muns);
+    BatchInsert::insert($conn, 'municipio', ['code', 'nombre', 'departamento'], $rows, $batch_size);
 }
 
-function insert_requisitos(PDO $conn, array $empleos): void
+function insert_requisitos(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO requisito (code, estudio, experiencia, otros, alternativas, equivalencias)
-            VALUES (:code, :estudio, :experiencia, :otros, :alternativas, :equivalencias)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $reqs = [];
     foreach ($empleos as $empleo) {
         foreach ($empleo['requisitosMinimos'] ?? [] as $req) {
-            $stmt->execute([
-                ':code'         => $req['id'],
-                ':estudio'      => $req['estudio'] ?? null,
-                ':experiencia'  => $req['experiencia'] ?? null,
-                ':otros'        => $req['otros'] ?? null,
-                ':alternativas' => json_encode($req['alternativas'] ?? []),
-                ':equivalencias'=> json_encode($req['equivalencias'] ?? []),
-            ]);
+            $reqs[] = $req;
         }
     }
+    $reqs = deduplicate_by($reqs, 'id');
+    $rows = array_map(fn($r) => [
+        $r['id'],
+        $r['estudio'] ?? null,
+        $r['experiencia'] ?? null,
+        $r['otros'] ?? null,
+        json_encode($r['alternativas'] ?? []),
+        json_encode($r['equivalencias'] ?? []),
+    ], $reqs);
+    $columns = ['code', 'estudio', 'experiencia', 'otros', 'alternativas', 'equivalencias'];
+    BatchInsert::insert($conn, 'requisito', $columns, $rows, $batch_size);
 }
 
-function insert_funciones(PDO $conn, array $empleos): void
+function insert_funciones(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO funcion (code, descripcion)
-            VALUES (:code, :descripcion)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $fns = [];
     foreach ($empleos as $empleo) {
         foreach ($empleo['funciones'] ?? [] as $funcion) {
-            $stmt->execute([':code' => $funcion['id'], ':descripcion' => $funcion['descripcion']]);
+            $fns[] = $funcion;
         }
     }
+    $fns  = deduplicate_by($fns, 'id');
+    $rows = array_map(fn($f) => [$f['id'], $f['descripcion']], $fns);
+    BatchInsert::insert($conn, 'funcion', ['code', 'descripcion'], $rows, $batch_size);
 }
 
-function insert_documentos(PDO $conn, array $empleos): void
+function insert_documentos(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql = 'INSERT INTO documento (code, ruta_archivo, content_type, version, stage_id, fecha, documento_origen_id)
-            VALUES (:code, :ruta_archivo, :content_type, :version, :stage_id, :fecha, :documento_origen_id)
-            ON DUPLICATE KEY UPDATE id = id';
-    $stmt = $conn->prepare($sql);
+    $docs = [];
     foreach ($empleos as $empleo) {
         $doc = $empleo['documento'] ?? null;
-        if ($doc === null) continue;
-        $stmt->execute([
-            ':code'                => $doc['id'],
-            ':ruta_archivo'        => $doc['rutaArchivo'] ?? null,
-            ':content_type'        => $doc['contentType'] ?? null,
-            ':version'             => $doc['version'] ?? null,
-            ':stage_id'            => $doc['stageId'] ?? null,
-            ':fecha'               => $doc['fecha'] ?? null,
-            ':documento_origen_id' => $doc['documentoOrigenId'] ?? null,
-        ]);
+        if ($doc !== null) $docs[] = $doc;
     }
+    $docs = deduplicate_by($docs, 'id');
+    $rows = array_map(fn($d) => [
+        $d['id'],
+        $d['rutaArchivo'] ?? null,
+        $d['contentType'] ?? null,
+        $d['version'] ?? null,
+        $d['stageId'] ?? null,
+        $d['fecha'] ?? null,
+        $d['documentoOrigenId'] ?? null,
+    ], $docs);
+    BatchInsert::insert($conn, 'documento', [
+        'code', 'ruta_archivo', 'content_type', 'version', 'stage_id',
+        'fecha', 'documento_origen_id'
+    ], $rows, $batch_size);
 }
 
-function insert_vacantes(PDO $conn, array $empleos): void
+function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
 {
-    $sql_mun = 'SELECT id FROM municipio WHERE code = :code LIMIT 1';
-    $sql_dep = 'SELECT id FROM dependencia WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO vacante
-                (code, cantidad_ascensos, municipio, municipio_id, dependencia, dependencia_id,
-                 fecha_generada, cantidad, disponible, cargos_vacantes, ocupadas_pre_pensionados)
-            VALUES
-                (:code, :cantidad_ascensos, :municipio, :municipio_id, :dependencia, :dependencia_id,
-                 :fecha_generada, :cantidad, :disponible, :cargos_vacantes, :ocupadas_pre_pensionados)
-            ON DUPLICATE KEY UPDATE id = id';
-    $mun_lookup = $conn->prepare($sql_mun);
-    $dep_lookup = $conn->prepare($sql_dep);
-    $stmt       = $conn->prepare($sql);
+    $mun_lookup = $conn->prepare('SELECT id FROM municipio WHERE code = :code LIMIT 1');
+    $dep_lookup = $conn->prepare('SELECT id FROM dependencia WHERE code = :code LIMIT 1');
+
+    $vacs = [];
     foreach ($empleos as $empleo) {
         foreach ($empleo['vacantes'] ?? [] as $vac) {
-            $mun_lookup->execute([':code' => $vac['municipio']['id'] ?? null]);
-            $municipio_id = $mun_lookup->fetchColumn() ?: null;
-
-            $dep_lookup->execute([':code' => $vac['dependencia']['id'] ?? null]);
-            $dependencia_id = $dep_lookup->fetchColumn() ?: null;
-
-            $stmt->execute([
-                ':code'                    => $vac['id'],
-                ':cantidad_ascensos'       => $vac['cantidadAscensos'] ?? null,
-                ':municipio'               => json_encode($vac['municipio'] ?? null),
-                ':municipio_id'            => $municipio_id,
-                ':dependencia'             => json_encode($vac['dependencia'] ?? null),
-                ':dependencia_id'          => $dependencia_id,
-                ':fecha_generada'          => $vac['fechaGenerada'] ?? null,
-                ':cantidad'                => $vac['cantidad'] ?? null,
-                ':disponible'              => $vac['disponible'] ?? null,
-                ':cargos_vacantes'         => json_encode($vac['cargosVacantes'] ?? []),
-                ':ocupadas_pre_pensionados'=> $vac['ocupadasPrePensionados'] ?? null,
-            ]);
+            $vacs[] = $vac;
         }
     }
+    $vacs = deduplicate_by($vacs, 'id');
+
+    $rows = [];
+    foreach ($vacs as $vac) {
+        $mun_lookup->execute([':code' => $vac['municipio']['id'] ?? null]);
+        $dep_lookup->execute([':code' => $vac['dependencia']['id'] ?? null]);
+        $rows[] = [
+            $vac['id'],
+            $vac['cantidadAscensos'] ?? null,
+            json_encode($vac['municipio'] ?? null),
+            $mun_lookup->fetchColumn() ?: null,
+            json_encode($vac['dependencia'] ?? null),
+            $dep_lookup->fetchColumn() ?: null,
+            $vac['fechaGenerada'] ?? null,
+            $vac['cantidad'] ?? null,
+            $vac['disponible'] ?? null,
+            json_encode($vac['cargosVacantes'] ?? []),
+            $vac['ocupadasPrePensionados'] ?? null,
+        ];
+    }
+    BatchInsert::insert($conn, 'vacante', [
+        'code', 'cantidad_ascensos', 'municipio', 'municipio_id', 'dependencia',
+        'dependencia_id', 'fecha_generada', 'cantidad', 'disponible',
+        'cargos_vacantes', 'ocupadas_pre_pensionados'
+    ], $rows, $batch_size);
 }
 
-function insert_empleo(PDO $conn, array $rows): void
+function insert_empleo(PDO $conn, array $rows, int $batch_size): void
 {
-    $sql_den  = 'SELECT id FROM denominacion WHERE code = :code LIMIT 1';
-    $sql_conv = 'SELECT id FROM convocatoria WHERE code = :code LIMIT 1';
-    $sql_doc  = 'SELECT id FROM documento WHERE code = :code LIMIT 1';
-    $sql_ent  = 'SELECT id FROM entidad WHERE code = :code LIMIT 1';
-    $sql = 'INSERT INTO empleo
-                (opec, created_date, asignacion_salarial, codigo_empleo, sin_codigo,
-                 denominacion_id, grado_nivel, grado_denominacion, convocatoria_id,
-                 area, discapacidades, documento_id, entidad_id, identificador,
-                 vigencia_salarial, urbano, aeronautico, no_cobro_opec,
-                 estado_inscripcion, favorito, inscripcion_id, fecha_inscripcion,
-                 nivel_nombre, `access`)
-            VALUES
-                (:opec, :created_date, :asignacion_salarial, :codigo_empleo, :sin_codigo,
-                 :denominacion_id, :grado_nivel, :grado_denominacion, :convocatoria_id,
-                 :area, :discapacidades, :documento_id, :entidad_id, :identificador,
-                 :vigencia_salarial, :urbano, :aeronautico, :no_cobro_opec,
-                 :estado_inscripcion, :favorito, :inscripcion_id, :fecha_inscripcion,
-                 :nivel_nombre, :access)
-            ON DUPLICATE KEY UPDATE id = id';
-    $den_lookup  = $conn->prepare($sql_den);
-    $conv_lookup = $conn->prepare($sql_conv);
-    $doc_lookup  = $conn->prepare($sql_doc);
-    $ent_lookup  = $conn->prepare($sql_ent);
-    $stmt        = $conn->prepare($sql);
+    $den_lookup  = $conn->prepare('SELECT id FROM denominacion WHERE code = :code LIMIT 1');
+    $conv_lookup = $conn->prepare('SELECT id FROM convocatoria WHERE code = :code LIMIT 1');
+    $doc_lookup  = $conn->prepare('SELECT id FROM documento WHERE code = :code LIMIT 1');
+    $ent_lookup  = $conn->prepare('SELECT id FROM entidad WHERE code = :code LIMIT 1');
+
+    $insert_rows = [];
     foreach ($rows as $row) {
         $empleo = json_decode($row['empleo'], true);
 
         $den_lookup->execute([':code' => $empleo['denominacion']['id'] ?? null]);
-        $denominacion_id = $den_lookup->fetchColumn() ?: null;
-
         $conv_lookup->execute([':code' => $empleo['convocatoria']['id'] ?? null]);
-        $convocatoria_id = $conv_lookup->fetchColumn() ?: null;
-
         $doc_lookup->execute([':code' => $empleo['documento']['id'] ?? null]);
-        $documento_id = $doc_lookup->fetchColumn() ?: null;
-
         $ent_lookup->execute([':code' => $empleo['entidad']['id'] ?? null]);
-        $entidad_id = $ent_lookup->fetchColumn() ?: null;
 
-        $stmt->execute([
-            ':opec'                => $empleo['id'],
-            ':created_date'        => $empleo['createdDate'] ?? null,
-            ':asignacion_salarial' => $empleo['asignacionSalarial'] ?? null,
-            ':codigo_empleo'       => $empleo['codigoEmpleo'] ?? null,
-            ':sin_codigo'          => (int)$empleo['sinCodigo'] ?? null,
-            ':denominacion_id'     => $denominacion_id,
-            ':grado_nivel'         => json_encode($empleo['gradoNivel'] ?? null),
-            ':grado_denominacion'  => json_encode($empleo['gradoDenominacion'] ?? null),
-            ':convocatoria_id'     => $convocatoria_id,
-            ':area'                => json_encode($empleo['area'] ?? null),
-            ':discapacidades'      => json_encode($empleo['discapacidades'] ?? []),
-            ':documento_id'        => $documento_id,
-            ':entidad_id'          => $entidad_id,
-            ':identificador'       => $empleo['identificador'] ?? null,
-            ':vigencia_salarial'   => $empleo['vigenciaSalarial'] ?? null,
-            ':urbano'              => (int)$empleo['urbano'] ?? null,
-            ':aeronautico'         => (int)$empleo['aeronautico'] ?? null,
-            ':no_cobro_opec'       => (int)$empleo['noCobroOpec'] ?? null,
-            ':estado_inscripcion'  => $row['estado_inscripcion'],
-            ':favorito'            => $row['favorito'],
-            ':inscripcion_id'      => $row['inscripcion_id'],
-            ':fecha_inscripcion'   => $row['fecha_inscripcion'],
-            ':nivel_nombre'        => $row['nivel_nombre'],
-            ':access'              => $row['access'],
-        ]);
+        $insert_rows[] = [
+            $empleo['id'],
+            $empleo['createdDate'] ?? null,
+            $empleo['asignacionSalarial'] ?? null,
+            $empleo['codigoEmpleo'] ?? null,
+            (int)($empleo['sinCodigo'] ?? 0),
+            $den_lookup->fetchColumn() ?: null,
+            json_encode($empleo['gradoNivel'] ?? null),
+            json_encode($empleo['gradoDenominacion'] ?? null),
+            $conv_lookup->fetchColumn() ?: null,
+            json_encode($empleo['area'] ?? null),
+            json_encode($empleo['discapacidades'] ?? []),
+            $doc_lookup->fetchColumn() ?: null,
+            $ent_lookup->fetchColumn() ?: null,
+            $empleo['identificador'] ?? null,
+            $empleo['vigenciaSalarial'] ?? null,
+            (int)($empleo['urbano'] ?? 0),
+            (int)($empleo['aeronautico'] ?? 0),
+            (int)($empleo['noCobroOpec'] ?? 0),
+            $row['estado_inscripcion'],
+            $row['favorito'],
+            $row['inscripcion_id'],
+            $row['fecha_inscripcion'],
+            $row['nivel_nombre'],
+            $row['access'],
+        ];
     }
+    BatchInsert::insert($conn, 'empleo', [
+        'opec', 'created_date', 'asignacion_salarial', 'codigo_empleo', 'sin_codigo',
+        'denominacion_id', 'grado_nivel', 'grado_denominacion', 'convocatoria_id',
+        'area', 'discapacidades', 'documento_id', 'entidad_id', 'identificador',
+        'vigencia_salarial', 'urbano', 'aeronautico', 'no_cobro_opec',
+        'estado_inscripcion', 'favorito', 'inscripcion_id', 'fecha_inscripcion',
+        'nivel_nombre', 'access',
+    ], $insert_rows, $batch_size);
 }
 
-function process_batch(PDO $conn, array $rows): void
+function process_batch(PDO $conn, array $rows, int $batch_size): void
 {
     $empleos = array_map(fn($row) => json_decode($row['empleo'], true), $rows);
 
-    insert_nivel($conn, $empleos);
-    insert_tipo_entidad($conn, $empleos);
-    insert_entidad($conn, $empleos);
-    insert_convocatorias($conn, $empleos);
-    insert_dependencias($conn, $empleos);
-    insert_municipios($conn, $empleos);
-    insert_requisitos($conn, $empleos);
-    insert_denominaciones($conn, $empleos);
-    insert_funciones($conn, $empleos);
-    insert_documentos($conn, $empleos);
-    insert_vacantes($conn, $empleos);
-    insert_empleo($conn, $rows);
+    insert_niveles($conn, $empleos, $batch_size);
+    insert_tipo_entidades($conn, $empleos, $batch_size);
+    insert_entidades($conn, $empleos, $batch_size);
+    insert_convocatorias($conn, $empleos, $batch_size);
+    insert_dependencias($conn, $empleos, $batch_size);
+    insert_municipios($conn, $empleos, $batch_size);
+    insert_requisitos($conn, $empleos, $batch_size);
+    insert_denominaciones($conn, $empleos, $batch_size);
+    insert_funciones($conn, $empleos, $batch_size);
+    insert_documentos($conn, $empleos, $batch_size);
+    insert_vacantes($conn, $empleos, $batch_size);
+    insert_empleo($conn, $rows, $batch_size);
 }
 
 #[CronJob(schedule: 'daily')]
@@ -320,7 +305,7 @@ function main(): void
               WHERE id >= :curr_id AND id < :next_id
                 AND ABS(id) % :div = :mod';
     $batch_size = 500;
-    $cursor_key= 'pipeline_main';
+    $cursor_key = 'pipeline_main';
 
     BatchScan::scan(
         $conn,
@@ -328,6 +313,7 @@ function main(): void
         $query,
         $batch_size,
         $cursor_key,
-        fn(array $rows) => process_batch($conn, $rows),
+        fn(array $rows) => process_batch($conn, $rows, $batch_size),
     );
 }
+
