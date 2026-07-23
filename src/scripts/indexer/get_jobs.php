@@ -1,6 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-require 'src/scripts/indexer/helpers.php';
+require __DIR__ . '/helpers.php';
 require 'src/utils/indexing.php';
 
 use Utils\Agent;
