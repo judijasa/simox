@@ -245,6 +245,8 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
             (int)($empleo['sinCodigo'] ?? 0),
             $den_lookup->fetchColumn() ?: null,
             $empleo['descripcion'] ?? null,
+            (int)($empleo['concursoAscenso'] ?? 0),
+            (int)($empleo['condicionDiscapacidad'] ?? 0),
             json_encode($empleo['gradoNivel'] ?? null),
             json_encode($empleo['gradoDenominacion'] ?? null),
             $conv_lookup->fetchColumn() ?: null,
@@ -267,11 +269,11 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
     }
     BatchInsert::insert($conn, 'empleo', [
         'opec', 'created_date', 'asignacion_salarial', 'codigo_empleo', 'sin_codigo',
-        'denominacion_id', 'descripcion', 'grado_nivel', 'grado_denominacion',
-        'convocatoria_id', 'area', 'discapacidades', 'documento_id', 'entidad_id',
-        'identificador', 'vigencia_salarial', 'urbano', 'aeronautico', 'no_cobro_opec',
-        'estado_inscripcion', 'favorito', 'inscripcion_id', 'fecha_inscripcion',
-        'nivel_nombre', 'access',
+        'denominacion_id', 'descripcion', 'concurso_ascenso', 'condicion_discapacidad',
+        'grado_nivel', 'grado_denominacion', 'convocatoria_id', 'area', 'discapacidades',
+        'documento_id', 'entidad_id', 'identificador', 'vigencia_salarial', 'urbano',
+        'aeronautico', 'no_cobro_opec', 'estado_inscripcion', 'favorito',
+        'inscripcion_id', 'fecha_inscripcion', 'nivel_nombre', 'access',
     ], $insert_rows, $batch_size);
 }
 
