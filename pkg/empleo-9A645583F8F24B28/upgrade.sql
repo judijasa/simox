@@ -12,7 +12,9 @@ CREATE OR REPLACE TABLE empleo (
     grado_nivel JSON,
     grado_denominacion JSON,
     convocatoria_id INT,
-    -- funciones (no column),
+    -- no funciones (using juncture table)
+    -- no requisitos_minimos (using juncture table)
+    -- no vacantes (using juncture table)
     area JSON,
     discapacidades JSON,
     documento_id INT,

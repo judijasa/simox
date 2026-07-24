@@ -1,7 +1,5 @@
 <?php
 $dependencies = array(
-    'vacante-WZ0T87MRR815E49Y',
-    'requisito-7SACLUK8T6IU4BP3',
     'entidad-67REHGMCNAEUY2R1',
     'empleo_snapshot-00B5FEB6B8B84570',
     'documento-B4389BGTHWELGSQP',
