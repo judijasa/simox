@@ -6,6 +6,7 @@ CREATE OR REPLACE TABLE empleo (
     codigo_empleo VARCHAR(10), -- assigned by simo
     sin_codigo BOOL,
     denominacion_id INT,
+    descripcion TEXT,
     grado_nivel JSON,
     grado_denominacion JSON,
     convocatoria_id INT,
