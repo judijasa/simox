@@ -243,6 +243,60 @@ function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
     ], $rows, $batch_size);
 }
 
+function insert_empleo_vacantes(PDO $conn, array $empleos, int $batch_size): void
+{
+    $emp_lookup = $conn->prepare('SELECT id FROM empleo WHERE opec = :opec LIMIT 1');
+    $vac_lookup = $conn->prepare('SELECT id FROM vacante WHERE code = :code LIMIT 1');
+    $rows = [];
+    foreach ($empleos as $empleo) {
+        $emp_lookup->execute([':opec' => $empleo['id'] ?? null]);
+        $empleo_id = $emp_lookup->fetchColumn() ?: null;
+        if ($empleo_id === null) continue;
+        foreach ($empleo['vacantes'] ?? [] as $vacante) {
+            $vac_lookup->execute([':code' => $vacante['id'] ?? null]);
+            $vacante_id = $vac_lookup->fetchColumn() ?: null;
+            if ($vacante_id !== null) $rows["$empleo_id:$vacante_id"] = [$empleo_id, $vacante_id];
+        }
+    }
+    BatchInsert::insert($conn, 'empleo_vacante', ['empleo_id', 'vacante_id'], array_values($rows), $batch_size);
+}
+
+function insert_empleo_requisitos(PDO $conn, array $empleos, int $batch_size): void
+{
+    $emp_lookup = $conn->prepare('SELECT id FROM empleo WHERE opec = :opec LIMIT 1');
+    $req_lookup = $conn->prepare('SELECT id FROM requisito WHERE code = :code LIMIT 1');
+    $rows = [];
+    foreach ($empleos as $empleo) {
+        $emp_lookup->execute([':opec' => $empleo['id'] ?? null]);
+        $empleo_id = $emp_lookup->fetchColumn() ?: null;
+        if ($empleo_id === null) continue;
+        foreach ($empleo['requisitosMinimos'] ?? [] as $requisito) {
+            $req_lookup->execute([':code' => $requisito['id'] ?? null]);
+            $requisito_id = $req_lookup->fetchColumn() ?: null;
+            if ($requisito_id !== null) $rows["$empleo_id:$requisito_id"] = [$empleo_id, $requisito_id];
+        }
+    }
+    BatchInsert::insert($conn, 'empleo_requisito', ['empleo_id', 'requisito_id'], array_values($rows), $batch_size);
+}
+
+function insert_empleo_funciones(PDO $conn, array $empleos, int $batch_size): void
+{
+    $emp_lookup = $conn->prepare('SELECT id FROM empleo WHERE opec = :opec LIMIT 1');
+    $fn_lookup  = $conn->prepare('SELECT id FROM funcion WHERE code = :code LIMIT 1');
+    $rows = [];
+    foreach ($empleos as $empleo) {
+        $emp_lookup->execute([':opec' => $empleo['id'] ?? null]);
+        $empleo_id = $emp_lookup->fetchColumn() ?: null;
+        if ($empleo_id === null) continue;
+        foreach ($empleo['funciones'] ?? [] as $funcion) {
+            $fn_lookup->execute([':code' => $funcion['id'] ?? null]);
+            $funcion_id = $fn_lookup->fetchColumn() ?: null;
+            if ($funcion_id !== null) $rows["$empleo_id:$funcion_id"] = [$empleo_id, $funcion_id];
+        }
+    }
+    BatchInsert::insert($conn, 'empleo_funcion', ['empleo_id', 'funcion_id'], array_values($rows), $batch_size);
+}
+
 function insert_empleos(PDO $conn, array $rows, int $batch_size): void
 {
     $den_lookup  = $conn->prepare('SELECT id FROM denominacion WHERE code = :code LIMIT 1');
@@ -315,6 +369,9 @@ function process_batch(PDO $conn, array $rows, int $batch_size): void
     insert_documentos($conn, $empleos, $batch_size);
     insert_vacantes($conn, $empleos, $batch_size);
     insert_empleos($conn, $rows, $batch_size);
+    insert_empleo_vacantes($conn, $empleos, $batch_size);
+    insert_empleo_requisitos($conn, $empleos, $batch_size);
+    insert_empleo_funciones($conn, $empleos, $batch_size);
 }
 
 #[CronJob(schedule: 'daily')]
