@@ -15,7 +15,7 @@ class BatchInsert
 
         foreach (array_chunk($rows, $batch_size) as $chunk) {
             $placeholders = implode(', ', array_fill(0, count($chunk), $placeholder));
-            $sql          = "INSERT INTO {$table} ({$col_list}) VALUES {$placeholders} ON DUPLICATE KEY UPDATE id = id";
+            $sql          = "INSERT INTO {$table} ({$col_list}) VALUES {$placeholders} ON DUPLICATE KEY UPDATE {$columns[0]} = {$columns[0]}";
             $conn->prepare($sql)->execute(array_merge(...$chunk));
         }
     }
