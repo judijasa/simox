@@ -61,14 +61,36 @@ function insert_entidades(PDO $conn, array $empleos, int $batch_size): void
 
 function insert_convocatorias(PDO $conn, array $empleos, int $batch_size): void
 {
+    $lookup = $conn->prepare('SELECT id FROM entidad WHERE code = :code LIMIT 1');
+
     $convs = [];
     foreach ($empleos as $empleo) {
         $conv = $empleo['convocatoria'] ?? null;
         if ($conv !== null) $convs[] = $conv;
     }
     $convs = deduplicate_by($convs, 'id');
-    $rows  = array_map(fn($c) => [$c['id'], $c['codigo'], $c['nombre'], $c['agno']], $convs);
-    $columns = ['code', 'codigo', 'nombre', 'agno'];
+
+    $rows = [];
+    foreach ($convs as $conv) {
+        $lookup->execute([':code' => $conv['entidad']['id'] ?? null]);
+        $rows[]  = [
+            $conv['id'],
+            $conv['nombre'],
+            $conv['agno'],
+            $conv['codigo'],
+            json_encode($conv['entidad']),
+            $lookup->fetchColumn() ?: null,  // entidad_id
+            isset($conv['es_tipo_fase']) ? (int)$conv['es_tipo_fase'] : null,
+            $conv['tipo_proceso'] ?? null,
+            isset($conv['no_cobro_nivel']) ? (int)$conv['no_cobro_nivel'] : null,
+            isset($conv['no_cobro_opec']) ? (int)$conv['no_cobro_opec'] : null,
+            $conv['tipo_proc_sele_id'] ?? null
+        ];
+    }
+    $columns = [
+        'code', 'nombre', 'agno', 'codigo', 'entidad', 'entidad_id', 'es_tipo_fase',
+        'tipo_proceso', 'no_cobro_nivel', 'no_cobro_opec', 'tipo_proc_sele_id'
+    ];
     BatchInsert::insert($conn, 'convocatoria', $columns, $rows, $batch_size);
 }
 

@@ -1,3 +1,6 @@
 <?php
-$dependencies = array();
+$dependencies = array(
+    'entidad-67REHGMCNAEUY2R1'
+);
 ?>
+
