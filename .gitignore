@@ -8,7 +8,6 @@ var/
 result/
 
 # Ignore files
-src/config.sh
 etc/reuter.ini
 etc/dev-machines.ini
 .env
