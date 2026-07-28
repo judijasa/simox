@@ -12,9 +12,11 @@
     # nixpkgs-pinned.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
 
     utils.url = "github:numtide/flake-utils";
+
+    ema.url = "github:judijasa/ema";
   };
 
-  outputs = { self, nixpkgs, utils }:
+  outputs = { self, nixpkgs, utils, ema }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -44,6 +46,7 @@
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
+        emaPkg = ema.packages.${system}.default;
 
         commonPackages = [
           bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
@@ -52,6 +55,7 @@
           # mariadbPkg  # nix build for stateful systems is anti-pattern
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
+          emaPkg
           phpComposer
           phpPkg
           tmuxPkg
@@ -99,10 +103,11 @@
 
               # Clean up background execution seamlessly upon exiting the shell
               trap "echo 'Stopping local MariaDB server...'; kill $MARIADB_PID; wait $MARIADB_PID 2>/dev/null" EXIT
-
-              # Local alias ensuring connections point to the workspace socket
-              alias mariadb="mariadb --socket=$MYSQL_UNIX_PORT"
             fi
+
+            [[ -f "$SIMO_REPO_PATH/.env" ]] && source "$SIMO_REPO_PATH/.env"
+
+            export EMA_TARGET="local"
 
             # Customize the prompt (PS1)
             # Define ANSI color codes for readability

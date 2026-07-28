@@ -42,13 +42,5 @@ SITE="https://simo.cnsc.gov.co"
 # SITE="https://simo.cnsc.gov.co" # redirects to https://simo.cnsc.gov.co/#homeCiudadano
 #SITE_2="https://simo.cnsc.gov.co"
 
-# SERVER eg 127.0.0.1, etc
-# DBMS eg mariadb, mysql, etc
-SERVER="localhost"
-DBMS="mariadb"
-DBNAME="simo"
-ADMIN_PASSWORD="xxxxxxxxxxxx"
-READER_PASSWORD="xxxxxxxxxxxx"
-
 # PHPMailer
 SMTP_PASS="xxxx xxxx xxxx xxxx"

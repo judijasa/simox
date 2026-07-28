@@ -30,8 +30,8 @@ prod-init: PROD_BASHRC_FILE = $(PROD_BASHRC_DIR)/simox_aliases.bashrc
 
 
 .PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
-    _dev-init-cluster _dev-init-composer _dev-update-hosts prod-init _prod-assert-user _prod-create-dirs \
-    _prod-init-cluster
+    _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env \
+    prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster
 
 help:
 	@echo "Available initialization targets:"
@@ -46,7 +46,7 @@ _assert-nix-dev:
 	    exit 1; \
 	fi
 
-_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts
+_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
 	@echo "Developer environment successfully initialized."
 
 _init-git-hooks:
@@ -99,6 +99,26 @@ _dev-update-hosts:
 	sudo cp "$$tmp_hosts" /etc/hosts; \
 	rm -f "$$tmp_hosts"; \
 	echo "Successfully synced!"
+
+_dev-init-local-env:
+	@if [ ! -f .env ]; then \
+	    echo "Creating .env..."; \
+	    if [ ! -f etc/dev-machines.ini ]; then \
+	        echo "ERROR: etc/dev-machines.ini not found."; \
+	        echo "       Copy etc/dev-machines.ini.template, add '$$(hostname)=<dbuser>', then re-run."; \
+	        exit 1; \
+	    fi; \
+	    _dbuser=$$(grep "^$$(hostname)=" etc/dev-machines.ini | cut -d= -f2); \
+	    if [ -z "$$_dbuser" ]; then \
+	        echo "ERROR: hostname '$$(hostname)' not found in etc/dev-machines.ini."; \
+	        echo "       Add '$$(hostname)=<dbuser>' to etc/dev-machines.ini, then re-run."; \
+	        exit 1; \
+	    fi; \
+	    printf '# Machine-specific environment (git-ignored).\nexport DBUSER=%s\n' "$$_dbuser" > .env; \
+	    echo "    Created .env with DBUSER=$$_dbuser"; \
+	else \
+	    echo ".env already exists. Skipping."; \
+	fi
 
 ###########################
 # PRODUCTION INITIALIZATION (Runs directly as root over remote SSH stream)

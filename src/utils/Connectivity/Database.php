@@ -12,22 +12,27 @@ class Database extends PDO
         parent::__construct($dsn, $user, $pass, $options);
     }
 
-    private static function buildDsn(string $dbname): string {
-        $cnf = parse_ini_file(__DIR__. '/../../config.sh');
-        $servername = $cnf["SERVER"];
-
-        // host=... is ignored if a socket is specified
-        $dns = "mysql:host={$servername};dbname={$dbname};charset=utf8mb4";
-
-        // Inject custom socket location if set (otherwise PHP default)
-        $socket_spec = '';
-        $cmd = '[[ -v MYSQL_UNIX_PORT ]] && echo "true" || echo "false"';
-        $is_set = trim(shell_exec($cmd));  // trim \n
-        if ($is_set === "true") {
-            $socket = trim(shell_exec('echo $MYSQL_UNIX_PORT'));
-            $socket_spec = ';unix_socket=' . $socket;
+    private static function loadConfig(): array {
+        $target = getenv('EMA_TARGET') ?: 'local';
+        $path = __DIR__ . '/../../../etc/reuter.ini';
+        $cnf = parse_ini_file($path, true);
+        if ($cnf === false || !isset($cnf[$target])) {
+            throw new \RuntimeException("Target '$target' not found in $path");
         }
-        return $dns . $socket_spec;
+        return $cnf[$target];
+    }
+
+    private static function buildDsn(string $dbname, array $cnf): string {
+        $server = $cnf['SERVER'];
+        $port = $cnf['PORT'] ?? '3306';
+
+        $dsn = "mysql:host={$server};port={$port};dbname={$dbname};charset=utf8mb4";
+
+        $socket = getenv('MYSQL_UNIX_PORT');
+        if ($socket !== false && $socket !== '') {
+            $dsn .= ';unix_socket=' . $socket;
+        }
+        return $dsn;
     }
 
     private static function baseOptions(): array {
@@ -39,32 +44,32 @@ class Database extends PDO
     }
 
     public static function admin(string $dbname): self {
-        $cnf = parse_ini_file(__DIR__. '/../../config.sh');
+        $cnf = self::loadConfig();
         return new self(
-            self::buildDsn($dbname),
+            self::buildDsn($dbname, $cnf),
             'admin',
-            $cnf["ADMIN_PASSWORD"],
+            $cnf['ADMIN_PASSWORD'],
             self::baseOptions()
         );
     }
 
     public static function reader(string $dbname): self {
-        $cnf = parse_ini_file(__DIR__. '/../../config.sh');
+        $cnf = self::loadConfig();
         return new self(
-            self::buildDsn($dbname),
+            self::buildDsn($dbname, $cnf),
             'reader',
-            $cnf["READER_PASSWORD"],
+            $cnf['READER_PASSWORD'],
             self::baseOptions()
         );
     }
 
     public static function public(string $dbname): self {
+        $cnf = self::loadConfig();
         return new self(
-            self::buildDsn($dbname),
+            self::buildDsn($dbname, $cnf),
             'public',
             '',
             self::baseOptions()
         );
     }
 }
-
