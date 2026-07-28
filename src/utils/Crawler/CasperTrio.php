@@ -12,6 +12,11 @@ use Browser\Casper;
 // Class extensions: https://www.w3schools.com/php/keyword_extends.asp
 
 class CasperTrio extends Casper {
+    public function __construct()
+    {
+        parent::__construct('vendor/bin/');
+    }
+
     /**
      *  @param string $selector
      *  @param string $input

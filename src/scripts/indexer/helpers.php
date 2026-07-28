@@ -24,12 +24,9 @@ function get_total_job_offers($base_url){
     // stackoverflow.com/questions/48098911/the-use-of-the-php-simple-html-dom-parser-when-parsing-large-html-files-result
     //  stackoverflow.com/questions/30966569/str-get-html-doesnt-work-and-return-blank/30967650
     define('MAX_FILE_SIZE', 4000000);
-    $cnf = parse_ini_file("src/config.sh");
-    $path2casper = $cnf["PATH2CASPER"];
     $target_site = $base_url. '/#ofertaEmpleo';
 
-
-    $casper = new CasperTrio($path2casper);
+    $casper = new CasperTrio();
 
     // Forward options to PhantomJS: ignore SSL errors
     $casper->setOptions(array(
