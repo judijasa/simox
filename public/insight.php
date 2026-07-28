@@ -73,12 +73,12 @@ Author: judijasa <ciudadania.ab@gmail.com>
     </head>
     <body>
         <?php
-            // Import file where we define connection to Database
-            require_once "/var/www/html/simo-express/connectivity.php";
+            require_once __DIR__ . '/../vendor/autoload.php';
+            use Utils\Connectivity\Database;
             try {
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo';
-                $conn = new publicPDO($dbname);
+                $conn = Database::public($dbname);
                 $query = "SELECT count(*) FROM vw_job_offer WHERE cierre >= date(now()) OR cierre = '1000-01-01'";
                 $stmt = $conn->query($query);
                 $total = $stmt->fetchColumn();

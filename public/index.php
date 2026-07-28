@@ -101,12 +101,12 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
 
-            // Import file where we define connection to Database
-            require_once "/var/www/html/simo-express/connectivity.php";
+            require_once __DIR__ . '/../vendor/autoload.php';
+            use Utils\Connectivity\Database;
 
             $dbname = 'simo';
             try {
-                $conn = new publicPDO($dbname);
+                $conn = Database::public($dbname);
             } catch (PDOException $e) {
                 echo 'Connection failed: ' . $e->getMessage();
             }

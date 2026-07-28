@@ -12,9 +12,21 @@ class Database extends PDO
         parent::__construct($dsn, $user, $pass, $options);
     }
 
+    private static function configPath(): string {
+        $repoPath = __DIR__ . '/../../../etc/reuter.ini';
+        if (file_exists($repoPath)) {
+            return $repoPath;
+        }
+        $override = getenv('SIMOX_REUTER_INI');
+        if ($override !== false && $override !== '') {
+            return $override;
+        }
+        throw new \RuntimeException("reuter.ini not found. Create etc/reuter.ini or set SIMOX_REUTER_INI.");
+    }
+
     private static function loadConfig(): array {
         $target = getenv('EMA_TARGET') ?: 'local';
-        $path = __DIR__ . '/../../../etc/reuter.ini';
+        $path = self::configPath();
         $cnf = parse_ini_file($path, true);
         if ($cnf === false || !isset($cnf[$target])) {
             throw new \RuntimeException("Target '$target' not found in $path");

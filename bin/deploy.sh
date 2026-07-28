@@ -239,34 +239,13 @@ git_target_changed() {
 
 deploy_website() {
   local REMOTE_HOST="$1"
-  local PROD_USER="$2"
-  local REMOTE_TARGET_DIR="$3"
-  local PREVIOUS_HASH_DEPLOYED="$4"
-  local CURRENT_HASH_DEPLOYED="$5"
-  local REMOTE_ABS_PUBLIC_DIR="${REMOTE_TARGET_DIR}/public"
-  local LOCAL_REL_PUBLIC_DIR="public"
-  local DEPLOY_WEB=$(git_target_changed $PREVIOUS_HASH_DEPLOYED $CURRENT_HASH_DEPLOYED $LOCAL_REL_PUBLIC_DIR)
+  local REMOTE_TARGET_DIR="$2"
 
-  if [ "$DEPLOY_WEB" = "true" ] || [ "$INIT" = "true" ]; then
-    ssh "root@$REMOTE_HOST" "
-      SOURCE_DIR=\"$REMOTE_ABS_PUBLIC_DIR\"
-      DEST_DIR='/var/www/html/simox'
-      echo 'Checking for website changes and deploying...'
-      if [ ! -d \"\$SOURCE_DIR\" ]; then
-          echo \"Error: Source directory \$SOURCE_DIR not found.\"
-          exit 1
-      fi
-      mkdir -p \"\$DEST_DIR\"
-      echo 'Checking for changes and deploying...'
-      RSYNC_OUT=\$(rsync -av --delete --chown=$PROD_USER:$PROD_USER --out-format=\"%i %n\" \"\$SOURCE_DIR\" \"\$DEST_DIR\")
-      if echo \"\$RSYNC_OUT\" | grep -E '[><+*cstmd]' > /dev/null; then
-          echo 'Changes detected and applied. Restarting web server...'
-          systemctl restart apache2
-      else
-          echo 'Websites are up to date. Skipping server restart.'
-      fi
-    "
-  fi
+  # Apache serves directly from the deployed repo's public/ subdirectory.
+  # The repo dir is recreated on each deploy, so www-data traversal must be restored each time.
+  # One-time setup (manual): chmod o+x on parent dirs, configure Apache vhost DocumentRoot to
+  # $REMOTE_TARGET_DIR/public, and set SetEnv SIMOX_REUTER_INI <path-to-reuter.ini> in the vhost.
+  ssh "root@$REMOTE_HOST" "chmod o+x '$REMOTE_TARGET_DIR'"
 }
 
 INIT=false
@@ -302,7 +281,7 @@ main() {
   [ "$NIX_EXISTS" != "true" ] && install_nix_remotely "$REMOTE_HOST" "$PROD_USER" || true
   deploy_nix_packages "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR"  # keep it before deploying composer
   deploy_composer_dependencies "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
-  deploy_website "$REMOTE_HOST" "$PROD_USER" "$REMOTE_TARGET_DIR" "$PREVIOUS_REV" "$REV"
+  deploy_website "$REMOTE_HOST" "$REMOTE_TARGET_DIR"
   if [ "$INIT" = "true" ]; then
     # prod-init is for execute only once workflows in prod server
     make prod-init
