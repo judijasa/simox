@@ -85,10 +85,10 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             }
 
             if (isset($_GET["dept"])) {
-                $dept  = intval($_GET["dept"]);
+                $dept_id_param = intval($_GET["dept"]);
             }
             else {
-                $dept = -1;
+                $dept_id_param = -1;
             }
 
             if (isset($_GET["width"])) {
@@ -112,22 +112,36 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             }
 
             // ORDER BY to guarantee No_Aplica option is last.
-            $query = "SELECT distinct departamento FROM municipio ORDER BY CASE WHEN id = 34 THEN 1 ELSE 0 END, departamento";
+            $query = '''
+                SELECT DISTINCT departamento FROM municipio
+                ORDER BY
+                CASE WHEN departamento = 'No_Aplica' THEN 1 ELSE 0 END, departamento
+            ''';
             $stmt = $conn->query($query);
-            $map_dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
             //print_r($row); // test
 
             # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
             # Careful: counting in vw_job_offer doesn't always coincides with
             # that of job_offer because the former filters offers with vacantes = 0.
-            $query = "SELECT count(*) FROM vw_job_offer WHERE (cierre >= date(now()) OR cierre = '1000-01-01')";
+            $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now())";
             if($dept !== -1){
-                $query .= " AND departamento = :str_dept";
+                $query .= ''' AND id IN (
+                        SELECT empleo_id FROM empleo_vacante
+                        WHERE vacante_id IN (
+                            SELECT id FROM vacante
+                            WHERE municipio_id IN (
+                                SELECT id FROM municipio
+                                WHERE departamento = :dept_str
+                            )
+                        )
+                    )
+                ''';
             }
             $stmt = $conn->prepare($query);
             // $stmt->bindParam(':today', $today);
             if($dept !== -1){
-                $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);
+                $stmt->bindParam(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
             }
             $stmt->execute();
             $total_records = $stmt->fetchColumn();
