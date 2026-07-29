@@ -61,10 +61,10 @@ flight_checks() {
     exit 1
   fi
 
-  if ping -c 1 -W 2 "${REMOTE_HOST}-as-root" &> /dev/null; then
-    echo "Host ${REMOTE_HOST}-as-root is online."
+  if ping -c 1 -W 2 "${REMOTE_HOST}" &> /dev/null; then
+    echo "Host ${REMOTE_HOST} is online."
   else
-    echo "Host ${REMOTE_HOST}-as-root is unreachable."
+    echo "Host ${REMOTE_HOST} is unreachable."
     exit 1
   fi
 }
