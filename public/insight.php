@@ -88,14 +88,6 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion IS NULL";
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
-                $query = "SELECT count(*)
-                          FROM empleo e
-                          WHERE e.created_at < e.fecha_inscripcion
-                            AND EXISTS (
-                                SELECT 1 FROM empleo_vacante ev WHERE ev.empleo_id = e.id
-                            )";
-                $stmt = $conn->query($query);
-                $validas = $stmt->fetchColumn();
             } catch (PDOException $e) {
                 echo "Error: ". $e->getMessage(). PHP_EOL;
             } finally {
@@ -109,7 +101,6 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <p>Total de ofertas<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
             Número de ofertas vigentes: <?php echo $vigentes;?><br>
             Número de ofertas con fecha de cierre "por definir": <?php echo $por_definir;?><br>
-            Número de ofertas publicadas al menos un día antes de su fecha de cierre (aprox.): <?php echo $validas;?>
 <hr></hr>
         <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.  Las ofertas con fechas de inscripción vencidas o con cero número de vacantes no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
 <!-- Las ofertas sin número de vacantes reportado no son incluidas en el análisis. -->
@@ -117,3 +108,4 @@ Author: judijasa <ciudadania.ab@gmail.com>
         </div>
     </body>
 </html>
+
