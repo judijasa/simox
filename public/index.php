@@ -119,14 +119,10 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             ''';
             $stmt = $conn->query($query);
             $dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            //print_r($row); // test
 
-            # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
-            # Careful: counting in vw_job_offer doesn't always coincides with
-            # that of job_offer because the former filters offers with vacantes = 0.
-            $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now())";
-            if($dept !== -1){
-                $query .= ''' AND id IN (
+            $query = "SELECT opec FROM empleo WHERE fecha_inscripcion >= date(now())";
+            if($dept_id_param !== -1){
+                $query .= " AND id IN (
                         SELECT empleo_id FROM empleo_vacante
                         WHERE vacante_id IN (
                             SELECT id FROM vacante
@@ -135,56 +131,46 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                                 WHERE departamento = :dept_str
                             )
                         )
-                    )
-                ''';
+                    )";
             }
+            $query .= " ORDER BY fecha_inscripcion";
             $stmt = $conn->prepare($query);
-            // $stmt->bindParam(':today', $today);
-            if($dept !== -1){
+            if($dept_id_param !== -1){
                 $stmt->bindParam(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
             }
             $stmt->execute();
-            $total_records = $stmt->fetchColumn();
+            $all_opecs = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
+            $total_records = count($all_opecs);
             echo "</br>";
-            // Number of pages required.
             $total_pages = ceil($total_records / $items_per_page);
 
-            //*******************************
-            // Get current page records...
-            //*******************************
-
             $start_from = ($page-1) * $items_per_page;
+            $page_opecs = array_slice($all_opecs, $start_from, $items_per_page);
 
-            $dept_count = count($map_dept_id_to_dept_str);
-            if($dept !== -1){
+            $dept_count = count($dept_id_to_dept_str);
+            $stmt = null;
+            if(count($page_opecs) > 0){
+                $placeholders = implode(',', array_fill(0, count($page_opecs), '?'));
                 $query = "
-                    SELECT *
-                    FROM vw_job_offer
-                    WHERE (cierre >= date(now()) OR cierre = '1000-01-01')
-                        AND departamento = :str_dept
-                    ORDER BY cierre
-                    LIMIT :start_from, :items_per_page
+                    SELECT
+                        e.opec,
+                        e.nivel_nombre AS nivel,
+                        d.nombre AS denominacion,
+                        e.asignacion_salarial AS salario,
+                        e.fecha_inscripcion AS cierre,
+                        '' AS estudio,
+                        '' AS keywords,
+                        '' AS municipio,
+                        NULL AS departamento_iso
+                    FROM empleo e
+                    LEFT JOIN denominacion d ON d.id = e.denominacion_id
+                    WHERE e.opec IN ($placeholders)
+                    ORDER BY e.fecha_inscripcion
                 ";
-                $stmt = $conn->prepare($query);  // do not relocate
-                $stmt->bindParam(':str_dept', $map_dept_id_to_dept_str[$dept]);  // do not relocate
-                // $stmt->bindParam(':today', $today); // Rebind again (otherwise raising error)
-                $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
-                $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
-            } else {
-                $query = "
-                    SELECT *
-                    FROM vw_job_offer
-                    WHERE cierre >= date(now()) OR cierre = '1000-01-01'
-                    ORDER BY cierre
-                    LIMIT :start_from, :items_per_page
-                ";
-                $stmt = $conn->prepare($query);  // do not relocate
-                // $stmt->bindParam(':today', $today);
-                $stmt->bindParam(':start_from', $start_from, PDO::PARAM_INT);
-                $stmt->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
+                $stmt = $conn->prepare($query);
+                $stmt->execute($page_opecs);
             }
-            $stmt->execute();
         ?>
 
         <div class="container">
@@ -225,7 +211,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
                 <select id="dept" onChange="go2Dept();">
                 <?php
-                    if($dept == -1) {
+                    if($dept_id_param == -1) {
                         echo "<option selected value=-1> -- todos los deptos -- </option>";
                     }else{
                         echo "<option value=-1> -- todos los deptos -- </option>";
@@ -253,10 +239,10 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
                     $i = 0;
                     for($x = 0; $x<$dept_count; $x++) {
-                        if($dept == $i) {
-                            echo "<option selected value=$i>". $map_dept_id_to_dept_str[$x]. "</option><br>";
+                        if($dept_id_param == $i) {
+                            echo "<option selected value=$i>". $dept_id_to_dept_str[$x]. "</option><br>";
                         }else {
-                            echo "<option value=$i>". $map_dept_id_to_dept_str[$x]. "</option><br>";
+                            echo "<option value=$i>". $dept_id_to_dept_str[$x]. "</option><br>";
                         }
                         $i++;
                     };
@@ -312,7 +298,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     </thead>
                     <tbody>
                         <?php
-                            while ($row = $stmt->fetch(PDO::FETCH_BOTH)) {
+                            while ($stmt && $row = $stmt->fetch(PDO::FETCH_BOTH)) {
                                 // Display each field of the records.
                         ?>
                         <tr>
@@ -355,13 +341,13 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             ?></td>
                         <td class="no-break"><?php
                             if(stripos($row["municipio"], "Bogot") !== false){
-                                if($dept === -1){
+                                if($dept_id_param === -1){
                                     echo "Bogotá, DC";
                                 } else {
                                     echo "Bogotá";
                                 }
                             }else{
-                                if($dept === -1 and $row["departamento_iso"] !== null){
+                                if($dept_id_param === -1 and $row["departamento_iso"] !== null){
                                     $text = $row["municipio"]. ", ". $row["departamento_iso"];
                                 } else {
                                     $text = $row["municipio"];
@@ -388,7 +374,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     $here = basename(__FILE__); // name of current file
 
                     if ($page > 1) {
-                        echo "<a class='arrows' href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept. "' style='margin-right: 10px;'>
+                        echo "<a class='arrows' href='". $here. "?width=".$width . "&page=".($page-1). "&dept=". $dept_id_param. "' style='margin-right: 10px;'>
                                 <i class='fas fa-angle-left' style='font-size:24px'></i>
                               </a>";
                     }
@@ -397,7 +383,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     echo $pagLink;
 
                     if ($page < $total_pages) {
-                        echo "<a class='arrows' href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept. "' style='margin-left: 10px;'>
+                        echo "<a class='arrows' href='". $here. "?width=".$width. "&page=".($page+1). "&dept=". $dept_id_param. "' style='margin-left: 10px;'>
                                 <i class='fas fa-angle-right' style='font-size:24px'></i>
                               </a>";
                     }
@@ -431,7 +417,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 var width = "<?php echo $_GET['width'];?>";
                 var bool = "<?php echo isset($_GET['width']);?>";
                 var page = document.getElementById("page").value;
-                var dept = "<?php echo $dept;?>";
+                var dept = "<?php echo $dept_id_param;?>";
                 var here = "<?php echo $here;?>";
                 var totalPages = "<?php echo $total_pages; ?>";
                 page = ((page > totalPages) ? totalPages: ((page < 1) ? 1 : page));
