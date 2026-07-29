@@ -9,4 +9,6 @@ CREATE OR REPLACE TABLE municipio (
     INDEX ix_municipio_departamento(departamento)
 );
 
+GRANT SELECT ON {{dbname}}.municipio TO 'public'@'{{servername}}';
+
 -- INSERT INTO municipio(id, code, nombre, departamento, departamento_id) VALUES (0, 0, 'No_Aplica', 'No_aplica', 34);
