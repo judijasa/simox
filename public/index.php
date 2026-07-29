@@ -358,7 +358,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             echo wordwrap($lugar, 30, "<br>", false);
                         ?></td>
                         <td><?php echo $row["salario"]; ?></td>
-                        <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
+                        <td><?php echo $row["cierre"] === null ? 'sin definir' : $row["cierre"]; ?></td>
                         <td><?php echo $row["opec"]; ?></td>
                         </tr>
                         <?php

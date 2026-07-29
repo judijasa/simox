@@ -79,21 +79,21 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo';
                 $conn = Database::public($dbname);
-                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre >= date(now()) OR cierre = '1000-01-01'";
+                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now()) OR fecha_inscripcion IS NULL";
                 $stmt = $conn->query($query);
                 $total = $stmt->fetchColumn();
-                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre >= date(now())";
+                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now())";
                 $stmt = $conn->query($query);
                 $vigentes = $stmt->fetchColumn();
-                # 'por definir' is encoded as '1000-01-01' and NULL as '0000-00-00'
-                $query = "SELECT count(*) FROM vw_job_offer WHERE cierre = '1000-01-01'";
+                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion IS NULL";
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
-                // Using job_offer instead of vw_job_offer because the latter doesn't have created_at column
-                // Adding filter vacantes > 0 so that it is faithful to vw_job_offer data.
                 $query = "SELECT count(*)
-                          FROM job_offer
-                          WHERE created_at < cierre AND vacantes > 0";
+                          FROM empleo e
+                          WHERE e.created_at < e.fecha_inscripcion
+                            AND EXISTS (
+                                SELECT 1 FROM empleo_vacante ev WHERE ev.empleo_id = e.id
+                            )";
                 $stmt = $conn->query($query);
                 $validas = $stmt->fetchColumn();
             } catch (PDOException $e) {
