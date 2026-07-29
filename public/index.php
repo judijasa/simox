@@ -230,27 +230,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     }else{
                         echo "<option value=-1> -- todos los deptos -- </option>";
                     }
-
-
-                    /*
-                    The commented lines below also work,
-                    but since we already fetched all data from $result_depts
-                    we better not fetch again.
-
-                    $i = 0; // initial val in option
-                    while($row = mysqli_fetch_row($result_depts)) {
-                        if(!$row[0]){
-                            break;
-                        }
-                        if($dept == $i) {
-                            echo "<option selected value=$i>". $row[0]. "</option><br>";
-                        }else {
-                            echo "<option value=$i>". $row[0]. "</option><br>";
-                        }
-                        $i++;
-                    };
-                    */
-
                     $i = 0;
                     for($x = 0; $x<$dept_count; $x++) {
                         if($dept_id_param == $i) {
