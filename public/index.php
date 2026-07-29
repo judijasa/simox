@@ -151,6 +151,22 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             $stmt = null;
             if(count($page_opecs) > 0){
                 $placeholders = implode(',', array_fill(0, count($page_opecs), '?'));
+                if($dept_id_param === -1) {
+                    $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT dep.iso ORDER BY dep.iso SEPARATOR ', ')
+                         FROM empleo_vacante ev
+                         JOIN vacante v ON v.id = ev.vacante_id
+                         JOIN municipio m ON m.id = v.municipio_id
+                         JOIN departamento dep ON dep.nombre = m.departamento
+                         WHERE ev.empleo_id = e.id) AS lugar";
+                } else {
+                    $dept_str_quoted = $conn->quote($dept_id_to_dept_str[$dept_id_param]);
+                    $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT m.nombre ORDER BY m.nombre SEPARATOR ', ')
+                         FROM empleo_vacante ev
+                         JOIN vacante v ON v.id = ev.vacante_id
+                         JOIN municipio m ON m.id = v.municipio_id
+                         WHERE ev.empleo_id = e.id
+                         AND m.departamento = $dept_str_quoted) AS lugar";
+                }
                 $query = "
                     SELECT
                         e.opec,
@@ -160,8 +176,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                         e.fecha_inscripcion AS cierre,
                         '' AS estudio,
                         '' AS keywords,
-                        '' AS municipio,
-                        NULL AS departamento_iso
+                        $lugar_subquery
                     FROM empleo e
                     LEFT JOIN denominacion d ON d.id = e.denominacion_id
                     WHERE e.opec IN ($placeholders)
@@ -289,7 +304,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     <thead>
                         <tr>
                         <th>Palabras clave</th>
-                        <th class="no-break">Municipio</th>
+                        <th class="no-break"><?php echo $dept_id_param === -1 ? 'Departamento' : 'Municipio'; ?></th>
                         <th>Salario</th>
                         <th>Cierre de inscripciones</th>
                         <th>OPEC</th>
@@ -339,21 +354,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             echo "$text";
                             ?></td>
                         <td class="no-break"><?php
-                            if(stripos($row["municipio"], "Bogot") !== false){
-                                if($dept_id_param === -1){
-                                    echo "Bogotá, DC";
-                                } else {
-                                    echo "Bogotá";
-                                }
-                            }else{
-                                if($dept_id_param === -1 and $row["departamento_iso"] !== null){
-                                    $text = $row["municipio"]. ", ". $row["departamento_iso"];
-                                } else {
-                                    $text = $row["municipio"];
-                                }
-                                $newtext = wordwrap($text, 30, "<br>", false);  // break line if too long
-                                echo "$newtext";
-                            }?></td>
+                            $lugar = $row["lugar"] ?? '';
+                            echo wordwrap($lugar, 30, "<br>", false);
+                        ?></td>
                         <td><?php echo $row["salario"]; ?></td>
                         <td><?php echo $row["cierre"] === '1000-01-01'? 'sin definir' : $row["cierre"]; ?></td>
                         <td><?php echo $row["opec"]; ?></td>
