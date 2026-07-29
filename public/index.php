@@ -112,7 +112,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             }
 
             // ORDER BY to guarantee No_Aplica option is last.
-            $query = "SELECT nombre FROM dpto_colombia ORDER BY CASE WHEN id = 34 THEN 1 ELSE 0 END, nombre";
+            $query = "SELECT distinct departamento FROM municipio ORDER BY CASE WHEN id = 34 THEN 1 ELSE 0 END, departamento";
             $stmt = $conn->query($query);
             $map_dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
             //print_r($row); // test
@@ -471,3 +471,4 @@ Author: 20198338 <ciudadania.ab@gmail.com>
         </script>
     </body>
 </html>
+
