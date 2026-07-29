@@ -298,8 +298,8 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                         <td><?php
                             // TODO make func with parsing below and add unit test to it
                             $estudio = '';
-                            $nivel = strtolower($row["nivel"]);
-                            $denom = strtolower($row["denominacion"]);
+                            $nivel = mb_strtolower($row["nivel"]);
+                            $denom = mb_strtolower($row["denominacion"]);
                             if($denom === 'profesional universitario'){
                                 $estudio = 'Profesional. ';
                                 $denom = '';
@@ -316,7 +316,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                             }
                             $nivel = str_contains($denom, $nivel)? '' : $row["nivel"]. '. ';
                             $denom = str_replace('tecnico','técnico', $denom);
-                            $denom = $denom? ucfirst($denom). '. ' : '';
+                            $denom = $denom? mb_ucfirst($denom). '. ' : '';
                             if(!$estudio and $row["keywords"] === 'Bachiller'){
                                 $estudio = 'Bachiller';
                                 $keywords = '';
