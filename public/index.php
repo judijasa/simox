@@ -113,9 +113,8 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             // ORDER BY to guarantee No_Aplica option is last.
             $query = "
-                SELECT DISTINCT departamento FROM municipio
-                ORDER BY
-                CASE WHEN departamento = 'No_Aplica' THEN 1 ELSE 0 END, departamento
+                SELECT DISTINCT nombre FROM departamento
+                ORDER BY CASE WHEN nombre = 'No_Aplica' THEN 1 ELSE 0 END, nombre
             ";
             $stmt = $conn->query($query);
             $dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
