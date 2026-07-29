@@ -8,3 +8,5 @@ CREATE OR REPLACE TABLE empleo_requisito (
     FOREIGN KEY fk_empleo_requisito_requisito_id(requisito_id)
         REFERENCES requisito(id)
 );
+
+GRANT SELECT ON {{dbname}}.empleo_requisito TO 'public'@'{{servername}}';

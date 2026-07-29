@@ -8,3 +8,5 @@ CREATE OR REPLACE TABLE empleo_vacante (
     FOREIGN KEY fk_empleo_vacante_vacante_id(vacante_id)
         REFERENCES vacante(id)
 );
+
+GRANT SELECT ON {{dbname}}.empleo_vacante TO 'public'@'{{servername}}';

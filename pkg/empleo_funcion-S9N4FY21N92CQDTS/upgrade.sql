@@ -8,3 +8,5 @@ CREATE OR REPLACE TABLE empleo_funcion (
     FOREIGN KEY fk_empleo_funcion_funcion_id(funcion_id)
         REFERENCES funcion(id)
 );
+
+GRANT SELECT ON {{dbname}}.empleo_funcion TO 'public'@'{{servername}}';
