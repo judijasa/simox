@@ -6,18 +6,79 @@
 3. Ofrece un portal en línea para ofertas de empleo.
 
 This application is comprised of three components: _crawler_, _database_ and _website_.
-<!--
-[comment]: # "Data: Entity: Job offer snapshots, Attributes: page, job title, salary, etc.;"
-[comment]: # "      Entity: Job offer, Attributes: job title, salary, etc.;..."
-[comment]: # "Database: simo_express"
-[comment]: # "Database Management System (DBMS): MySQL (or MariaDB)"
-[comment]: # "Database Application Program: Internet database application (HTML + Apache + PHP/MySQL)"
--->
+
+## Quick Test
+This application can be easily tested under the `nix develop` environment, managing all dependencies and specified in the `nix.flake` file.
+This requires the installation of Nix. Under this environment, execute from the repo root directory the following command:
+```bash
+nix develop
+```
+
+Initialize developer environment (install mariadb locally, etc):
+```bash
+make dev-init
+```
+
+Create the database config from the template and fill in your values:
+```bash
+cp etc/reuter.ini.template etc/reuter.ini
+```
+
+`ema` is a MariaDB package manager. Build `simo` database locally and build tables from root package:
+```bash
+ema init db simo
+ema init tables simo-C196A24801D24B16
+```
+
+Run indexer:
+```bash
+bin/phprun 'src/scripts/indexer/get_jobs.php:main($batch_size_limit=15, $jobs_per_page=5, $timeout=15)'
+```
+
+Access local `simo` database:
+```bash
+ema mariadb simo
+```
+
+Verify content in the empleo_snapshot:
+```bash
+SELECT count(*) FROM empleo_snapshot;
+```
+
+Run pipeline:
+```bash
+bin/phprun 'src/scripts/pipeline/pipeline.php:main()'
+```
+
+Verify content in tables e.g.
+```bash
+SELECT * FROM convocatoria WHERE id = (SELECT convocatoria_id FROM empleo LIMIT 1) \G;
+```
+
+Start PHP's built-in server (from repo root directory):
+```bash
+php -S localhost:8000
+```
+
+Navigate to the website: `http://localhost:8000/public/index.php`
+
+## Remote Access
+To connect to a production server via `ema`, two additional config files are needed:
+
+- `etc/dev-machines.ini` — maps your machine hostname to your prod DB username (`hostname=dbuser`). Run `hostname` to find yours. When set, `ema` uses it as the default DB user for remote connections; otherwise you must set `DBUSER` explicitly. Copy from `etc/dev-machines.ini.template`. In a private fork, this file (once removed from `.gitignore`) can also serve as a central team registry: all members' entries committed together so that `ema init db` creates each member's DB user and privileges in one shot. The latter functionality is not yet featured by ema.
+- `etc/hosts` — maps prod server hostnames to IP addresses (merged into `/etc/hosts` by `make dev-init`). Copy from `etc/hosts.template` and add your server entries.
+
+## Production Server Setup
+Config files stored inside the repo directory (e.g. `etc/reuter.ini`) are gitignored but can still be overwritten by operations like `git clean`. For production servers, store config outside the repo and point to it via environment variables:
+
+- **`SIMOX_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`). If unset, `etc/reuter.ini` inside the repo is used.
+- **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`.
+
 ## System Requirements
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
 
 #### 1. Web Server (Ngnix, Apache, etc.)
-#### 2. PHP >=8.2
+#### 2. PHP >=8.4+
 jakoch/phantomjs-installer further requires installation of the bz2 (`... install php-bz2`) extension for PHP.  It is also recommended to install cURL (`... install php-curl`).
 #### 3. MariaDB Server >=10.6
 #### 4. PHP/MySQL support modules for the Web Server
@@ -32,10 +93,13 @@ Required by the `phantomjs` binary (`... install libfontconfig1`).
 There is a shell.nix providing a Nix dev environment for local tests.
 
 ## PHP Casper Class
+Scraping use to be the original approach to fetch data from the SIMO website. It has been superseded by
+the use of the API endpoint. A minor role is still kept to showcase the use of crawling with Casper.
 `src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
-It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, edit
-`vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.<br/>
-Alternatively, edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
+It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, we edit
+`vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.
+This is done when executing `make dev-init`.<br/>
+An alternative is to edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
 of the boolean option `reset`, which is already defined in
 `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`
 
@@ -103,48 +167,3 @@ of the boolean option `reset`, which is already defined in
 
 3.  Another important section of code is `vendor/jerome-breton/casperjs/modules/clientutils.js:setField`,
     used in casperjs' `sendKeys()` method.
-
-## Setup
-1. Execute `composer install` to build dependencies specified in `composer.lock`.
-2. Modify `src/config.sh` according to your custom values.
-
-## Troubleshooting
-
-1. Lower versions of some packages can conflict with higher versions of Composer.
-Composer should install the most recent version of any package, under the given constratints. Sometimes one is required to remove the vendor folder and run again `composer install`.
-If for some reason you are stuck with a lower version of a package (e.g. `jakoch/phantomjs-installer`) and it conflicts with the Composer version 2, you may have to modify the `Installer` class `download()` method in the corresponding `Installer.php` file, to handle different versions of Composer.
-This is a generic method, so you can use any other, more recent, package as a reference (e.g. `jerome-breton/casperjs-installer`) or replace the installer file with one more recent in the source repository (e.g. `jakoch/phantomjs-installer` at Github).
-To run the customized installers execute `composer update` in the same directory of your `composer.json`.
-You may have to run the installer several times, until you find the `phpcasperjs` and `phantomjs` binaries in the newly created `vendor/bin/` directory.
-
-2. You have to properly escape the regex expression in
-   ```
-    vendor/sunra/php-simple-html-dom-parser/Src/Sunra/PhpSimple/simplehtmldom_1_5/simple_html_dom.php
-
-    ```
-at lines 696 and 1378: `[\w-:\*]` should be `[\w\-\:\*]`, `[\w-]` should be `[\w\-]`. 
-
-## Database Design
-Entities: Job Offer
-Attributes:
-
-```mermaid
-flowchart TD;
-source("Official Website") -->
-start[n = 1, i = 1] -->
-scrap[[Scrap from pages n to N]] -->
-check{"(n = N) <br/> OR <br/> (i = last_attempt)?"} -- YES -->
-post[Process Data]
-check -- NO --> scrap
-post -->
-data[(My Database)] -->
-report[Report activity summary] & myweb(My Unofficial Website)
-
-note["<div style='text-align:left'>The overall workflow is in the file <b>main.sh</b>.<br/><br/>  To recover from connectivity crashes we run a conditional loop<br/> with an upper bound in the number of attempts.</div>"]-->
-anothernote["<div style='text-align:left'>The actual scrapping takes place in the file <b>get_jobs.php</b>.<br/><br/>We use the Casper class from [1] to script navigate the web:<br/><br/><pre>$casper = Casper(#quot;simo.cnsc.gov.co/#ofertaEmpleo#quot;);</pre><br/>[1] github.com/alwex/php-casperjs: A PHP wrapper of the library CasperJS.</div>"]
-style note fill:#FFFFE0,stroke:#333;
-style anothernote fill:#FFFFE0,stroke:#333;
-linkStyle 8 stroke-width:0px;
-%% White: #FFFFFF
-
-```
