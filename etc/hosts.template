@@ -1,0 +1,4 @@
+# Map hostnames used by ema/ssh to their addresses.
+# Format: ip-address  hostname
+# Example:
+# 192.168.1.100	my-server
