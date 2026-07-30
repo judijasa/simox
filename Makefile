@@ -102,17 +102,14 @@ _dev-update-hosts:
 
 _dev-init-local-env:
 	@if [ ! -f .env ]; then \
-	    echo "Creating .env..."; \
 	    if [ ! -f etc/dev-machines.ini ]; then \
-	        echo "ERROR: etc/dev-machines.ini not found."; \
-	        echo "       Copy etc/dev-machines.ini.template, add '$$(hostname)=<dbuser>', then re-run."; \
-	        exit 1; \
+	        echo "WARNING: etc/dev-machines.ini not found. Skipping .env creation (needed for remote access only)."; \
+	        exit 0; \
 	    fi; \
 	    _dbuser=$$(grep "^$$(hostname)=" etc/dev-machines.ini | cut -d= -f2); \
 	    if [ -z "$$_dbuser" ]; then \
-	        echo "ERROR: hostname '$$(hostname)' not found in etc/dev-machines.ini."; \
-	        echo "       Add '$$(hostname)=<dbuser>' to etc/dev-machines.ini, then re-run."; \
-	        exit 1; \
+	        echo "WARNING: hostname '$$(hostname)' not found in etc/dev-machines.ini. Skipping .env creation (needed for remote access only)."; \
+	        exit 0; \
 	    fi; \
 	    printf '# Machine-specific environment (git-ignored).\nexport DBUSER=%s\n' "$$_dbuser" > .env; \
 	    echo "    Created .env with DBUSER=$$_dbuser"; \
