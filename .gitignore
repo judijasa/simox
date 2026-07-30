@@ -10,4 +10,5 @@ result/
 # Ignore files
 etc/reuter.ini
 etc/dev-machines.ini
+etc/hosts
 .env
