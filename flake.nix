@@ -91,7 +91,7 @@
             export MYSQL_PID_FILE="$MYSQL_BASE_DIR/mysql.pid"
 
             # Initialize the database if missing
-            if [ -d "$MYSQL_DATA_DIR" ]; then
+            if [ -d "$MYSQL_DATA_DIR" ] && [ ! -S "$MYSQL_UNIX_PORT" ]; then
               # Start the daemon in the background safely
               echo "Starting isolated MariaDB server..."
               mysqld --datadir="$MYSQL_DATA_DIR" \

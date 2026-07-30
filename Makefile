@@ -69,6 +69,11 @@ _dev-init-cluster:
 	                       --datadir=$(DEV_DB_DATA_DIR) \
 	                       --basedir=$$mariadb \
 	                       --pid-file=$(DEV_DB_PID_FILE) > /dev/null 2>&1; \
+	    echo "    Starting MariaDB daemon..."; \
+	    mysqld --datadir=$(DEV_DB_DATA_DIR) \
+	           --pid-file=$(DEV_DB_PID_FILE) \
+	           --socket=$(DEV_DB_UNIX_PORT) \
+	           --skip-networking > /dev/null 2>&1 & \
 	else \
 	    echo "    MariaDB cluster already initialized. Skipping."; \
 	fi
