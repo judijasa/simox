@@ -1,6 +1,61 @@
+[.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
+    [.] Add a way to drop a database with ema (see schematic for inspiration).
+        Add other easy to implement commands for schematic.
+
+[.] Not sure if we really need this. It also feels
+    more natural to add municipio.departamento_id
+    [.] Add vacante.departamento_id
+    [.] Modify pipeline.php:insert_vacantes
+    [.] Simplify query in public/index.php
+
+[x] adapt public/ to new schema.
+
+[.] Check that
+      ema init tables pkg/simo-C196A24801D24B16
+    returns a message explaining why id doesnt work.
+
+[.] zerotier?
+
+[.] Find out why convocatoria always returns
+      es_tipo_fase: NULL
+      tipo_proceso: NULL
+      no_cobro_nivel: NULL
+      no_cobro_opec: NULL
+      tipo_proc_sele_id: NULL
+
+[.] Briefly explain what `make dev-init` does (why is necessary to run
+    in the quick test).
+
+[.] There already an env var that allows to change db target from
+    local to prod. The prod should be default if you we want many
+    worker machines from different servers ingesting data
+    to a specific server machine.
+
+    Anyway tell about this env var in README.md
+
+[.] In `src/deploy.sh`, let's make sure that shipping nix builds
+    removes old builds and brings the new, not just constructive
+    changes. Ask if this is good policy.
+
+[c] 
+    [.] Make etc/host_template and git ignore etc/host.
+    [x] Make etc/reuter_template.ini and ignore etc/reuter.ini
+
+[c] [.] Setup zerotier for dev env
+    [x] Create "reuter" file, redirectioning db connection requests
+        to the corresponding db server. Use schematic repo as inspiration.
+
+[.] Run and fix linter errors
+
+
+[.] [.] Create table alternativa and equivalencia tables.
+    [.] Create requisito_alternativa and requisito_equivalencia tables.
+    [.] Remove alternativas and equivalencias columns from `requisito` table.
+    [.] Monitor afterwards to see if alternativas and equivalencias can by in one table.
+
 [.] Install mariadb in prod-init.
 
-[c] Testing:
+[c] Testing (wait for server):
     
     bash src/deploy.sh prod-server-1
 
@@ -123,6 +178,43 @@
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] Make sure pipeline.php works as expected, then clean unnecessary schemas.
+
+[x] src/init:
+    [x] databases.php and tables.php should be part of ema and
+        the ema should be a standalone repo.  
+    [x] src/init/database.php and src/init/tables.php work for nix-shell,
+        make sure it works for deployment.
+
+        Note that sudo remove nix-shell env so we need to explicitly forward
+        env vars when using sudo. We need to make sure deployment takes care
+        of similar issues.
+
+[x] Add ingestion of juncture tables in pipeline.php:
+    'empleo_vacante-AGC76TYMHR1LD9PT',
+    'empleo_requisito-9KS537SIXRO89TUK',
+    'empleo_funcion-S9N4FY21N92CQDTS',
+
+[x] Complete pkg/vw_empleo-DAF75B74DD6A469D/upgrade.sql
+
+[x] [x] Create table `entidad` (check opec 19348 to see its subfields).
+    [x] Include columns entidad_tipo (JSON) and entidad_tipo_id in `entidad` tbl.
+    [x] Create table `entidad_tipo`.
+    [x] Add insert_entidad_tipo and insert_entidad in pipeline.php, in that order.
+    [x] Remove `entidad` col and add `entidad_id` col in `empleo` tbl (add fk and dependency)
+        and adapt pipeline.php accordingly.
+
+[x] Ask claude if is apt to use insertion by batches, if yes
+    implement it and deduplicate before each insertion.
+
+[x] Fix redundancy of line
+      `$empleo = json_decode($row['empleo'], true);`
+    in pipeline.php
+
+[x] Commit unstaged changes in pkg/vacante-WZ0T87MRR815E49Y/upgrade.sql
+    and adapt pipeline.php accordingly. Similarly, create
+    denominacion.nivel and denominacion.nivel_id and adapt pipeline.php
 
 [x] Make --init option to src/deploy.sh
 
