@@ -139,6 +139,10 @@ _prod-create-dirs:
 	@echo "Creating permanent system logging and storage directories..."
 	mkdir -p $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR) && \
 	chown -R $(PROD_USER):$(PROD_USER) $(PROD_LOG_DIR) $(PROD_DB_DATA_DIR)
+	@echo "Creating deploy parent directory..."
+	mkdir -p /srv/apps && \
+	chown $(PROD_USER):$(PROD_USER) /srv/apps && \
+	chmod o+x /srv /srv/apps
 
 _prod-init-cluster:
 	@echo "Initializing raw MariaDB cluster structures..."

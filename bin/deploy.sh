@@ -90,8 +90,7 @@ deploy_repo_remotely() {
       BASE_DIR=\$(dirname '$REMOTE_TARGET_DIR')
       FINAL_DIR='$REMOTE_TARGET_DIR'
       BACKUP_DIR=\"\${FINAL_DIR}_backup\"
-      VAR_DIR='/home/$PROD_USER/var'
-      LOG_DIR=\"\$VAR_DIR/simox/log\"
+      LOG_DIR='/var/log/simox'
 
       # Unpack inside the same parent base directory to ensure fast rename across the same mount point
       TMP_DIR=\$(mktemp -d -p \"\$BASE_DIR\")
@@ -100,7 +99,8 @@ deploy_repo_remotely() {
       
       # Ensure permissions are set before pushing live
       mkdir -p \"\$LOG_DIR\"
-      chown -R $PROD_USER:$PROD_USER \"\$TMP_DIR\" \"\$VAR_DIR\"
+      chown -R $PROD_USER:$PROD_USER \"\$TMP_DIR\"
+      chown $PROD_USER:$PROD_USER \"\$LOG_DIR\"
 
       # Clear out any previous backup directory
       rm -rf \"\$BACKUP_DIR\"
@@ -243,8 +243,9 @@ deploy_website() {
 
   # Apache serves directly from the deployed repo's public/ subdirectory.
   # The repo dir is recreated on each deploy, so www-data traversal must be restored each time.
-  # One-time setup (manual): chmod o+x on parent dirs, configure Apache vhost DocumentRoot to
-  # $REMOTE_TARGET_DIR/public, and set SetEnv SIMOX_REUTER_INI <path-to-reuter.ini> in the vhost.
+  # One-time setup (manual): chmod o+x /srv /srv/apps (Debian/AppArmor needs no relabeling);
+  # configure Apache vhost DocumentRoot to $REMOTE_TARGET_DIR/public, and set
+  # SetEnv SIMOX_REUTER_INI <path-to-reuter.ini> in the vhost.
   ssh "root@$REMOTE_HOST" "chmod o+x '$REMOTE_TARGET_DIR'"
 }
 
@@ -266,7 +267,7 @@ main() {
   local REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
   flight_checks
   local PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
-  local REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"
+  local REMOTE_TARGET_DIR="/srv/apps/simox"
   local REV=$(git rev-parse HEAD)
 
   if ! OUTPUT=$(deploy_repo_remotely $REMOTE_HOST $PROD_USER $REMOTE_TARGET_DIR $REV); then

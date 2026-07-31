@@ -3,8 +3,8 @@ In production, you serve your site using a global system service
 such as apache or ngnix. You have to configure httpd.conf
 (apache: /etc/httpd/conf/httpd.conf, nginx: /etc/nginx/nginx.conf) as
 ```conf
-DocumentRoot "/home/user/my-project/public"
-<Directory "/home/user/my-project/public">
+DocumentRoot "/srv/apps/simox/public"
+<Directory "/srv/apps/simox/public">
     Require all granted
 </Directory>
 ```

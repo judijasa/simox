@@ -69,10 +69,34 @@ To connect to a production server via `ema`, two additional config files are nee
 - `etc/hosts` — maps prod server hostnames to IP addresses (merged into `/etc/hosts` by `make dev-init`). Copy from `etc/hosts.template` and add your server entries.
 
 ## Production Server Setup
-Config files stored inside the repo directory (e.g. `etc/reuter.ini`) are gitignored but can still be overwritten by operations like `git clean`. For production servers, store config outside the repo and point to it via environment variables:
+
+One-time steps to provision a new production server:
+
+**1. `/etc/environment`** — add these entries so cron jobs and scripts resolve paths correctly:
+```
+SIMO_REPO_PATH=/srv/apps/simox
+SIMO_LOG_PATH=/var/log/simox
+```
+(`SIMO_VAR_PATH` is dev-only; do not set it in production.)
+
+**2. Apache vhost** — point the vhost at the deploy directory and set the config path:
+```apache
+DocumentRoot "/srv/apps/simox/public"
+<Directory "/srv/apps/simox/public">
+    Require all granted
+</Directory>
+SetEnv SIMOX_REUTER_INI /etc/simox/reuter.ini
+```
+Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
 - **`SIMOX_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`). If unset, `etc/reuter.ini` inside the repo is used.
 - **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`.
+
+**3. Initial deploy** — run from the dev machine inside `nix develop`:
+```bash
+bin/deploy.sh --init <host>
+```
+`--init` provisions system directories (`/srv/apps`, `/var/log/simox`, `/var/lib/simox/mariadb`) in addition to deploying the repo.
 
 ## System Requirements
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
