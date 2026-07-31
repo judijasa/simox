@@ -3,13 +3,13 @@
 set -euo pipefail
 
 if [[ ! -n $IN_NIX_SHELL ]]; then
-  source /etc/environment  # SIMO_REPO_PATH, SIMO_LOG_PATH
+  source /etc/environment  # SIMOX_REPO_PATH, SIMOX_LOG_PATH
 fi
 
 parent=$(ps -o comm= -p "$PPID")
 if [[ "$parent" == "cron" || "$parent" == "crond" ]]; then
-  cd $SIMO_REPO_PATH
-elif [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
+  cd $SIMOX_REPO_PATH
+elif [[ "$PWD" != "$SIMOX_REPO_PATH" ]]; then
   echo "This command must be executed from the repository's root directory."
   exit 1
 fi
@@ -20,7 +20,7 @@ export OPENSSL_CONF=dev/null
 # Generate LOG_FILE
 SCRIPT_NAME=$(basename "$0")
 DIR_PREFIX=$(dirname "$0" | tr '/' '_')
-LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
+LOG_FILE="${SIMOX_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
 
 if [ ! -f "$LOG_FILE" ]; then
   touch "$LOG_FILE"

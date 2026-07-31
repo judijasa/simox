@@ -79,13 +79,13 @@
           ];
           shellHook = ''
             # Dynamic path: binds variables natively to your local repository directory
-            export SIMO_REPO_PATH="$PWD"
-            export SIMO_VAR_PATH="$SIMO_REPO_PATH/var"
-            export SIMO_LOG_PATH="$SIMO_VAR_PATH/log"
+            export SIMOX_REPO_PATH="$PWD"
+            export SIMOX_VAR_PATH="$SIMOX_REPO_PATH/var"
+            export SIMOX_LOG_PATH="$SIMOX_VAR_PATH/log"
             export PROD_USER="deploy"
 
             # Localizing paths securely to avoid any Production server interference
-            export MYSQL_BASE_DIR="$SIMO_VAR_PATH/mariadb"
+            export MYSQL_BASE_DIR="$SIMOX_VAR_PATH/mariadb"
             export MYSQL_DATA_DIR="$MYSQL_BASE_DIR/data"
             export MYSQL_UNIX_PORT="$MYSQL_BASE_DIR/mysql.sock"
             export MYSQL_PID_FILE="$MYSQL_BASE_DIR/mysql.pid"
@@ -105,7 +105,7 @@
               trap "echo 'Stopping local MariaDB server...'; kill $MARIADB_PID; wait $MARIADB_PID 2>/dev/null" EXIT
             fi
 
-            [[ -f "$SIMO_REPO_PATH/.env" ]] && source "$SIMO_REPO_PATH/.env"
+            [[ -f "$SIMOX_REPO_PATH/.env" ]] && source "$SIMOX_REPO_PATH/.env"
 
             export EMA_TARGET="local"
 

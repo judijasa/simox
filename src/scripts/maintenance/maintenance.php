@@ -34,7 +34,7 @@ function memory_cleaning(): void
 #[Agent]
 function trim_log_files(): void
 {
-    $log_dir  = getenv('SIMO_LOG_PATH');
+    $log_dir  = getenv('SIMOX_LOG_PATH');
     $max_size = 1_000_000; // 1MB per log file
 
     foreach (glob("$log_dir/*.log") as $log_file) {

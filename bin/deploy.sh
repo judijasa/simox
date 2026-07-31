@@ -34,7 +34,7 @@ flight_checks() {
       exit 1
   fi
   
-  if [[ "$PWD" != "$SIMO_REPO_PATH" ]]
+  if [[ "$PWD" != "$SIMOX_REPO_PATH" ]]
   then
     echo "This command must be executed from the repository's root directory."
     exit 1
@@ -126,7 +126,7 @@ deploy_repo_remotely() {
 
       # Piggyback: Update cron jobs from #[CronJob] attributes in source
       echo 'Updating cron jobs...' >&2
-      SIMO_REPO_PATH=\"\$FINAL_DIR\" php \"\$FINAL_DIR/bin/update-cron-manifest\" > /etc/cron.d/simo-orchestrator
+      SIMOX_REPO_PATH=\"\$FINAL_DIR\" php \"\$FINAL_DIR/bin/update-cron-manifest\" > /etc/cron.d/simo-orchestrator
       chmod 644 /etc/cron.d/simo-orchestrator
       systemctl restart cron || systemctl restart crond
       echo 'Cron jobs updated.' >&2

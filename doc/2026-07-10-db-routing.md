@@ -69,7 +69,7 @@ A template lives at `../ema/etc/reuter.template.sh` (in the `ema` repo). The use
 copies it once per target to `src/reuter/{name}.sh` and fills in the values for
 that target.
 
-### `SIMO_TARGET` environment variable
+### `SIMOX_TARGET` environment variable
 
 | Value | Config read from | Transport |
 |---|---|---|
@@ -80,10 +80,10 @@ This covers all scenarios without touching script code:
 
 | Scenario | How |
 |---|---|
-| Prod cron on prod server | `SIMO_TARGET` unset (defaults to `local`) |
-| Dev machine → prod DB via ZeroTier | `export SIMO_TARGET=prod` |
-| Dev shell → local sandbox | `SIMO_TARGET=local` (or unset), socket via `MYSQL_UNIX_PORT` |
-| Dev machine → second local cluster | `export SIMO_TARGET=local2` (user-defined) |
+| Prod cron on prod server | `SIMOX_TARGET` unset (defaults to `local`) |
+| Dev machine → prod DB via ZeroTier | `export SIMOX_TARGET=prod` |
+| Dev shell → local sandbox | `SIMOX_TARGET=local` (or unset), socket via `MYSQL_UNIX_PORT` |
+| Dev machine → second local cluster | `export SIMOX_TARGET=local2` (user-defined) |
 
 ### Where `ema` looks for its config
 
@@ -98,7 +98,7 @@ variables (`$SERVER`, `$DBMS`, `$ADMIN_PASSWORD`, etc.) and the
 
 - [x] `ema` sources `/etc/environment` unconditionally; it should skip that
       when `IN_NIX_SHELL` is set (same pattern as `src/init/databases.sh`)
-- [x] `ema` references `$SIMOX_REPO_PATH` but the flake exports `$SIMO_REPO_PATH`
+- [x] `ema` references `$SIMOX_REPO_PATH` but the flake exports `$SIMOX_REPO_PATH`
       — fix the variable name throughout `ema`
 
 ### Phase 1 — Directory structure & cleanup
@@ -114,7 +114,7 @@ variables (`$SERVER`, `$DBMS`, `$ADMIN_PASSWORD`, etc.) and the
 ### Phase 2 — Target loading in `ema`
 
 - [x] Add `_load_target` function to `ema`:
-      reads `SIMO_TARGET` (defaults to `local`), sources `src/reuter/${target}.sh`,
+      reads `SIMOX_TARGET` (defaults to `local`), sources `src/reuter/${target}.sh`,
       exports the connection variables for use by other functions in `ema`
 - [x] Add `_mariadb_args` function: returns an array of `mariadb` flags
       (`--socket=...` or `-h $SERVER [-P $PORT]`) based on the loaded target
@@ -163,31 +163,31 @@ single address used for everything:
 
 - `ssh deploy@<zerotier-ip>` to reach the server
 - `SERVER="<zerotier-ip>"` in `src/reuter/prod.sh` so that
-  `SIMO_TARGET=prod` on a dev machine reaches the prod database
+  `SIMOX_TARGET=prod` on a dev machine reaches the prod database
 
-`SIMO_TARGET=prod` on a dev machine is for running application scripts
+`SIMOX_TARGET=prod` on a dev machine is for running application scripts
 (e.g. `pipeline.php`) against a prod database without SSH-ing in. ZeroTier
 makes this reachable; the tool sees only a hostname.
 
 ### Phase 5 — Update `Database.php`
 
-- [x] Extract `loadConfig(): array` private static: reads `SIMO_TARGET`
+- [x] Extract `loadConfig(): array` private static: reads `SIMOX_TARGET`
       (defaults to `local`), sources `src/reuter/{target}.sh`
 - [x] Replace `shell_exec` for socket detection with PHP `getenv()`
 - [x] Support `PORT` key in DSN
 
 ### Phase 6 — Dev shell
 
-- [x] Set `export SIMO_TARGET=local` explicitly in `flake.nix` shellHook
-      (makes the mechanism visible; easy to override with `export SIMO_TARGET=prod`
+- [x] Set `export SIMOX_TARGET=local` explicitly in `flake.nix` shellHook
+      (makes the mechanism visible; easy to override with `export SIMOX_TARGET=prod`
       before entering the shell or in `.envrc`)
 
 ### Phase 7 — Verification
 
 - [ ] `ema init db simo` + `ema init tables simo-C196A24801D24B16` work in dev shell
-- [ ] `pipeline.php` connects correctly with `SIMO_TARGET=local`
-- [ ] `pipeline.php` connects to prod DB with `SIMO_TARGET=prod`
-- [ ] Prod cron jobs work with `SIMO_TARGET` unset
+- [ ] `pipeline.php` connects correctly with `SIMOX_TARGET=local`
+- [ ] `pipeline.php` connects to prod DB with `SIMOX_TARGET=prod`
+- [ ] Prod cron jobs work with `SIMOX_TARGET` unset
 
 ## Notes
 

@@ -1,7 +1,7 @@
 SHELL := $(shell which bash 2>/dev/null)
 
-ifndef SIMO_VAR_PATH
-$(error SIMO_VAR_PATH is not set in the environment)
+ifndef SIMOX_VAR_PATH
+$(error SIMOX_VAR_PATH is not set in the environment)
 endif
 ifndef MYSQL_DATA_DIR
 $(error MYSQL_DATA_DIR is not set in the environment)
@@ -10,12 +10,12 @@ ifndef PROD_USER
 $(error PROD_USER is not set in the environment)
 endif
 
-_dev-init: DEV_VAR_DIR = $(SIMO_VAR_PATH)
+_dev-init: DEV_VAR_DIR = $(SIMOX_VAR_PATH)
 _dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)
 _dev-init: DEV_DB_DATA_DIR = $(MYSQL_DATA_DIR)
 _dev-init: DEV_DB_UNIX_PORT = $(MYSQL_UNIX_PORT)
 _dev-init: DEV_DB_PID_FILE = $(MYSQL_PID_FILE)
-_dev-init: DEV_LOG_DIR = $(SIMO_LOG_PATH)
+_dev-init: DEV_LOG_DIR = $(SIMOX_LOG_PATH)
 _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
 

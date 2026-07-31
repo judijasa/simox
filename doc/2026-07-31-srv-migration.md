@@ -41,7 +41,7 @@ FHS correctness, the dedicated partition, and not touching home-dir perms.
 **Runtime data decision:** the app's writable state stays on **system paths**,
 not co-located under `/srv/apps/simox/var`:
 
-- logs → `/var/log/simox`  (`SIMO_LOG_PATH`)
+- logs → `/var/log/simox`  (`SIMOX_LOG_PATH`)
 - MariaDB → `/var/lib/simox/mariadb`
 
 This matches what `Makefile prod-init` already provisions, keeps mutable state
@@ -57,8 +57,8 @@ likely to grow. Relocating the DB/logs to the `/srv` partition is explicitly
 ## How prod resolves its paths today
 
 Prod cron jobs and scripts do **not** read `flake.nix` (that shellHook is
-dev-only, deriving `SIMO_VAR_PATH=$PWD/var`). Instead, when not in a nix shell
-they `source /etc/environment` for `SIMO_REPO_PATH` and `SIMO_LOG_PATH`
+dev-only, deriving `SIMOX_VAR_PATH=$PWD/var`). Instead, when not in a nix shell
+they `source /etc/environment` for `SIMOX_REPO_PATH` and `SIMOX_LOG_PATH`
 (`bin/phprun:6`, `src/scripts/indexer/main.sh:6`). Nothing in the repo writes
 `/etc/environment` — it is a **manual, one-time** server file and therefore a
 migration touchpoint.
@@ -67,7 +67,7 @@ Deploy-time path assumptions live in `bin/deploy.sh`:
 - `REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"`  (`main`, ~line 269)
 - `VAR_DIR='/home/$PROD_USER/var'`, `LOG_DIR="$VAR_DIR/simox/log"`
   (inside `deploy_repo_remotely`, ~lines 93–94) — used only for
-  `deploy_version.log`; today this diverges from `SIMO_LOG_PATH`. The migration
+  `deploy_version.log`; today this diverges from `SIMOX_LOG_PATH`. The migration
   reconciles it onto `/var/log/simox`.
 
 Nix is unaffected: it stays under `~/.nix-profile` / `~/.nix-gcroots`, bridged
@@ -82,7 +82,7 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
       `PROD_USER`).
 - [x] Reconcile deploy-log paths: replace `VAR_DIR='/home/$PROD_USER/var'` /
       `LOG_DIR="$VAR_DIR/simox/log"` with `LOG_DIR='/var/log/simox'` so
-      `deploy_version.log` lands next to the app logs (`SIMO_LOG_PATH`). Update
+      `deploy_version.log` lands next to the app logs (`SIMOX_LOG_PATH`). Update
       the `chown -R ... "$VAR_DIR"` line accordingly (chown `/var/log/simox` to
       `PROD_USER`, as `prod-init` already does).
 - [x] Confirm the atomic-swap still holds: `BASE_DIR=$(dirname REMOTE_TARGET_DIR)`
@@ -104,9 +104,9 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 
 ### Phase 3 — Server one-time manual steps
 
-- [ ] `/etc/environment`: set `SIMO_REPO_PATH=/srv/apps/simox` and
-      `SIMO_LOG_PATH=/var/log/simox`. (Only these two are consumed by
-      `phprun` / `main.sh` in prod; `SIMO_VAR_PATH` is dev-only.)
+- [ ] `/etc/environment`: set `SIMOX_REPO_PATH=/srv/apps/simox` and
+      `SIMOX_LOG_PATH=/var/log/simox`. (Only these two are consumed by
+      `phprun` / `main.sh` in prod; `SIMOX_VAR_PATH` is dev-only.)
 - [ ] Apache vhost: point `DocumentRoot` and `<Directory>` to
       `/srv/apps/simox/public`; keep `SetEnv SIMOX_REUTER_INI <path>`.
 - [ ] First cutover: deploy once to `/srv/apps/simox` (`bin/deploy.sh --init`),

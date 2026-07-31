@@ -74,10 +74,10 @@ One-time steps to provision a new production server:
 
 **1. `/etc/environment`** — add these entries so cron jobs and scripts resolve paths correctly:
 ```
-SIMO_REPO_PATH=/srv/apps/simox
-SIMO_LOG_PATH=/var/log/simox
+SIMOX_REPO_PATH=/srv/apps/simox
+SIMOX_LOG_PATH=/var/log/simox
 ```
-(`SIMO_VAR_PATH` is dev-only; do not set it in production.)
+(`SIMOX_VAR_PATH` is dev-only; do not set it in production.)
 
 **2. Apache vhost** — point the vhost at the deploy directory and set the config path:
 ```apache
