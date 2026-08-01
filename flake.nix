@@ -82,7 +82,7 @@
             export SIMOX_REPO_PATH="$PWD"
             export SIMOX_VAR_PATH="$SIMOX_REPO_PATH/var"
             export SIMOX_LOG_PATH="$SIMOX_VAR_PATH/log"
-            export PROD_USER="deploy"
+            export PROD_USER="simox"
 
             # Localizing paths securely to avoid any Production server interference
             export MYSQL_BASE_DIR="$SIMOX_VAR_PATH/mariadb"
