@@ -93,6 +93,7 @@ deploy_repo_remotely() {
       LOG_DIR='/var/log/simox'
 
       # Unpack inside the same parent base directory to ensure fast rename across the same mount point
+      mkdir -p \"\$BASE_DIR\"
       TMP_DIR=\$(mktemp -d -p \"\$BASE_DIR\")
       echo 'Unpacking to temp...' >&2
       tar -x -C \"\$TMP_DIR\"
