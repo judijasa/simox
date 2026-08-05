@@ -48,3 +48,53 @@ function trim_log_files(): void
     }
 }
 
+#[CronJob(schedule: 'weekly')]
+#[Agent]
+function nix_store_gc(): void
+{
+    // The nix store grows with every nixpkgs revision shipped by deploy.sh;
+    // only the latest closure is gcroot-protected, so old ones accumulate.
+    $nix_store = locate_nix_store();
+    if ($nix_store === null) {
+        Logger::info('nix-store binary not found. Skipping nix store garbage collection.');
+        return;
+    }
+
+    run_nix_store_command($nix_store, '--gc');
+    // --optimise hard-links duplicated store paths (eg same package built
+    // from different nixpkgs revisions). Disable with SIMOX_NIX_GC_OPTIMISE=0.
+    if (getenv('SIMOX_NIX_GC_OPTIMISE') !== '0') {
+        run_nix_store_command($nix_store, '--optimise');
+    }
+}
+
+/**
+ * Locates the nix-store binary. deploy.sh symlinks it into /usr/local/bin;
+ * fall back to the PROD_USER profile (single-user --no-daemon install).
+ */
+function locate_nix_store(): ?string
+{
+    $candidates   = ['/usr/local/bin/nix-store'];
+    $prod_user    = getenv('PROD_USER') ?: 'simox';
+    $candidates[] = "/home/$prod_user/.nix-profile/bin/nix-store";
+
+    foreach ($candidates as $path) {
+        if (is_executable($path)) return $path;
+    }
+
+    return null;
+}
+
+/**
+ * Runs a nix-store action (--gc, --optimise) and logs its output.
+ */
+function run_nix_store_command(string $nix_store, string $action): void
+{
+    Logger::info("Running nix-store $action...");
+    $output    = [];
+    $exit_code = -1;
+    exec(escapeshellarg($nix_store) . " $action 2>&1", $output, $exit_code);
+    $message = trim(implode(PHP_EOL, $output));
+    Logger::info($message !== '' ? $message : "nix-store $action exited with code $exit_code.");
+}
+
