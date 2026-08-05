@@ -174,14 +174,16 @@ deploy_nix_packages() {
   # - Keep /usr/local/simox/result/ root owned. This because
   #   PROD_USER only needs to read/exec Nix binaries and if
   #   PROD_USER writes here, it could inject malicious executables.
+  # - Keep the store gcroot at /nix/var/nix/gcroots/simox (root-owned).
+  #   With one user per project, a project-named path under /home is
+  #   redundant, so the root lives in the system gcroot dir instead.
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
   local REMOTE_TARGET_DIR="$3"
 
   ssh "root@$REMOTE_HOST" "
     set -e
-    mkdir -p '/usr/local/simox' '/home/$PROD_USER/.nix-gcroots'
-    chown $PROD_USER:$PROD_USER '/home/$PROD_USER/.nix-gcroots'
+    mkdir -p '/usr/local/simox' '/nix/var/nix/gcroots'
     ln -sf /nix/var/nix/profiles/default/bin/nix-store /usr/local/bin/nix-store
   "
 
@@ -200,8 +202,11 @@ deploy_nix_packages() {
 
   echo "Registering nix store root on remote..."
   ssh "root@$REMOTE_HOST" "
-    su - $PROD_USER -c '/nix/var/nix/profiles/default/bin/nix-store --add-root /home/$PROD_USER/.nix-gcroots/simox --realise $REMOTE_STORE_PATH'
+    /nix/var/nix/profiles/default/bin/nix-store --add-root /nix/var/nix/gcroots/simox --realise $REMOTE_STORE_PATH
     ln -sfn '$REMOTE_STORE_PATH' '/usr/local/simox/result'
+    # Legacy cleanup: the gcroot used to live in the prod user's home.
+    rm -f '/home/$PROD_USER/.nix-gcroots/simox'
+    rmdir '/home/$PROD_USER/.nix-gcroots' 2>/dev/null || true
   "
 }
 
