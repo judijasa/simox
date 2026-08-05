@@ -132,14 +132,11 @@ deploy_repo_remotely() {
       systemctl restart cron || systemctl restart crond
       echo 'Cron jobs updated.' >&2
 
-      # Piggyback: Check if nix is in the user's path or standard profile
-      if su - \"$PROD_USER\" -c 'command -v nix' &>/dev/null; then
+      # Piggyback: Check if nix daemon is running (multi-user install)
+      if systemctl is-active --quiet nix-daemon; then
         NIX_INSTALLED='true'
       else
         NIX_INSTALLED='false'
-        # Piggyback: sudo privileged pre-installation step
-        mkdir -p '/nix'
-        chown $PROD_USER:$PROD_USER '/nix'
       fi
 
       # Output previous hash, NIX_INSTALLED, and arch to stdout (separated by spaces)
@@ -154,8 +151,14 @@ deploy_repo_remotely() {
 install_nix_remotely() {
   local REMOTE_HOST="$1"
   local PROD_USER="$2"
-  echo "Installing Nix directly into the $PROD_USER account on $REMOTE_HOST..."
-  if ! ssh "$PROD_USER@$REMOTE_HOST" "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"; then
+  echo "Installing Nix (multi-user) on $REMOTE_HOST..."
+  if ! ssh "root@$REMOTE_HOST" "
+    set -e
+    curl -L https://nixos.org/nix/install | sh -s -- --daemon --yes
+    mkdir -p /etc/nix
+    echo 'trusted-users = root $PROD_USER' >> /etc/nix/nix.conf
+    systemctl restart nix-daemon
+  "; then
       echo "Nix installation failed."
       return 1
   fi
@@ -179,7 +182,7 @@ deploy_nix_packages() {
     set -e
     mkdir -p '/usr/local/simox' '/home/$PROD_USER/.nix-gcroots'
     chown $PROD_USER:$PROD_USER '/home/$PROD_USER/.nix-gcroots'
-    ln -sf /home/$PROD_USER/.nix-profile/bin/nix-store /usr/local/bin/nix-store
+    ln -sf /nix/var/nix/profiles/default/bin/nix-store /usr/local/bin/nix-store
   "
 
   if ! nix eval ".#packages.x86_64-linux.default" &>/dev/null; then
@@ -197,7 +200,7 @@ deploy_nix_packages() {
 
   echo "Registering nix store root on remote..."
   ssh "root@$REMOTE_HOST" "
-    su - $PROD_USER -c '/home/$PROD_USER/.nix-profile/bin/nix-store --add-root /home/$PROD_USER/.nix-gcroots/simox --realise $REMOTE_STORE_PATH'
+    su - $PROD_USER -c '/nix/var/nix/profiles/default/bin/nix-store --add-root /home/$PROD_USER/.nix-gcroots/simox --realise $REMOTE_STORE_PATH'
     ln -sfn '$REMOTE_STORE_PATH' '/usr/local/simox/result'
   "
 }

@@ -70,13 +70,14 @@ function nix_store_gc(): void
 
 /**
  * Locates the nix-store binary. deploy.sh symlinks it into /usr/local/bin;
- * fall back to the PROD_USER profile (single-user --no-daemon install).
+ * fall back to the canonical multi-user nix path.
  */
 function locate_nix_store(): ?string
 {
-    $candidates   = ['/usr/local/bin/nix-store'];
-    $prod_user    = getenv('PROD_USER') ?: 'simox';
-    $candidates[] = "/home/$prod_user/.nix-profile/bin/nix-store";
+    $candidates = [
+        '/usr/local/bin/nix-store',
+        '/nix/var/nix/profiles/default/bin/nix-store',
+    ];
 
     foreach ($candidates as $path) {
         if (is_executable($path)) return $path;
