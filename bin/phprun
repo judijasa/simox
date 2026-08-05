@@ -8,8 +8,8 @@ fi
 
 parent=$(ps -o comm= -p "$PPID")
 if [[ "$parent" == "cron" || "$parent" == "crond" ]]; then
-    cd "$SIMO_REPO_PATH"
-elif [[ "$PWD" != "$SIMO_REPO_PATH" ]]; then
+    cd "$SIMOX_REPO_PATH"
+elif [[ "$PWD" != "$SIMOX_REPO_PATH" ]]; then
     echo "This command must be executed from the repository's root directory." >&2
     exit 1
 fi
@@ -24,7 +24,7 @@ fi
 SCRIPT="${ARG%%:*}"
 SCRIPT_NAME=$(basename "$SCRIPT" .php)
 DIR_PREFIX=$(dirname "$SCRIPT" | tr '/' '_')
-LOG_FILE="${SIMO_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
+LOG_FILE="${SIMOX_LOG_PATH}/${DIR_PREFIX}_${SCRIPT_NAME}.log"
 
 touch -a "$LOG_FILE"
 
@@ -34,4 +34,4 @@ else
     exec >> "$LOG_FILE" 2>&1
 fi
 
-php "$SIMO_REPO_PATH/src/utils/phprun.php" "$ARG"
+php "$SIMOX_REPO_PATH/src/utils/phprun.php" "$ARG"
