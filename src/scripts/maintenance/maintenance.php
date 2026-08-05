@@ -8,7 +8,7 @@ use Utils\Agent;
 use Utils\CronJob;
 use Utils\Logger;
 
-#[CronJob(schedule: '5min')]
+#[CronJob(schedule: '*/5 * * * *')]
 #[Agent]
 function memory_cleaning(): void
 {
@@ -30,7 +30,7 @@ function memory_cleaning(): void
     }
 }
 
-#[CronJob(schedule: 'monthly')]
+#[CronJob(schedule: '0 6 * * 6')]
 #[Agent]
 function trim_log_files(): void
 {
@@ -48,7 +48,7 @@ function trim_log_files(): void
     }
 }
 
-#[CronJob(schedule: 'weekly')]
+#[CronJob(schedule: '0 8 * * 6')]
 #[Agent]
 function nix_store_gc(): void
 {

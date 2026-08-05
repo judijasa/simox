@@ -9,7 +9,7 @@ use Utils\Connectivity\Database;
 use Utils\DatabaseOps\CursorSeq;
 use Utils\Logger;
 
-#[CronJob(schedule: 'daily')]
+#[CronJob(schedule: '0 2 * * *')]
 #[Agent]
 function main($batch_size_limit = 200, $jobs_per_page = 50, $timeout =  60 * 45){
     $base_url = "https://simo.cnsc.gov.co";
