@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script has two purposes:
 # 1. Continuous development deployment and
