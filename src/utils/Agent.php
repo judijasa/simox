@@ -5,4 +5,7 @@ declare(strict_types=1);
 namespace Utils;
 
 #[\Attribute]
-class Agent {}
+class Agent
+{
+    public function __construct(public readonly ?string $dbTarget) {}
+}

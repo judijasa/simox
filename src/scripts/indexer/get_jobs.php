@@ -5,28 +5,19 @@ require 'src/utils/indexing.php';
 
 use Utils\Agent;
 use Utils\CronJob;
-use Utils\Connectivity\Database;
 use Utils\DatabaseOps\CursorSeq;
 use Utils\Logger;
 
 #[CronJob(schedule: '0 2 * * *')]
-#[Agent]
-function main($batch_size_limit = 200, $jobs_per_page = 50, $timeout =  60 * 45){
+#[Agent(dbTarget: 'simo')]
+function main($conn, $batch_size_limit = 200, $jobs_per_page = 50, $timeout =  60 * 45){
     $base_url = "https://simo.cnsc.gov.co";
-    $dbname = 'simo';
-    try {
-        $conn = Database::admin($dbname);
-        indexer(
-            $conn,
-            $base_url,
-            $batch_size_limit,
-            $jobs_per_page,
-            $timeout);
-    } catch (PDOException $e) {
-        echo "Error: ". $e->getMessage(). PHP_EOL;
-    } finally {
-        $conn = null;
-    }
+    indexer(
+        $conn,
+        $base_url,
+        $batch_size_limit,
+        $jobs_per_page,
+        $timeout);
 }
 
 function indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){

@@ -9,7 +9,7 @@ use Utils\CronJob;
 use Utils\Logger;
 
 #[CronJob(schedule: '*/5 * * * *')]
-#[Agent]
+#[Agent(dbTarget: null)]
 function memory_cleaning(): void
 {
     $threshold = 90;
@@ -31,7 +31,7 @@ function memory_cleaning(): void
 }
 
 #[CronJob(schedule: '0 6 * * 6')]
-#[Agent]
+#[Agent(dbTarget: null)]
 function trim_log_files(): void
 {
     $log_dir  = getenv('SIMOX_LOG_PATH');
@@ -49,7 +49,7 @@ function trim_log_files(): void
 }
 
 #[CronJob(schedule: '0 8 * * 6')]
-#[Agent]
+#[Agent(dbTarget: null)]
 function nix_store_gc(): void
 {
     // The nix store grows with every nixpkgs revision shipped by deploy.sh;

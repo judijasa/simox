@@ -5,7 +5,6 @@ require_once __DIR__ . '/helper.php';
 
 use Utils\Agent;
 use Utils\CronJob;
-use Utils\Connectivity\Database;
 use Utils\DatabaseOps\BatchScan;
 use Utils\DatabaseOps\BatchInsert;
 
@@ -375,11 +374,9 @@ function process_batch(PDO $conn, array $rows, int $batch_size): void
 }
 
 #[CronJob(schedule: '0 5 * * *')]
-#[Agent]
-function main(): void
+#[Agent(dbTarget: 'simo')]
+function main(PDO $conn): void
 {
-    $conn = Database::admin('simo');
-
     $table_name = 'empleo_snapshot';
     $query = 'SELECT id, empleo, estado_inscripcion, favorito, inscripcion_id,
                      fecha_inscripcion, nivel_nombre, `access`

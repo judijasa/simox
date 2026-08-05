@@ -68,7 +68,7 @@ foreach ($files as $file) {
 
 echo "NIX_BIN=$nix_bin" . PHP_EOL . PHP_EOL;
 foreach ($entries as $e) {
-    $sched = $schedules[$e['schedule']] ?? '0 * * * *';
+    $sched = $e['schedule'];
     $cmd   = "bin/phprun {$e['script']}:{$e['agent']}()";
     echo "$sched root /bin/sh -c 'export PATH=\"\$NIX_BIN:\$PATH\"; cd $repo_root && $cmd'" . PHP_EOL;
 }
