@@ -3,12 +3,14 @@
 *.swp
 
 # Ignore directories
-vendor/
-var/
-result/
+# mydir/ ignores mydir dirs at any dir level,
+# while /mydir/ ignores only mydir dir at repo root-level (not at system-level).
+/vendor/
+/var/
+/result/
 
 # Ignore files
-etc/reuter.ini
-etc/dev-machines.ini
-etc/hosts
+/etc/reuter.ini
+/etc/dev-machines.ini
+/etc/hosts
 .env
