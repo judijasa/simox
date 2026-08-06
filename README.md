@@ -32,7 +32,7 @@ ema init tables simo-C196A24801D24B16
 
 Run indexer:
 ```bash
-bin/phprun 'src/scripts/indexer/get_jobs.php:main($batch_size_limit=15, $jobs_per_page=5, $timeout=15)'
+phprun 'src/scripts/indexer/get_jobs.php:main($batch_size_limit=15, $jobs_per_page=5, $timeout=15)'
 ```
 
 Access local `simo` database:
@@ -47,7 +47,7 @@ SELECT count(*) FROM empleo_snapshot;
 
 Run pipeline:
 ```bash
-bin/phprun 'src/scripts/pipeline/pipeline.php:main()'
+phprun 'src/scripts/pipeline/pipeline.php:main()'
 ```
 
 Verify content in tables e.g.
@@ -119,7 +119,8 @@ There is a shell.nix providing a Nix dev environment for local tests.
 ## PHP Casper Class
 Scraping use to be the original approach to fetch data from the SIMO website. It has been superseded by
 the use of the API endpoint. A minor role is still kept to showcase the use of crawling with Casper.
-`src/utils/CasperTrio.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
+`src/scripts/indexer/helpers.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`,
+provided by the `judijasa/php-daas-framework` composer package (`Utils\Crawler\CasperTrio`).
 It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, we edit
 `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.
 This is done when executing `make dev-init`.<br/>

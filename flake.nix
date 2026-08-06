@@ -14,9 +14,14 @@
     utils.url = "github:numtide/flake-utils";
 
     ema.url = "github:judijasa/ema";
+
+    # Local absolute path while php_daas_framework is unpublished (relative
+    # path: inputs are mishandled by nix during lock resolution); switch to
+    # github:judijasa/php_daas_framework once the repo is public.
+    php_daas_framework.url = "path:/home/juan/git/php_daas_framework";
   };
 
-  outputs = { self, nixpkgs, utils, ema }:
+  outputs = { self, nixpkgs, utils, ema, php_daas_framework }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -47,6 +52,7 @@
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
         emaPkg = ema.packages.${system}.default;
+        phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
 
         commonPackages = [
           bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
@@ -56,6 +62,7 @@
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
           emaPkg
+          phpDaasFrameworkPkg
           phpComposer
           phpPkg
           tmuxPkg
