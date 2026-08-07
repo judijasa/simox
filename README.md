@@ -76,8 +76,10 @@ One-time steps to provision a new production server:
 ```
 SIMOX_REPO_PATH=/srv/apps/simox
 SIMOX_LOG_PATH=/var/log/simox
+PHPRUN_REPO_PATH=/srv/apps/simox
+PHPRUN_LOG_PATH=/var/log/simox
 ```
-(`SIMOX_VAR_PATH` is dev-only; do not set it in production.)
+(`SIMOX_VAR_PATH` is dev-only; do not set it in production.) `SIMOX_*` are read by simox's own scripts; `PHPRUN_*` are the names consumed by the php_daas_framework CLI (`phprun`) — both must be set in production.
 
 **2. Apache vhost** — point the vhost at the deploy directory and set the config path:
 ```apache
@@ -85,11 +87,11 @@ DocumentRoot "/srv/apps/simox/public"
 <Directory "/srv/apps/simox/public">
     Require all granted
 </Directory>
-SetEnv SIMOX_REUTER_INI /etc/simox/reuter.ini
+SetEnv PHPRUN_REUTER_INI /etc/simox/reuter.ini
 ```
 Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
-- **`SIMOX_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`). If unset, `etc/reuter.ini` inside the repo is used.
+- **`PHPRUN_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class (legacy name: `SIMOX_REUTER_INI`). If unset, `etc/reuter.ini` inside the repo is used (CLI only).
 - **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`.
 
 **3. Initial deploy** — run from the dev machine inside `nix develop`:
@@ -119,11 +121,12 @@ There is a shell.nix providing a Nix dev environment for local tests.
 ## PHP Casper Class
 Scraping use to be the original approach to fetch data from the SIMO website. It has been superseded by
 the use of the API endpoint. A minor role is still kept to showcase the use of crawling with Casper.
-`src/scripts/indexer/helpers.php:CasperTrio` is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`,
-provided by the `judijasa/php-daas-framework` composer package (`Utils\Crawler\CasperTrio`).
-It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, we edit
-`vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`, replacing `private $script` with `protected $script`.
-This is done when executing `make dev-init`.<br/>
+`Utils\Crawler\CasperTrio` (from the `judijasa/php-daas-framework` composer package, used by
+`src/scripts/indexer/helpers.php`) is a subclass of `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`.
+It overrides and defines new methods.  To use this subclass, after downloading the vendor libraries, the
+`judijasa/php-daas-framework` composer plugin edits `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`,
+replacing `private $script` with `protected $script` automatically on every
+`composer install`/`composer update`.<br/>
 An alternative is to edit `vendor/phpcasperjs/phpcasperjs/src/Casper.php:sendKeys()` to allow setting
 of the boolean option `reset`, which is already defined in
 `vendor/jerome-breton/casperjs/modules/casper.js:sendKeys()`

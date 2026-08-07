@@ -12,7 +12,4 @@ if git diff --cached --name-only | grep -qx "composer.json"; then
     composer install
     echo "Staging new composer.lock..."
     git add composer.lock
-    echo "Patching vendor/phpcasperjs/phpcasperjs/src/Casper.php..."
-    TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"
-    sed -i 's/private $script = \x27\x27;/protected $script = \x27\x27;/g' $TARGET_FILE
 fi

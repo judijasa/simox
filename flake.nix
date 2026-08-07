@@ -15,10 +15,10 @@
 
     ema.url = "github:judijasa/ema";
 
-    # Local absolute path while php_daas_framework is unpublished (relative
-    # path: inputs are mishandled by nix during lock resolution); switch to
-    # github:judijasa/php_daas_framework once the repo is public.
-    php_daas_framework.url = "path:/home/juan/git/php_daas_framework";
+    # Public repo. Fetched through git (respects .gitignore), so runtime
+    # artifacts such as var/mariadb/mysql.sock never enter the Nix store
+    # (Nix rejects sockets with "unsupported type").
+    php_daas_framework.url = "github:judijasa/php_daas_framework";
   };
 
   outputs = { self, nixpkgs, utils, ema, php_daas_framework }:
@@ -90,6 +90,13 @@
             export SIMOX_VAR_PATH="$SIMOX_REPO_PATH/var"
             export SIMOX_LOG_PATH="$SIMOX_VAR_PATH/log"
             export PROD_USER="simox"
+
+            # php_daas_framework reads PHPRUN_* only (no SIMOX_* fallback).
+            # Mirror the SIMOX_* values here, keeping the framework repo
+            # free of any simox reference.
+            export PHPRUN_REPO_PATH="$SIMOX_REPO_PATH"
+            export PHPRUN_LOG_PATH="$SIMOX_LOG_PATH"
+            export PHPRUN_REUTER_INI="$SIMOX_REPO_PATH/etc/reuter.ini"
 
             # Localizing paths securely to avoid any Production server interference
             export MYSQL_BASE_DIR="$SIMOX_VAR_PATH/mariadb"

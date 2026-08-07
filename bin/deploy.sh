@@ -225,9 +225,7 @@ deploy_composer_dependencies() {
       # TO DO: Add minimal test for modified vendor/
       ssh "$PROD_USER@$REMOTE_HOST" "
           export PATH='/usr/local/simox/result/bin':\$PATH
-          TARGET_FILE=\"$REMOTE_TARGET_DIR/vendor/phpcasperjs/phpcasperjs/src/Casper.php\"
-          cd \"$REMOTE_TARGET_DIR\" && composer install && \\
-          sed -i 's/private \$script = \x27\x27;/protected \$script = \x27\x27;/g' \"\$TARGET_FILE\"
+          cd \\\"$REMOTE_TARGET_DIR\\\" && composer install
       "
   else
       echo "File $COMPOSER_JSON has not changed between deployments. Skipping deployment of vendor/..."
@@ -254,7 +252,7 @@ deploy_website() {
   # The repo dir is recreated on each deploy, so www-data traversal must be restored each time.
   # One-time setup (manual): chmod o+x /srv /srv/apps (Debian/AppArmor needs no relabeling);
   # configure Apache vhost DocumentRoot to $REMOTE_TARGET_DIR/public, and set
-  # SetEnv SIMOX_REUTER_INI <path-to-reuter.ini> in the vhost.
+  # SetEnv PHPRUN_REUTER_INI <path-to-reuter.ini> in the vhost.
   ssh "root@$REMOTE_HOST" "chmod o+x '$REMOTE_TARGET_DIR'"
 }
 

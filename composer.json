@@ -1,29 +1,20 @@
 {
-  "extra": {
-    "readme": ["jakoch/phantomjs-installer is a jerome-breton/casperjs-installer dependency.",
-      "I have fixed its version to allows predictible shimming."
-    ]
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "judijasa/php-daas-framework": true
+    }
   },
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
-    "jerome-breton/casperjs-installer": "dev-master",
-    "jakoch/phantomjs-installer": "3.0.3",
-    "phpcasperjs/phpcasperjs": "^1.3",
     "phpmailer/phpmailer": "^6.5",
     "judijasa/php-daas-framework": "dev-main"
   },
   "repositories": [
     {
-      "type": "path",
-      "url": "../php_daas_framework"
+      "type": "vcs",
+      "url": "https://github.com/judijasa/php_daas_framework"
     }
-  ],
-  "scripts": {
-    "post-install-cmd": [
-      "CasperJsInstaller\\Installer::install"
-    ],
-    "post-update-cmd": [
-      "CasperJsInstaller\\Installer::install"
-    ]
-  }
+  ]
 }

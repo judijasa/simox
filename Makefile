@@ -81,9 +81,6 @@ _dev-init-composer:
 	-rm -rf vendor
 	@echo "Running composer install..."; \
 	composer install
-	@echo "Patching vendor/phpcasperjs/phpcasperjs/src/Casper.php..."
-	@TARGET_FILE="vendor/phpcasperjs/phpcasperjs/src/Casper.php"; \
-	sed -i 's/private $$script = \x27\x27;/protected $$script = \x27\x27;/g' "$$TARGET_FILE"
 
 _dev-update-hosts:
 	@echo "Syncing repository hosts to /etc/hosts..."
