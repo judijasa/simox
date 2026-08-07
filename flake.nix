@@ -54,6 +54,32 @@
         emaPkg = ema.packages.${system}.default;
         phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
 
+        # simox↔php_daas_framework integration point: phprun reads PHPRUN_*
+        # only (no SIMOX_* fallback in the framework). Each wrapper below
+        # provides those vars from simox context, so no env var needs to be
+        # set on the server or duplicated in /etc/environment.
+        #
+        # Dev: derive PHPRUN_* from the SIMOX_* exports of the dev shell.
+        phprunDev = pkgs.writeShellScriptBin "phprun" ''
+          export PHPRUN_REPO_PATH="''${PHPRUN_REPO_PATH:-''${SIMOX_REPO_PATH:-}}"
+          export PHPRUN_LOG_PATH="''${PHPRUN_LOG_PATH:-''${SIMOX_LOG_PATH:-}}"
+          export PHPRUN_REUTER_INI="''${PHPRUN_REUTER_INI:-''${SIMOX_REPO_PATH:-}/etc/reuter.ini}"
+          exec ${phpDaasFrameworkPkg}/bin/phprun "$@"
+        '';
+        # Prod: the repo layout is fixed, so paths are baked in at build time.
+        # Overridable for ad-hoc testing. EMA_TARGET selects the [prod] section
+        # of reuter.ini for DB-using agents.
+        phprunProd = pkgs.writeShellScriptBin "phprun" ''
+          export PHPRUN_REPO_PATH="''${PHPRUN_REPO_PATH:-/srv/apps/simox}"
+          export PHPRUN_LOG_PATH="''${PHPRUN_LOG_PATH:-/var/log/simox}"
+          export PHPRUN_REUTER_INI="''${PHPRUN_REUTER_INI:-/etc/simox/reuter.ini}"
+          export EMA_TARGET="''${EMA_TARGET:-prod}"
+          exec ${phpDaasFrameworkPkg}/bin/phprun "$@"
+        '';
+
+        # Common packages shared by dev and prod. phpDaasFrameworkPkg is NOT
+        # listed: phprunDev/phprunProd wrap its binary, pulling it into the
+        # closure through the exec reference above.
         commonPackages = [
           bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
           # gnumakePkg
@@ -62,7 +88,6 @@
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
           emaPkg
-          phpDaasFrameworkPkg
           phpComposer
           phpPkg
           tmuxPkg
@@ -73,12 +98,13 @@
         # This builds the raw binaries, but DOES NOT spin up background services.
         packages.default = pkgs.symlinkJoin {
           name = "prod-dependencies";
-          paths = commonPackages;
+          paths = commonPackages ++ [ phprunProd ];
         };
 
         # DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
           buildInputs = commonPackages ++ [
+            phprunDev
             gitPkg
             mariadbPkg
             phpLinter
@@ -91,13 +117,6 @@
             export SIMOX_LOG_PATH="$SIMOX_VAR_PATH/log"
             export PROD_USER="simox"
 
-            # php_daas_framework reads PHPRUN_* only (no SIMOX_* fallback).
-            # Mirror the SIMOX_* values here, keeping the framework repo
-            # free of any simox reference.
-            export PHPRUN_REPO_PATH="$SIMOX_REPO_PATH"
-            export PHPRUN_LOG_PATH="$SIMOX_LOG_PATH"
-            export PHPRUN_REUTER_INI="$SIMOX_REPO_PATH/etc/reuter.ini"
-
             # Localizing paths securely to avoid any Production server interference
             export MYSQL_BASE_DIR="$SIMOX_VAR_PATH/mariadb"
             export MYSQL_DATA_DIR="$MYSQL_BASE_DIR/data"
@@ -108,10 +127,7 @@
             if [ -d "$MYSQL_DATA_DIR" ] && [ ! -S "$MYSQL_UNIX_PORT" ]; then
               # Start the daemon in the background safely
               echo "Starting isolated MariaDB server..."
-              mysqld --datadir="$MYSQL_DATA_DIR" \
-                     --pid-file="$MYSQL_PID_FILE" \
-                     --socket="$MYSQL_UNIX_PORT" \
-                     --skip-networking > /dev/null 2>&1 &
+              mysqld --datadir="$MYSQL_DATA_DIR" --pid-file="$MYSQL_PID_FILE" --socket="$MYSQL_UNIX_PORT" --skip-networking > /dev/null 2>&1 &
               
               MARIADB_PID=$!
 

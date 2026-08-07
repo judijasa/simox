@@ -72,16 +72,7 @@ To connect to a production server via `ema`, two additional config files are nee
 
 One-time steps to provision a new production server:
 
-**1. `/etc/environment`** — add these entries so cron jobs and scripts resolve paths correctly:
-```
-SIMOX_REPO_PATH=/srv/apps/simox
-SIMOX_LOG_PATH=/var/log/simox
-PHPRUN_REPO_PATH=/srv/apps/simox
-PHPRUN_LOG_PATH=/var/log/simox
-```
-(`SIMOX_VAR_PATH` is dev-only; do not set it in production.) `SIMOX_*` are read by simox's own scripts; `PHPRUN_*` are the names consumed by the php_daas_framework CLI (`phprun`) — both must be set in production.
-
-**2. Apache vhost** — point the vhost at the deploy directory and set the config path:
+**1. Apache vhost** — point the vhost at the deploy directory and set the config path:
 ```apache
 DocumentRoot "/srv/apps/simox/public"
 <Directory "/srv/apps/simox/public">
@@ -92,9 +83,11 @@ SetEnv PHPRUN_REUTER_INI /etc/simox/reuter.ini
 Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
 - **`PHPRUN_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class (legacy name: `SIMOX_REUTER_INI`). If unset, `etc/reuter.ini` inside the repo is used (CLI only).
-- **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`.
+- **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`; the nix-built `phprun` used by cron sets it to `prod`.
 
-**3. Initial deploy** — run from the dev machine inside `nix develop`:
+No `/etc/environment` entries are required: the nix-built `phprun` (wrapped in `flake.nix`) bakes `PHPRUN_REPO_PATH=/srv/apps/simox`, `PHPRUN_LOG_PATH=/var/log/simox`, `PHPRUN_REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` into the binary shipped by `nix build`.
+
+**2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
 bin/deploy.sh --init <host>
 ```

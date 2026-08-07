@@ -34,7 +34,12 @@ function memory_cleaning(): void
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
 {
-    $log_dir  = getenv('SIMOX_LOG_PATH');
+    // phprun (wrapped in flake.nix) always provides PHPRUN_LOG_PATH.
+    $log_dir = getenv('PHPRUN_LOG_PATH');
+    if ($log_dir === false || $log_dir === '') {
+        Logger::info('PHPRUN_LOG_PATH not set. Skipping log trimming.');
+        return;
+    }
     $max_size = 1_000_000; // 1MB per log file
 
     foreach (glob("$log_dir/*.log") as $log_file) {

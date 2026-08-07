@@ -1,3 +1,23 @@
+deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
+
+[.] deepseek --resume 39cf2015-8b93-454d-b863-b58f875b9d5c
+
+    [x] php_daas_framework had phprun variable PHPRUN_REPO_PATH to
+        fallback to SIMOX_REPO_PATH. I removed that fallback in
+        php_daas_framework. We need to adapt simox repo to 
+        that change for dev and prod, perhaps with Makefile.
+        DONE: flake.nix wraps phprun with phprunDev (maps SIMOX_* →
+        PHPRUN_* in the dev shell) and phprunProd (bakes
+        /srv/apps/simox, /var/log/simox, /etc/simox/reuter.ini and
+        EMA_TARGET=prod). maintenance.php:trim_log_files reads
+        PHPRUN_LOG_PATH. No /etc/environment entries needed; Apache
+        vhost keeps SetEnv PHPRUN_REUTER_INI (web/mod_php path).
+    [.] After commiting in php_daas_framework, next commit
+        should be to relocate deployment to php_daas_framework.
+
+[.] Test 2026-08-06-import-php-runner in simox repo with quick start
+    in README.md
+
 [.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
     [.] Add a way to drop a database with ema (see schematic for inspiration).
         Add other easy to implement commands for schematic.

@@ -59,7 +59,7 @@ likely to grow. Relocating the DB/logs to the `/srv` partition is explicitly
 Prod cron jobs and scripts do **not** read `flake.nix` (that shellHook is
 dev-only, deriving `SIMOX_VAR_PATH=$PWD/var`). Instead, when not in a nix shell
 they `source /etc/environment` for `SIMOX_REPO_PATH` and `SIMOX_LOG_PATH`
-(`bin/phprun:6`, `src/scripts/indexer/main.sh:6`). Nothing in the repo writes
+(`phprun`, `src/scripts/indexer/main.sh:6`). Nothing in the repo writes
 `/etc/environment` — it is a **manual, one-time** server file and therefore a
 migration touchpoint.
 
@@ -104,11 +104,11 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 
 ### Phase 3 — Server one-time manual steps
 
-- [ ] `/etc/environment`: set `SIMOX_REPO_PATH=/srv/apps/simox` and
-      `SIMOX_LOG_PATH=/var/log/simox`. (Only these two are consumed by
-      `phprun` / `main.sh` in prod; `SIMOX_VAR_PATH` is dev-only.)
+- [ ] `/etc/environment`: no longer needed — the nix-built `phprun`
+      wrapper bakes `PHPRUN_REPO_PATH`, `PHPRUN_LOG_PATH`,
+      `PHPRUN_REUTER_INI` and `EMA_TARGET=prod` at build time.
 - [ ] Apache vhost: point `DocumentRoot` and `<Directory>` to
-      `/srv/apps/simox/public`; keep `SetEnv SIMOX_REUTER_INI <path>`.
+      `/srv/apps/simox/public`; keep `SetEnv PHPRUN_REUTER_INI <path>`.
 - [ ] First cutover: deploy once to `/srv/apps/simox` (`bin/deploy.sh --init`),
       verify, then remove the old `/home/$PROD_USER/apps/simox` and its
       `..._backup`, and drop the `chmod o+x` that had been applied to the home
@@ -126,7 +126,7 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 
 - [ ] `bin/deploy.sh <host>` deploys to `/srv/apps/simox`; atomic swap works.
 - [ ] Website served correctly from `/srv/apps/simox/public` (autoload +
-      `Utils\` classes resolve; `SIMOX_REUTER_INI` picked up).
+      `Utils\` classes resolve; `PHPRUN_REUTER_INI` picked up).
 - [ ] Cron jobs run: `/etc/cron.d/simo-orchestrator` regenerated with
       `cd /srv/apps/simox`, logs written to `/var/log/simox`.
 - [ ] `deploy_version.log` and `.deploy_version` land in the expected places.
