@@ -93,6 +93,58 @@ bin/deploy.sh --init <host>
 ```
 `--init` provisions system directories (`/srv/apps`, `/var/log/simox`, `/var/lib/simox/mariadb`) in addition to deploying the repo.
 
+## Dependency Pinning
+
+The external repo `php_daas_framework` is integrated via both Nix (`flake.nix`) and Composer (`composer.json`). By default, both track the tip of the `main` branch, which is convenient during active co-development but dangerous for production: a breaking upstream change can silently enter the next deploy.
+
+To lock the integration to a known-good commit:
+
+### 1. flake.nix
+
+Replace the floating URL in the `inputs` section:
+
+```nix
+# Before (floating — tracks HEAD of main):
+php_daas_framework.url = "github:judijasa/php_daas_framework";
+
+# After (pinned to commit abc1234):
+php_daas_framework.url = "github:judijasa/php_daas_framework?rev=abc1234";
+```
+
+After changing the URL, update the lock file:
+
+```bash
+nix flake lock --update-input php_daas_framework
+```
+
+This bakes the exact revision into `flake.lock`, so every `nix build` / `nix develop` — whether locally, in CI, or on the production server — pulls the identical source tree.
+
+### 2. composer.json
+
+Pin the commit hash in the `require` field:
+
+```json
+// Before (floating — tracks tip of dev-main):
+"judijasa/php-daas-framework": "dev-main"
+
+// After (pinned to commit abc1234):
+"judijasa/php-daas-framework": "dev-main#abc1234"
+```
+
+Then refresh the lock file:
+
+```bash
+composer update judijasa/php-daas-framework
+```
+
+The `#<hash>` suffix tells Composer to resolve `dev-main` to that exact commit, recorded in `composer.lock`. Subsequent `composer install` runs (including on the production server) will always fetch that revision.
+
+### When to bump
+
+- After validating a new upstream version locally (`nix develop` + full test run).
+- Always bump both files together so Nix and Composer agree on the same commit.
+- Commit the updated `flake.lock` and `composer.lock` so the pinned revision is tracked in git.
+
 ## System Requirements
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
 
