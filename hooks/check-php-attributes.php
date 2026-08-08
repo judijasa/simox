@@ -1,4 +1,6 @@
 <?php
+// Guarantees correctly written CronJob/Agent attributes
+
 declare(strict_types=1);
 
 $files = array_slice($argv, 1);
@@ -59,3 +61,4 @@ foreach ($files as $file) {
 }
 
 exit($exitCode);
+
