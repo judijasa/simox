@@ -8,3 +8,4 @@ parameters:
 		- doc/*
 		- vendor/*
 		- var/*
+		- result/*
