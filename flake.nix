@@ -81,7 +81,7 @@
         # listed: phprunDev/phprunProd wrap its binary, pulling it into the
         # closure through the exec reference above.
         commonPackages = [
-          bashPkg  # If removed, modify SHELL in etc/cron.d/orchestrate
+          bashPkg
           # gnumakePkg
           jqPkg
           # mariadbPkg  # nix build for stateful systems is anti-pattern

@@ -170,7 +170,6 @@ deploy_nix_packages() {
   #   if server is hardware limited, as it needs build resources:
   #   compilers, -dev packages, 20GB of disk, etc.
   # - Ship Nix store folder structure (i.e. the symlinks to nix/store)
-  # - Keep it consistent with NIX_BIN value at etc/cron.d/orchestrator.
   # - Keep /usr/local/simox/result/ root owned. This because
   #   PROD_USER only needs to read/exec Nix binaries and if
   #   PROD_USER writes here, it could inject malicious executables.
