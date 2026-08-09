@@ -27,7 +27,7 @@ prod-init: PROD_DB_UNIX_PORT = $(PROD_DB_DIR)/mysql.sock
 prod-init: PROD_DB_PID_FILE = $(PROD_DB_DIR)/mysql.pid
 prod-init: PROD_LOG_DIR = /var/log/simox
 
-.PHONY: help dev-init _assert-nix-dev _dev-init _init-git-hooks _dev-create-dirs \
+.PHONY: help dev-init _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
     _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env \
     prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster
 
@@ -36,18 +36,18 @@ help:
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
 	@echo "  prod-init  - Run ONCE on a brand-new production server to provision system state"
 
-dev-init: _assert-nix-dev _dev-init
+dev-init: _dev-assert-nix _dev-init
 
-_assert-nix-dev:
+_dev-assert-nix:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
 	    echo "ERROR: This target must be run inside 'nix develop'"; \
 	    exit 1; \
 	fi
 
-_dev-init: _init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
+_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
 	@echo "Developer environment successfully initialized."
 
-_init-git-hooks:
+_dev-init-git-hooks:
 	@bin/dev/init-git-hooks.sh
 
 _dev-create-dirs:
