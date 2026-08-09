@@ -125,6 +125,14 @@ deploy_repo_remotely() {
       echo \"Deploy complete: $REV\" > \"\$FINAL_DIR/.deploy_version\"
       chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.deploy_version\"
 
+      # Piggyback: Regenerate the production .env. The deployed repo
+      # directory is replaced on every deploy, so the gitignored .env must
+      # be recreated here, before cron is installed. gen-env.sh fails loudly
+      # if the file would be incomplete (e.g. missing EMA_TARGET=prod).
+      echo 'Regenerating production .env...' >&2
+      \"\$FINAL_DIR/bin/prod/gen-env.sh\" \"\$FINAL_DIR\"
+      chown $PROD_USER:$PROD_USER \"\$FINAL_DIR/.env\"
+
       # Piggyback: Update cron jobs from #[CronJob] attributes in source
       echo 'Updating cron jobs...' >&2
       SIMOX_REPO_PATH=\"\$FINAL_DIR\" php \"\$FINAL_DIR/bin/update-cron-manifest\" > /etc/cron.d/simo-orchestrator

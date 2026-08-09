@@ -54,32 +54,20 @@
         emaPkg = ema.packages.${system}.default;
         phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
 
-        # simox↔php_daas_framework integration point: phprun reads PHPRUN_*
-        # only (no SIMOX_* fallback in the framework). Each wrapper below
-        # provides those vars from simox context, so no env var needs to be
-        # set on the server or duplicated in /etc/environment.
-        #
-        # Dev: derive PHPRUN_* from the SIMOX_* exports of the dev shell.
-        phprunDev = pkgs.writeShellScriptBin "phprun" ''
-          export PHPRUN_REPO_PATH="''${PHPRUN_REPO_PATH:-''${SIMOX_REPO_PATH:-}}"
-          export PHPRUN_LOG_PATH="''${PHPRUN_LOG_PATH:-''${SIMOX_LOG_PATH:-}}"
-          export PHPRUN_REUTER_INI="''${PHPRUN_REUTER_INI:-''${SIMOX_REPO_PATH:-}/etc/reuter.ini}"
-          exec ${phpDaasFrameworkPkg}/bin/phprun "$@"
-        '';
-        # Prod: the repo layout is fixed, so paths are baked in at build time.
-        # Overridable for ad-hoc testing. EMA_TARGET selects the [prod] section
-        # of reuter.ini for DB-using agents.
-        phprunProd = pkgs.writeShellScriptBin "phprun" ''
-          export PHPRUN_REPO_PATH="''${PHPRUN_REPO_PATH:-/srv/apps/simox}"
-          export PHPRUN_LOG_PATH="''${PHPRUN_LOG_PATH:-/var/log/simox}"
-          export PHPRUN_REUTER_INI="''${PHPRUN_REUTER_INI:-/etc/simox/reuter.ini}"
-          export EMA_TARGET="''${EMA_TARGET:-prod}"
-          exec ${phpDaasFrameworkPkg}/bin/phprun "$@"
-        '';
+        # simox↔php_daas_framework integration point: the framework's own
+        # bin/phprun loads the repo-root .env from the CWD at runtime, so
+        # simox ships that binary directly (phpDaasFrameworkPkg in
+        # commonPackages below) — no wrapper, no baked paths, no dev/prod
+        # flags. Configuration lives in .env at the repo root: `make
+        # dev-init` generates it in dev, bin/prod/gen-env.sh regenerates it
+        # on every deploy (the deployed repo directory is replaced on each
+        # deploy, so the gitignored .env is recreated there before cron is
+        # installed). Project-agnostic: whichever `phprun` binary wins the
+        # PATH race, it loads the .env of the directory it runs in.
 
-        # Common packages shared by dev and prod. phpDaasFrameworkPkg is NOT
-        # listed: phprunDev/phprunProd wrap its binary, pulling it into the
-        # closure through the exec reference above.
+        # Common packages shared by dev and prod. phpDaasFrameworkPkg ships
+        # the phprun CLI: its bin/phprun loads the repo-root .env from the
+        # CWD, so it can be dropped directly into both environments.
         commonPackages = [
           bashPkg
           # gnumakePkg
@@ -90,6 +78,7 @@
           emaPkg
           phpComposer
           phpPkg
+          phpDaasFrameworkPkg
           tmuxPkg
         ];
       in
@@ -98,13 +87,12 @@
         # This builds the raw binaries, but DOES NOT spin up background services.
         packages.default = pkgs.symlinkJoin {
           name = "prod-dependencies";
-          paths = commonPackages ++ [ phprunProd ];
+          paths = commonPackages;
         };
 
         # DEVELOPMENT ENVIRONMENT (Triggered via 'nix develop')
         devShells.default = pkgs.mkShell {
           buildInputs = commonPackages ++ [
-            phprunDev
             gitPkg
             mariadbPkg
             phpLinter
@@ -136,8 +124,6 @@
             fi
 
             [[ -f "$SIMOX_REPO_PATH/.env" ]] && source "$SIMOX_REPO_PATH/.env"
-
-            export EMA_TARGET="local"
 
             # Customize the prompt (PS1)
             # Define ANSI color codes for readability

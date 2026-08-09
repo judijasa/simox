@@ -34,7 +34,7 @@ function memory_cleaning(): void
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
 {
-    // phprun (wrapped in flake.nix) always provides PHPRUN_LOG_PATH.
+    // The repo-root .env (loaded by the nix phprun wrapper) provides PHPRUN_LOG_PATH.
     $log_dir = getenv('PHPRUN_LOG_PATH');
     if ($log_dir === false || $log_dir === '') {
         Logger::info('PHPRUN_LOG_PATH not set. Skipping log trimming.');

@@ -29,7 +29,7 @@ prod-init: PROD_LOG_DIR = /var/log/simox
 
 .PHONY: help dev-init _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
     _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env \
-    prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster
+    prod-init _prod-assert-user _prod-create-dirs _prod-init-cluster prod-gen-env
 
 help:
 	@echo "Available initialization targets:"
@@ -75,6 +75,11 @@ _dev-init-local-env:
 
 prod-init: _prod-assert-user _prod-create-dirs _prod-init-cluster
 	@echo "Deploying simox..."
+
+# Regenerate the production .env on the prod server (as root). deploy.sh also
+# does this automatically on every deploy, before cron is installed.
+prod-gen-env:
+	@bin/prod/gen-env.sh
 
 _prod-assert-user:
 	@bin/prod/assert-user.sh "$(PROD_USER)"

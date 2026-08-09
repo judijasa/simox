@@ -83,9 +83,12 @@ SetEnv PHPRUN_REUTER_INI /etc/simox/reuter.ini
 Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
 - **`PHPRUN_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class. If unset, `etc/reuter.ini` inside the repo is used (CLI only).
-- **`EMA_TARGET`** — selects which section of `reuter.ini` to use (e.g. `prod`). Defaults to `local`; the nix-built `phprun` used by cron sets it to `prod`.
+- **`EMA_TARGET`** — selects which section of `reuter.ini` to use (`prod` or `local`). Defaults to `local`.
 
-No `/etc/environment` entries are required: the nix-built `phprun` (wrapped in `flake.nix`) bakes `PHPRUN_REPO_PATH=/srv/apps/simox`, `PHPRUN_LOG_PATH=/var/log/simox`, `PHPRUN_REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` into the binary shipped by `nix build`.
+No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
+
+- **dev** — `make dev-init` runs `bin/dev/init-local-env.sh`, which writes `.env` in the repo root with `PHPRUN_REPO_PATH=$SIMOX_REPO_PATH`, `PHPRUN_LOG_PATH=$SIMOX_LOG_PATH`, `PHPRUN_REUTER_INI=$SIMOX_REPO_PATH/etc/reuter.ini` and `EMA_TARGET=local`.
+- **prod** — every deploy regenerates `/srv/apps/simox/.env` with `PHPRUN_REPO_PATH=/srv/apps/simox`, `PHPRUN_LOG_PATH=/var/log/simox`, `PHPRUN_REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` (via `bin/prod/gen-env.sh`, which fails loudly if the file would be incomplete — a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong `reuter.ini` section).
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
