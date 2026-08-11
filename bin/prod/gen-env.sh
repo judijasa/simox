@@ -19,11 +19,11 @@ ENV_FILE="$TARGET_DIR/.env"
 {
     printf '# Production environment (git-ignored, regenerated on every deploy).
 '
-    printf 'export PHPRUN_REPO_PATH=/srv/apps/simox
+    printf 'export REPO_PATH=/srv/apps/simox
 '
-    printf 'export PHPRUN_LOG_PATH=/var/log/simox
+    printf 'export REPO_LOG=/var/log/simox
 '
-    printf 'export PHPRUN_REUTER_INI=/etc/simox/reuter.ini
+    printf 'export REUTER_INI=/etc/simox/reuter.ini
 '
     printf 'export EMA_TARGET=prod
 '
@@ -31,7 +31,7 @@ ENV_FILE="$TARGET_DIR/.env"
 
 # Deploy-time guard: fail loudly instead of silently misrouting prod cron
 # jobs to the framework's default (local) configuration.
-for _need in 'export PHPRUN_REPO_PATH=/srv/apps/simox' 'export PHPRUN_LOG_PATH=/var/log/simox' 'export PHPRUN_REUTER_INI=/etc/simox/reuter.ini' 'export EMA_TARGET=prod'; do
+for _need in 'export REPO_PATH=/srv/apps/simox' 'export REPO_LOG=/var/log/simox' 'export REUTER_INI=/etc/simox/reuter.ini' 'export EMA_TARGET=prod'; do
     grep -qxF "$_need" "$ENV_FILE" || {
         echo "ERROR: $ENV_FILE is missing required line: $_need" >&2
         exit 1

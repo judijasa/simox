@@ -34,7 +34,7 @@ flight_checks() {
       exit 1
   fi
   
-  if [[ "$PWD" != "$SIMOX_REPO_PATH" ]]
+  if [[ "$PWD" != "$REPO_PATH" ]]
   then
     echo "This command must be executed from the repository's root directory."
     exit 1
@@ -135,7 +135,7 @@ deploy_repo_remotely() {
 
       # Piggyback: Update cron jobs from #[CronJob] attributes in source
       echo 'Updating cron jobs...' >&2
-      SIMOX_REPO_PATH=\"\$FINAL_DIR\" php \"\$FINAL_DIR/bin/update-cron-manifest\" > /etc/cron.d/simo-orchestrator
+      REPO_PATH=\\\"\\$FINAL_DIR\\\" php \\\"\\$FINAL_DIR/bin/update-cron-manifest\\\" > /etc/cron.d/simo-orchestrator
       chmod 644 /etc/cron.d/simo-orchestrator
       systemctl restart cron || systemctl restart crond
       echo 'Cron jobs updated.' >&2
@@ -259,7 +259,7 @@ deploy_website() {
   # The repo dir is recreated on each deploy, so www-data traversal must be restored each time.
   # One-time setup (manual): chmod o+x /srv /srv/apps (Debian/AppArmor needs no relabeling);
   # configure Apache vhost DocumentRoot to $REMOTE_TARGET_DIR/public, and set
-  # SetEnv PHPRUN_REUTER_INI <path-to-reuter.ini> in the vhost.
+  # SetEnv REUTER_INI <path-to-reuter.ini> in the vhost.
   ssh "root@$REMOTE_HOST" "chmod o+x '$REMOTE_TARGET_DIR'"
 }
 

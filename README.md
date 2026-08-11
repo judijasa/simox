@@ -78,17 +78,17 @@ DocumentRoot "/srv/apps/simox/public"
 <Directory "/srv/apps/simox/public">
     Require all granted
 </Directory>
-SetEnv PHPRUN_REUTER_INI /etc/simox/reuter.ini
+SetEnv REUTER_INI /etc/simox/reuter.ini
 ```
 Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
-- **`PHPRUN_REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class. If unset, `etc/reuter.ini` inside the repo is used (CLI only).
+- **`REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class. If unset, `etc/reuter.ini` inside the repo is used (CLI only).
 - **`EMA_TARGET`** — selects which section of `reuter.ini` to use (`prod` or `local`). Defaults to `local`.
 
 No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
 
-- **dev** — `make dev-init` runs `bin/dev/init-local-env.sh`, which writes `.env` in the repo root with `PHPRUN_REPO_PATH=$SIMOX_REPO_PATH`, `PHPRUN_LOG_PATH=$SIMOX_LOG_PATH`, `PHPRUN_REUTER_INI=$SIMOX_REPO_PATH/etc/reuter.ini` and `EMA_TARGET=local`.
-- **prod** — every deploy regenerates `/srv/apps/simox/.env` with `PHPRUN_REPO_PATH=/srv/apps/simox`, `PHPRUN_LOG_PATH=/var/log/simox`, `PHPRUN_REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` (via `bin/prod/gen-env.sh`, which fails loudly if the file would be incomplete — a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong `reuter.ini` section).
+- **dev** — `make dev-init` runs `bin/dev/init-local-env.sh`, which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/etc/reuter.ini` and `EMA_TARGET=local`.
+- **prod** — every deploy regenerates `/srv/apps/simox/.env` with `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` (via `bin/prod/gen-env.sh`, which fails loudly if the file would be incomplete — a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong `reuter.ini` section).
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash

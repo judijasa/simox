@@ -19,7 +19,7 @@ $schedules = [
     'monthly' => '@monthly',
 ];
 
-$repo_root = getenv('SIMOX_REPO_PATH') ?: getcwd();
+$repo_root = getenv('REPO_PATH') ?: getcwd();
 $nix_bin   = '/usr/local/simox/result/bin';
 $src_dir   = $repo_root . '/src';
 

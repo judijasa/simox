@@ -34,10 +34,10 @@ function memory_cleaning(): void
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
 {
-    // The repo-root .env (loaded by the nix phprun wrapper) provides PHPRUN_LOG_PATH.
-    $log_dir = getenv('PHPRUN_LOG_PATH');
+    // The repo-root .env (loaded by the nix phprun wrapper) provides REPO_LOG.
+    $log_dir = getenv('REPO_LOG');
     if ($log_dir === false || $log_dir === '') {
-        Logger::info('PHPRUN_LOG_PATH not set. Skipping log trimming.');
+        Logger::info('REPO_LOG not set. Skipping log trimming.');
         return;
     }
     $max_size = 1_000_000; // 1MB per log file
@@ -67,8 +67,8 @@ function nix_store_gc(): void
 
     run_nix_store_command($nix_store, '--gc');
     // --optimise hard-links duplicated store paths (eg same package built
-    // from different nixpkgs revisions). Disable with SIMOX_NIX_GC_OPTIMISE=0.
-    if (getenv('SIMOX_NIX_GC_OPTIMISE') !== '0') {
+    // from different nixpkgs revisions). Disable with NIX_GC_OPTIMISE=0.
+    if (getenv('NIX_GC_OPTIMISE') !== '0') {
         run_nix_store_command($nix_store, '--optimise');
     }
 }
