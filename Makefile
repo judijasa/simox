@@ -2,15 +2,18 @@
 
 SHELL := $(shell which bash 2>/dev/null)
 
-ifndef SIMOX_VAR_PATH
-$(error SIMOX_VAR_PATH is not set in the environment)
-endif
-ifndef MYSQL_DATA_DIR
-$(error MYSQL_DATA_DIR is not set in the environment)
-endif
-ifndef PROD_USER
-$(error PROD_USER is not set in the environment)
-endif
+# Machine paths are derived from the repo root and owned by this Makefile
+# (not by the environment): .env is a regenerated snapshot and nothing
+# exports these into the shell anymore. The defaults let every target run
+# standalone, e.g. `make prod-init` via ssh where no env vars exist.
+SIMOX_REPO_PATH = $(CURDIR)
+SIMOX_VAR_PATH = $(SIMOX_REPO_PATH)/var
+SIMOX_LOG_PATH = $(SIMOX_VAR_PATH)/log
+MYSQL_BASE_DIR = $(SIMOX_VAR_PATH)/mariadb
+MYSQL_DATA_DIR = $(MYSQL_BASE_DIR)/data
+MYSQL_UNIX_PORT = $(MYSQL_BASE_DIR)/mysql.sock
+MYSQL_PID_FILE = $(MYSQL_BASE_DIR)/mysql.pid
+PROD_USER = simox
 
 _dev-init: DEV_VAR_DIR = $(SIMOX_VAR_PATH)
 _dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)

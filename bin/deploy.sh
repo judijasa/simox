@@ -280,7 +280,7 @@ main() {
   local INIT="$INIT"
   local REMOTE_HOST="${1:?ERROR: Missing REMOTE_HOST argument. Usage: $0 <remote_host>}"
   flight_checks
-  local PROD_USER="${PROD_USER:?ERROR: PROD_USER environment variable is required}"
+  local PROD_USER="${PROD_USER:?}"
   local REMOTE_TARGET_DIR="/srv/apps/simox"
   local REV=$(git rev-parse HEAD)
 
