@@ -6,6 +6,11 @@ SHELL := $(shell which bash 2>/dev/null)
 # (not by the environment): .env is a regenerated snapshot and nothing
 # exports these into the shell anymore. The defaults let every target run
 # standalone, e.g. `make prod-init` via ssh where no env vars exist.
+#
+# PROD_USER (and DEPLOY_*) come from the committed etc/deploy.conf —
+# shared with the framework `deploy` CLI; `?=` keeps the default when
+# the file is absent (subdirectory runs).
+-include etc/deploy.conf
 REPO_PATH = $(CURDIR)
 REPO_VAR = $(REPO_PATH)/var
 REPO_LOG = $(REPO_VAR)/log
@@ -13,7 +18,7 @@ MYSQL_BASE_DIR = $(REPO_VAR)/mariadb
 MYSQL_DATA_DIR = $(MYSQL_BASE_DIR)/data
 MYSQL_UNIX_PORT = $(MYSQL_BASE_DIR)/mysql.sock
 MYSQL_PID_FILE = $(MYSQL_BASE_DIR)/mysql.pid
-PROD_USER = simox
+PROD_USER ?= simox
 
 _dev-init: DEV_VAR_DIR = $(REPO_VAR)
 _dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)
