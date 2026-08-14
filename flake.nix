@@ -59,11 +59,12 @@
         # simox ships that binary directly (phpDaasFrameworkPkg in
         # commonPackages below) — no wrapper, no baked paths, no dev/prod
         # flags. Configuration lives in .env at the repo root: `make
-        # dev-init` generates it in dev, bin/prod/gen-env.sh regenerates it
-        # on every deploy (the deployed repo directory is replaced on each
-        # deploy, so the gitignored .env is recreated there before cron is
-        # installed). Project-agnostic: whichever `phprun` binary wins the
-        # PATH race, it loads the .env of the directory it runs in.
+        # dev-init` generates it in dev; on deploy the framework `gen-env`
+        # CLI regenerates it on the remote (consumer hook
+        # bin/deploy/post-nix.sh — the deployed repo directory is replaced
+        # on each deploy, so the gitignored .env is recreated there before
+        # cron is installed). Project-agnostic: whichever `phprun` binary
+        # wins the PATH race, it loads the .env of the directory it runs in.
 
         # Common packages shared by dev and prod. phpDaasFrameworkPkg ships
         # the phprun CLI: its bin/phprun loads the repo-root .env from the
