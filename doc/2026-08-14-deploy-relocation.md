@@ -84,8 +84,13 @@ environment, so it is the wrong home for project-static deploy parameters.
       Validated: `bash -n`/`php -l`, cron-manifest output byte-identical to
       the old script, gen-env fail-fast tests, deploy CLI smoke tests,
       sandbox end-to-end run of `post-nix.sh` (stubbed systemctl), framework
-      `nix build` (ships all four CLIs). **Not committed (both repos).**
-- [ ] Phase 4 — validation, simox cleanup, docs, pin bumps.
+      `nix build` (ships all four CLIs). **Committed:** framework `6883f00`
+      (pushed to origin/main), simox `f954590`.
+- [ ] Phase 4 — staging test pending; cleanup, docs and pin bumps DONE
+      (simox `Makefile` shrunk to dev-only; `bin/deploy.sh`,
+      `bin/update-cron-manifest`, `bin/prod/*` removed; `README.md` +
+      `doc/prod-user-setup.md` updated; `flake.lock` + `composer.lock`
+      pinned to `6883f00`). Uncommitted.
 
 ### Next actions (in order)
 1. Phase 2 (simox): create `etc/deploy.conf` (committed); update
@@ -101,7 +106,11 @@ environment, so it is the wrong home for project-static deploy parameters.
    deps). Simox ships **post-nix.sh**, not post-swap.sh. Uncommitted (both
    repos). **Ask the user before committing/pushing.**
 3. Phase 4: staging test, remove old scripts, update docs, bump pins
-   (framework must be pushed first).
+   (framework must be pushed first). — Mostly DONE: framework `6883f00`
+   pushed; old scripts removed; Makefile shrunk; docs updated; pins bumped
+   (uncommitted in simox). Remaining: end-to-end `deploy` test on a staging
+   host (needs the remote host + branch `main` — see Gotchas), then commit
+   the simox Phase 4 changes.
 
 ### Gotchas for the next session
 - **Commit policy:** never stage/commit without explicit user approval; always
@@ -186,14 +195,20 @@ environment, so it is the wrong home for project-static deploy parameters.
   end-to-end run of simox `post-nix.sh` (stubbed systemctl, real framework
   CLIs); framework `nix build` artifact inspection.
 
-### Phase 4 — Validation & simox cleanup (pending)
+### Phase 4 — Validation & simox cleanup (mostly done; staging test pending)
 
-- End-to-end `deploy` test on a staging host; `--init` provisions via hook.
-- Remove `bin/deploy.sh`, `bin/prod/*`, `bin/update-cron-manifest`; shrink the
-  Makefile to `dev-init`.
-- Update docs: `README.md`, `doc/prod-user-setup.md`, this file.
-- Bump simox pins (`flake.lock` + `composer.lock`) to the new framework commit
-  (requires pushing the framework commit first).
+- [ ] End-to-end `deploy` test on a staging host; `--init` provisions via
+      hook. **Requires:** a reachable remote host (root + PROD_USER ssh
+      access) and the simox branch `main` (the deploy flight checks refuse
+      other branches). Run `deploy --init <host>` from the repo root inside
+      `nix develop`; verify repo swap, `.env` regeneration, cron install
+      (`/etc/cron.d/simo-orchestrator`), and provisioned dirs.
+- [x] Remove `bin/deploy.sh`, `bin/prod/*`, `bin/update-cron-manifest`; shrink
+      the Makefile to dev-only (prod provisioning now lives in
+      `bin/provision.sh`, driven by the framework `deploy --init`).
+- [x] Update docs: `README.md`, `doc/prod-user-setup.md`, this file.
+- [x] Bump simox pins (`flake.lock` + `composer.lock`) to the new framework
+      commit `6883f00` (pushed to origin/main first).
 
 ## Open decisions
 

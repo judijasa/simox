@@ -88,13 +88,25 @@ Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be o
 No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
 
 - **dev** — `make dev-init` runs `bin/dev/init-local-env.sh`, which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/etc/reuter.ini` and `EMA_TARGET=local`.
-- **prod** — every deploy regenerates `/srv/apps/simox/.env` with `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod` (via `bin/prod/gen-env.sh`, which fails loudly if the file would be incomplete — a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong `reuter.ini` section).
+- **prod** — every deploy regenerates `/srv/apps/simox/.env` from the
+  committed `etc/env.prod` template via the framework `gen-env` CLI (consumer
+  hook `bin/deploy/post-nix.sh`), writing `REPO_PATH=/srv/apps/simox`,
+  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and
+  `EMA_TARGET=prod`. `gen-env` fails loudly if the file would be incomplete —
+  a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong
+  `reuter.ini` section.
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
-bin/deploy.sh --init <host>
+deploy --init <host>
 ```
-`--init` provisions system directories (`/srv/apps`, `/var/log/simox`, `/var/lib/simox/mariadb`) in addition to deploying the repo.
+`deploy` runs the framework deploy CLI (shipped via the flake). `--init`
+additionally runs `bin/provision.sh` on the remote, which provisions system
+directories (`/srv/apps`, `/var/log/simox`, `/var/lib/simox/mariadb`) and
+initializes MariaDB. Every deploy then runs `bin/deploy/post-nix.sh` on the
+remote, regenerating `.env` and installing cron
+(`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
+attributes.
 
 ## Dependency Pinning
 

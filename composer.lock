@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "696c974c73b0790b162f4e97c26d42eb1283a013"
+                "reference": "6883f00cffcd7b07778ee18247d195622726faf0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/696c974c73b0790b162f4e97c26d42eb1283a013",
-                "reference": "696c974c73b0790b162f4e97c26d42eb1283a013",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/6883f00cffcd7b07778ee18247d195622726faf0",
+                "reference": "6883f00cffcd7b07778ee18247d195622726faf0",
                 "shasum": ""
             },
             "require": {
@@ -131,7 +131,10 @@
             },
             "default-branch": true,
             "bin": [
-                "bin/phprun"
+                "bin/phprun",
+                "bin/deploy",
+                "bin/gen-env",
+                "bin/cron-manifest"
             ],
             "type": "composer-plugin",
             "extra": {
@@ -158,7 +161,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-08-09T17:04:18+00:00"
+            "time": "2026-08-14T23:17:44+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",

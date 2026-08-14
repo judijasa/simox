@@ -109,11 +109,11 @@
         "utils": "utils_3"
       },
       "locked": {
-        "lastModified": 1786295058,
-        "narHash": "sha256-37AcDMx2oXY3EXquEstr/YpiI9KkDmgoEgo/9qx1fGg=",
+        "lastModified": 1786749464,
+        "narHash": "sha256-YsO33lim25Pu1QmM8nUNaVPHi8b1IKeApI9syXldq1U=",
         "owner": "judijasa",
         "repo": "php_daas_framework",
-        "rev": "696c974c73b0790b162f4e97c26d42eb1283a013",
+        "rev": "6883f00cffcd7b07778ee18247d195622726faf0",
         "type": "github"
       },
       "original": {
