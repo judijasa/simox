@@ -95,13 +95,19 @@ design stays extensible (parameterized scripts, scripts on PATH) but it is
 
 ### Phase 3 — docs
 
-- [ ] `simox/README.md` — dev-init `.env` description → framework's
+- [x] `simox/README.md` — dev-init `.env` description → framework's
       `init-local-env.sh` (shipped via `phpDaasFrameworkPkg`).
-- [ ] `simox/doc/2026-08-14-deploy-relocation.md` — references to
+- [x] `simox/doc/2026-08-14-deploy-relocation.md` — references to
       `bin/dev/init-local-env.sh` (L69, L97, L161) and `init-cluster.sh`
-      (L184) → framework-owned scripts.
-- [ ] `simox/doc/todo.txt` — "Adapt the recent changes in simox to
+      (L184) → framework-owned scripts (the L184 `init-cluster.sh` was
+      clarified as the consumer-side `bin/prod/init-cluster.sh`
+      consolidated into `bin/provision.sh`, distinct from the framework's
+      dev `init-cluster.sh`).
+- [x] `simox/doc/todo.txt` — "Adapt the recent changes in simox to
       php_daas_framework" / "copy or relocate Makefile" items updated.
+- Verified: `grep` for `bin/dev/init-local-env` / `bin/dev/init-cluster`
+      across `*.md` finds no stale consumer-side references (only the
+      env-relocation doc's own history sections).
 
 ## Notes
 

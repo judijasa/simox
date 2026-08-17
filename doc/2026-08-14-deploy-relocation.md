@@ -66,7 +66,8 @@ environment, so it is the wrong home for project-static deploy parameters.
       (+ `.env` for `REPO_PATH`); framework ships `etc/deploy.conf.template`;
       README updated. Committed in `275a795`.
 - [x] Phase 2 — simox: `etc/deploy.conf` created (PROD_USER + DEPLOY_*);
-      `bin/dev/init-local-env.sh` no longer generates `PROD_USER` into `.env`;
+      `init-local-env.sh` (framework-owned, on PATH) no longer generates
+      `PROD_USER` into `.env`;
       Makefile sources `etc/deploy.conf` (`PROD_USER ?= simox` fallback);
       flake.nix shellHook comment synced. Validated: config sources cleanly,
       `.env` regenerated without PROD_USER, `make -pn` resolves PROD_USER from
@@ -94,7 +95,7 @@ environment, so it is the wrong home for project-static deploy parameters.
 
 ### Next actions (in order)
 1. Phase 2 (simox): create `etc/deploy.conf` (committed); update
-   `bin/dev/init-local-env.sh` if `PROD_USER` stops being generated into
+   `init-local-env.sh` if `PROD_USER` stops being generated into
    `.env`. **Ask the user before committing.** — DONE, committed `a298e43`.
 2. Phase 3: relocate `cron-manifest` / `gen-env`; decide `prod-init` approach;
    create simox `bin/deploy/post-swap.sh` (currently missing — simox deploy
@@ -158,7 +159,7 @@ environment, so it is the wrong home for project-static deploy parameters.
   added `CRON_FILE`/`CRON_USER`.)
 - `.env` stays machine-specific: `REPO_PATH`, `REPO_LOG`, `REUTER_INI`,
   `EMA_TARGET`, `MYSQL_*`, `DBUSER`. `PROD_USER` removed from
-  `bin/dev/init-local-env.sh` (carried by `etc/deploy.conf`).
+  `init-local-env.sh` (framework-owned; carried by `etc/deploy.conf`).
 - Makefile sources `etc/deploy.conf` (`PROD_USER ?= simox` fallback).
 
 ### Phase 3 — Relocate the remaining deploy tools — DONE (uncommitted in both repos)
@@ -180,9 +181,12 @@ environment, so it is the wrong home for project-static deploy parameters.
   `CRON_FILE` install + cron restart); the swap-time `post-swap.sh` hook
   contract is unchanged but simox does not ship it (nothing swap-time to do).
 - **Provisioning decision (open decision #1 resolved):** consumer hook —
-  simox `bin/provision.sh` consolidates `assert-user.sh`/`create-dirs.sh`/
-  `init-cluster.sh` (provisioning is machine-state data; a framework
-  `provision` CLI would need a new config schema for marginal benefit).
+  simox `bin/provision.sh` consolidates `bin/prod/assert-user.sh`/
+  `bin/prod/create-dirs.sh`/`bin/prod/init-cluster.sh` (prod provisioning
+  is machine-state data; a framework `provision` CLI would need a new
+  config schema for marginal benefit). Note: this prod init-cluster is
+  consumer-side, distinct from the framework's dev `init-cluster.sh`
+  (shipped on PATH for `make dev-init`).
   `DEPLOY_INIT_CMD="bash bin/provision.sh"`. Note: prod keeps
   `mariadb-install-db` without the dev `--auth-root-authentication-method`
   flag (unix_socket auth vs dev sandbox).
