@@ -57,11 +57,12 @@ likely to grow. Relocating the DB/logs to the `/srv` partition is explicitly
 ## How prod resolves its paths today
 
 Prod cron jobs and scripts do **not** read `flake.nix` (that shellHook is
-dev-only, deriving `SIMOX_VAR_PATH=$PWD/var`). Instead, when not in a nix shell
-they `source /etc/environment` for `SIMOX_REPO_PATH` and `SIMOX_LOG_PATH`
-(`phprun`, `src/scripts/indexer/main.sh:6`). Nothing in the repo writes
-`/etc/environment` — it is a **manual, one-time** server file and therefore a
-migration touchpoint.
+dev-only, deriving `SIMOX_VAR_PATH=$PWD/var`). Instead, prod runs the
+nix-built `phprun`, whose wrapper bakes `PHPRUN_REPO_PATH=/srv/apps/simox`,
+`PHPRUN_LOG_PATH=/var/log/simox`, `PHPRUN_REUTER_INI=/etc/simox/reuter.ini`
+and `EMA_TARGET=prod` at build time. Nothing sources `/etc/environment` — no
+server-side env file is required (the old `src/scripts/indexer/main.sh` did,
+but it has been deleted).
 
 Deploy-time path assumptions live in `bin/deploy.sh`:
 - `REMOTE_TARGET_DIR="/home/${PROD_USER}/apps/simox"`  (`main`, ~line 269)
@@ -104,9 +105,10 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 
 ### Phase 3 — Server one-time manual steps
 
-- [ ] `/etc/environment`: no longer needed — the nix-built `phprun`
-      wrapper bakes `PHPRUN_REPO_PATH`, `PHPRUN_LOG_PATH`,
-      `PHPRUN_REUTER_INI` and `EMA_TARGET=prod` at build time.
+- [x] `/etc/environment`: **not used** — the nix-built `phprun` wrapper
+      bakes `PHPRUN_REPO_PATH`, `PHPRUN_LOG_PATH`,
+      `PHPRUN_REUTER_INI` and `EMA_TARGET=prod` at build time; no
+      entry is ever required (the last consumer, `main.sh`, is gone).
 - [ ] Apache vhost: point `DocumentRoot` and `<Directory>` to
       `/srv/apps/simox/public`; keep `SetEnv PHPRUN_REUTER_INI <path>`.
 - [ ] First cutover: deploy once to `/srv/apps/simox` (`bin/deploy.sh --init`),
@@ -139,7 +141,8 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 - **Ownership unchanged** — `/srv/apps/simox` is owned by the unprivileged
   `PROD_USER`; Apache runs as its own worker uid. Same confinement as before.
 - **Dev is unaffected** — `flake.nix` derives paths from `$PWD`; the dev shell
-  keeps `var/` inside the repo. Only prod uses `/var/log/simox` (via
-  `/etc/environment`). This dev/prod divergence already exists and is intended.
+  keeps `var/` inside the repo. Only prod uses `/var/log/simox` (baked into the
+  nix-built `phprun` wrapper). This dev/prod divergence already exists and is
+  intended.
 - Related: [[project_db_routing]] (`doc/db-routing.md`) — same "server has no
   git, repo dir is overwritten each deploy" model this migration preserves.
