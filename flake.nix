@@ -13,21 +13,19 @@
 
     utils.url = "github:numtide/flake-utils";
 
-    ema.url = "github:judijasa/ema";
-
     # Public repo. Fetched through git (respects .gitignore), so runtime
     # artifacts such as var/mariadb/mysql.sock never enter the Nix store
     # (Nix rejects sockets with "unsupported type").
     php_daas_framework.url = "github:judijasa/php_daas_framework";
   };
 
-  outputs = { self, nixpkgs, utils, ema, php_daas_framework }:
+  outputs = { self, nixpkgs, utils, php_daas_framework }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         # Pinned packages evaluated strictly from our historical commit input
         # pkgsPinned = import nixpkgs-pinned { inherit system; };
-        
+
         #bashPkg = pkgsPinned.bash;
         bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
@@ -35,23 +33,16 @@
         # jqPkg = pkgsPinned.jq;
         jqPkg = pkgs.jq;
         mariadbPkg = pkgs.mariadb_118;
-        # phpPkg = pkgs.php84;  # without extensions
-        phpPkg = pkgs.php84.withExtensions ({ all, enabled }: 
-          enabled ++ [
-            all.mysqli 
-            all.pdo_mysql
-            all.bz2  # required by jerome-breton composer dependency
-          ]
-        );
-        # Make sure Composer uses this php, as it has the required extensions.
-        # phpComposer = pkgs.php84Packages.composer; (discarded)
-        phpComposer = pkgs.php84Packages.composer.override {
-          php = phpPkg;
-        };
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
-        emaPkg = ema.packages.${system}.default;
+
+        # php/composer/ema come from php_daas_framework, which owns the PHP
+        # runtime + required extension set (mysqli/pdo_mysql for the DB
+        # layer, bz2 for its composer deps), the composer override, and the
+        # pinned `ema` input. `runtime` is a symlinkJoin of php + composer.
+        phpRuntime = php_daas_framework.packages.${system}.runtime;
+        emaPkg = php_daas_framework.packages.${system}.ema;
         phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
 
         # simox↔php_daas_framework integration point: the framework's own
@@ -77,8 +68,7 @@
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
           emaPkg
-          phpComposer
-          phpPkg
+          phpRuntime
           phpDaasFrameworkPkg
           tmuxPkg
         ];
@@ -118,7 +108,7 @@
             GREEN='\033[0;32m'
             NC='\033[0m' # No Color
             export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
-       
+
             # Inherit nix shell env in tmux (doesn't include PS1)
             # Requires `set -g default-command ...` in .tmux.conf
             PROJECT_NAME="simox"
