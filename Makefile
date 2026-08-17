@@ -1,5 +1,9 @@
 # simox Makefile (dev-only; production deploy lives in the php_daas_framework
 # `deploy` CLI + consumer hooks bin/deploy/post-nix.sh and bin/provision.sh).
+# Generic dev-init steps delegate to the framework scripts shipped by
+# phpDaasFrameworkPkg (init-cluster.sh, init-local-env.sh — on PATH inside
+# `nix develop`); this Makefile keeps only the consumer-specific steps
+# (git hooks, hosts).
 
 SHELL := $(shell which bash 2>/dev/null)
 
@@ -34,9 +38,9 @@ help:
 dev-init: _dev-assert-nix _dev-init
 
 _dev-assert-nix:
-	@if [ -z "$$IN_NIX_SHELL" ]; then 
-	    echo "ERROR: This target must be run inside 'nix develop'"; 
-	    exit 1; 
+	@if [ -z "$$IN_NIX_SHELL" ]; then \
+	    echo "ERROR: This target must be run inside 'nix develop'"; \
+	    exit 1; \
 	fi
 
 _dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
@@ -50,7 +54,7 @@ _dev-create-dirs:
 	mkdir -p $(DEV_LOG_DIR) $(DEV_DB_DATA_DIR)
 
 _dev-init-cluster:
-	@bin/dev/init-cluster.sh "$(DEV_DB_DATA_DIR)" "$(DEV_DB_PID_FILE)" "$(DEV_DB_UNIX_PORT)"
+	@init-cluster.sh "$(DEV_DB_DATA_DIR)" "$(DEV_DB_PID_FILE)" "$(DEV_DB_UNIX_PORT)"
 
 _dev-init-composer:
 	@echo "Removing vendor/ if exists..." 
@@ -62,4 +66,4 @@ _dev-update-hosts:
 	@bin/dev/update-hosts.sh "$(TAG_BEGIN)" "$(TAG_END)"
 
 _dev-init-local-env:
-	@bin/dev/init-local-env.sh
+	@init-local-env.sh
