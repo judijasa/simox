@@ -94,10 +94,18 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` from the
   committed `etc/env.prod` template via the framework `gen-env` CLI (consumer
   hook `bin/deploy/post-nix.sh`), writing `REPO_PATH=/srv/apps/simox`,
-  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and
-  `EMA_TARGET=prod`. `gen-env` fails loudly if the file would be incomplete —
-  a missing `EMA_TARGET=prod` would silently route cron jobs to the wrong
-  `reuter.ini` section.
+  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini`, the
+  `MYSQL_*` datadir/socket/pid paths (derived from `DEPLOY_DB_BASE` in
+  `etc/deploy.conf`) and `EMA_TARGET=prod`. `gen-env` fails loudly if the
+  file would be incomplete — a missing `EMA_TARGET=prod` would silently
+  route cron jobs to the wrong `reuter.ini` section.
+
+The production MariaDB instance is provisioned by `deploy --init` (framework
+`bin/provision.sh`): datadir/socket/pid live under `/var/lib/simox/mariadb`,
+the per-project defaults file is `/etc/simox/my.cnf`, and the daemon runs as
+a systemd unit `mariadb@simox` — enabled exactly once, socket-only by
+default, durable across reboots. Never start `mysqld` manually in
+production; re-deploys leave the running instance untouched.
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
