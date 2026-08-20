@@ -70,7 +70,10 @@ To connect to a production server via `ema`, two additional config files are nee
 
 ## Production Server Setup
 
-One-time steps to provision a new production server:
+One-time steps to provision a new production server. The app user
+(`PROD_USER` in `etc/deploy.conf`) must exist with SSH access first —
+see `_my_notes_/prod-user-setup.md` for the exact steps (create the user
+with `useradd --create-home`, lock the password, install the SSH key):
 
 **1. Apache vhost** — point the vhost at the deploy directory and set the config path:
 ```apache
@@ -100,11 +103,13 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 ```bash
 deploy --init <host>
 ```
-`deploy` runs the framework deploy CLI (shipped via the flake). `--init`
-additionally runs `bin/provision.sh` on the remote, which provisions system
-directories (`/srv/apps`, `/var/log/simox`, `/var/lib/simox/mariadb`) and
-initializes MariaDB. Every deploy then runs `bin/deploy/post-nix.sh` on the
-remote, regenerating `.env` and installing cron
+`deploy` runs the framework deploy CLI (shipped via the flake). `--init` runs the framework's generic `bin/provision.sh` on the remote
+(asserts the app user, creates system directories `/srv/apps`,
+`/var/log/simox`, `/var/lib/simox/mariadb` and initializes MariaDB),
+then the consumer-specific `DEPLOY_INIT_CMD`
+(`bin/deploy/provision-extra.sh`: Apache www-data traversal).
+Every deploy then runs `bin/deploy/post-nix.sh` on the remote,
+regenerating `.env` and installing cron
 (`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
 attributes.
 

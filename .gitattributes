@@ -2,7 +2,7 @@
 # `git archive`, which honors `export-ignore`. These paths are omitted from
 # the deployed tarball while remaining present in dev checkouts. Everything
 # the remote needs at runtime (composer.json/lock, src/, public/, pkg/, srv/,
-# etc/, bin/deploy, bin/provision.sh, LICENSE, README.md) stays in the archive.
+# etc/, bin/deploy/ hooks, LICENSE, README.md) stays in the archive.
 
 # Linting and git tooling
 /.pre-commit-config.yaml export-ignore
