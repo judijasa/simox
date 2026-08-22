@@ -35,6 +35,9 @@ export PATH="$DEPLOY_NIX_RESULT_DIR/result/bin:$PATH"
 echo "    Regenerating production .env..."
 gen-env "$PWD"
 
+echo "    Refreshing /etc reuter.ini [prod] connectivity..."
+gen-reuter "$REUTER_INI"
+
 echo "    Updating cron jobs from #[CronJob]/#[Agent] attributes..."
 cron-manifest > "$CRON_FILE"
 chmod 644 "$CRON_FILE"

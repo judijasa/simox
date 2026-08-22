@@ -11,7 +11,7 @@
 
 # Ignore files
 /etc/reuter.ini
-/etc/dev-machines.ini
+/etc/machines.ini
 /etc/hosts
 .env
 .phpstan-result-cache.php

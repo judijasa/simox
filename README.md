@@ -63,10 +63,10 @@ php -S localhost:8000
 Navigate to the website: `http://localhost:8000/public/index.php`
 
 ## Remote Access
-To connect to a production server via `ema`, two additional config files are needed:
+To connect to a production server via `ema`, the machine registry config is needed:
 
-- `etc/dev-machines.ini` — maps your machine hostname to your prod DB username (`hostname=dbuser`). Run `hostname` to find yours. When set, `ema` uses it as the default DB user for remote connections; otherwise you must set `DBUSER` explicitly. Copy from `etc/dev-machines.ini.template`. In a private fork, this file (once removed from `.gitignore`) can also serve as a central team registry: all members' entries committed together so that `ema init db` creates each member's DB user and privileges in one shot. The latter functionality is not yet featured by ema.
-- `etc/hosts` — maps prod server hostnames to IP addresses (merged into `/etc/hosts` by `make dev-init`). Copy from `etc/hosts.template` and add your server entries.
+- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[dev]` section maps your machine hostname to your prod DB username (`hostname=dbuser`) — run `hostname` to find yours; `ema` uses it as the default DB user for remote connections (`DBUSER`). The `[prod]` section lists the prod servers by ZeroTier IP; the single entry with a non-empty value (`ip=simo`) is the database host, empty entries are app-only servers. `deploy` targets every `[prod]` host by default; the DB host is the only one that gets a MariaDB instance on `--init`.
+- `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 
 ## Production Server Setup
 
@@ -94,30 +94,40 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` from the
   committed `etc/env.prod` template via the framework `gen-env` CLI (consumer
   hook `bin/deploy/post-nix.sh`), writing `REPO_PATH=/srv/apps/simox`,
-  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini`, the
-  `MYSQL_*` datadir/socket/pid paths (derived from `DEPLOY_DB_BASE` in
-  `etc/deploy.conf`) and `EMA_TARGET=prod`. `gen-env` fails loudly if the
-  file would be incomplete — a missing `EMA_TARGET=prod` would silently
-  route cron jobs to the wrong `reuter.ini` section.
+  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and
+  `EMA_TARGET=prod`. The same hook then runs `gen-reuter "$REUTER_INI"` to
+  refresh the `/etc/simox/reuter.ini` `[prod]` section (SERVER/PORT/DBNAME)
+  from `etc/machines.ini` + `etc/deploy.conf` — the DB host's ZeroTier IP and
+  `DEPLOY_DB_PORT` — preserving the credentials already in the file.
+  `gen-env` fails loudly if the file would be incomplete — a missing
+  `EMA_TARGET=prod` would silently route cron jobs to the wrong
+  `reuter.ini` section.
 
 The production MariaDB instance is provisioned by `deploy --init` (framework
-`bin/provision.sh`): datadir/socket/pid live under `/var/lib/simox/mariadb`,
-the per-project defaults file is `/etc/simox/my.cnf`, and the daemon runs as
-a systemd unit `mariadb@simox` — enabled exactly once, socket-only by
-default, durable across reboots. Never start `mysqld` manually in
-production; re-deploys leave the running instance untouched.
+`bin/provision.sh`) **only on the database host** (the non-empty `[prod]`
+entry in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
+live under `/var/lib/simox/mariadb`, the per-project defaults file is
+`/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
+enabled exactly once, durable across reboots. When app servers run on other
+hosts, set `DEPLOY_DB_PORT` (and `DEPLOY_DB_BIND` to the DB host's ZeroTier
+IP) in `etc/deploy.conf`: the instance then listens on TCP over ZeroTier so
+both the DB host and the app-only servers can serve the website against the
+same database. Never start `mysqld` manually in production; re-deploys leave
+the running instance untouched.
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
-deploy --init <host>
+deploy --init          # every [prod] host in etc/machines.ini
+deploy --init <host>   # a single prod host (must be in [prod])
 ```
 `deploy` runs the framework deploy CLI (shipped via the flake). `--init` runs the framework's generic `bin/provision.sh` on the remote
 (asserts the app user, creates system directories `/srv/apps`,
-`/var/log/simox`, `/var/lib/simox/mariadb` and initializes MariaDB),
-then the consumer-specific `DEPLOY_INIT_CMD`
+`/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
+and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
 Every deploy then runs `bin/deploy/post-nix.sh` on the remote,
-regenerating `.env` and installing cron
+regenerating `.env`, refreshing `/etc/simox/reuter.ini` `[prod]` via
+`gen-reuter`, and installing cron
 (`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
 attributes.
 

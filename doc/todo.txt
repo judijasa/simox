@@ -1,22 +1,34 @@
-deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
 
-[.] deepseek --resume 39cf2015-8b93-454d-b863-b58f875b9d5c
+[.] Currently we have `deploy --init` creating one mariadb instance per project (ie per repo) in the target server.
+    I want a config that restricts the deployment of such mariadb instance to specific target servers, assuming we
+    have more than one target server and that `deploy --init` deploys to all target servers in the config file.
 
-    [x] php_daas_framework had phprun variable PHPRUN_REPO_PATH to
-        fallback to SIMOX_REPO_PATH. I removed that fallback in
-        php_daas_framework. We need to adapt simox repo to 
-        that change for dev and prod, perhaps with Makefile.
-        DONE: flake.nix wraps phprun with phprunDev (maps SIMOX_* →
-        PHPRUN_* in the dev shell) and phprunProd (bakes
-        /srv/apps/simox, /var/log/simox, /etc/simox/reuter.ini and
-        EMA_TARGET=prod). maintenance.php:trim_log_files reads
-        PHPRUN_LOG_PATH. No /etc/environment entries needed; Apache
-        vhost keeps SetEnv PHPRUN_REUTER_INI (web/mod_php path).
-    [.] After commiting in php_daas_framework, next commit
-        should be to relocate deployment to php_daas_framework.
+[.] Make sure check-php-attributes.php enforces "#[CronJob] requires #[Agent]" in the framework;
+    in fact this enforcement should be consume from the framework by the consumer repos instead
+    of replicating the hook in the consumer repo.
 
-[.] Test 2026-08-06-import-php-runner in simox repo with quick start
-    in README.md
+[d] Currently in simox and php_daas_framework we only check import compatibility between php files
+    using git push hook, not git commit hook. This is to avoid scanning the whole codebase after each commit.
+    But, specially in php_daas_framework this is not a good idea because such repo gets into production
+    not only via git push... wait, it does get into production only via git push. What is true
+    is that it doesn't get into production only through deployment because it is sometimes
+    imported from external repos via nix, but that is an orthogonal issue. This
+    task is therefore DISCARDED.
+
+[.] Check the git hooks. Which one should stay in simox and which ones
+    should be relocated (or copied) to php_daas_framework.
+
+    All should be copied. Include phpstan configuration(s).
+    Also copy .gitignore and .git/info/exclude.
+
+    Makefile part RESOLVED (2026-08-17): the framework ships its own
+    dev-init Makefile + bin/dev scripts; simox keeps the consumer steps
+    (git hooks, hosts) and delegates the generic steps. Copying simox's
+    hooks/ + phpstan configs to the framework is still OPEN. deploy.sh
+    relocation DONE (framework deploy CLI).
+
+    deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
+
 
 [.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
     [.] Add a way to drop a database with ema (see schematic for inspiration).
@@ -27,8 +39,6 @@ deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
     [.] Add vacante.departamento_id
     [.] Modify pipeline.php:insert_vacantes
     [.] Simplify query in public/index.php
-
-[x] adapt public/ to new schema.
 
 [.] Check that
       ema init tables pkg/simo-C196A24801D24B16
@@ -198,6 +208,58 @@ deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] What /var/lib/simox/mariadb/data means:
+
+   -  /var/lib — the standard Linux directory for persistent mutable state (databases, package data).
+      MariaDB's own distro default data dir is /var/lib/mysql.
+   -  simox/ — a project namespace under /var/lib, so simox's state doesn't collide with other apps.
+   -  mariadb/data — the MariaDB data directory (--datadir): where the actual table/index files live.
+
+    So it means "the database files for simox's private MariaDB cluster." The problem you've spotted:
+    that path namespaces the cluster to simox, so another project can't share it.
+    A shared cluster belongs in a neutral location (the distro default /var/lib/mysql, or a dedicated
+    service dir) owned by a shared DB service user (mysql), not a single app's PROD_USER.
+    You've flagged that as a separate future task — and the refactor should set it up so that future
+    change is a one-line config edit, not a code change.  
+
+[x] .gitattributes for php_daas_framework
+
+
+[x] Try to relocate as much as possible the integration between simox and
+    php_daas_framework from simox/flake.nix to php_daas_framework/flake.nix
+    so that it is easier for framework callers to setup their flake.nix.
+
+[x] If possible do not deploy hooks/ directory, nor any git hooks related file.
+
+[x] adapt public/ to new schema.
+
+[x] deepseek --resume 39cf2015-8b93-454d-b863-b58f875b9d5c
+
+    [x] php_daas_framework had phprun variable PHPRUN_REPO_PATH to
+        fallback to SIMOX_REPO_PATH. I removed that fallback in
+        php_daas_framework. We need to adapt simox repo to 
+        that change for dev and prod, perhaps with Makefile.
+        DONE: flake.nix wraps phprun with phprunDev (maps SIMOX_* →
+        PHPRUN_* in the dev shell) and phprunProd (bakes
+        /srv/apps/simox, /var/log/simox, /etc/simox/reuter.ini and
+        EMA_TARGET=prod). maintenance.php:trim_log_files reads
+        PHPRUN_LOG_PATH. No /etc/environment entries needed; Apache
+        vhost keeps SetEnv PHPRUN_REUTER_INI (web/mod_php path).
+    [x] After commiting in php_daas_framework, next commit
+        should be to relocate deployment to php_daas_framework.
+
+[x] Adapt the recent changes in simox to php_daas_framework:
+    we relocated env vars to .env. The latter being generated by
+    Makefile.
+
+    DONE: the framework owns the dev-init machinery — bin/dev/
+    init-local-env.sh, init-cluster.sh, shell-enter.sh and a dev-init
+    Makefile; simox's make dev-init delegates to the framework scripts
+    (on PATH inside nix develop). deploy.sh relocation also DONE
+    (framework deploy CLI).
+
+    deepseek --resume fd0db1d1-12d9-432c-a366-b81e8f9dca10
 
 [x] Make sure pipeline.php works as expected, then clean unnecessary schemas.
 

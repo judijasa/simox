@@ -1,4 +1,0 @@
-# Map dev machine hostnames to their MariaDB username on prod.
-# Format: hostname=dbuser
-# Run `hostname` to find yours, then add a line below.
-# my-hostname=mydbuser
