@@ -65,7 +65,7 @@ Navigate to the website: `http://localhost:8000/public/index.php`
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
 
-- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[dev]` section maps your machine hostname to your prod DB username (`hostname=dbuser`) — run `hostname` to find yours; `ema` uses it as the default DB user for remote connections (`DBUSER`). The `[prod]` section lists the prod servers by ZeroTier IP; the single entry with a non-empty value (`ip=simo`) is the database host, empty entries are app-only servers. `deploy` targets every `[prod]` host by default; the DB host is the only one that gets a MariaDB instance on `--init`.
+- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[dev]` section maps your machine hostname to your prod DB username (`hostname=dbuser`) — run `hostname` to find yours; `ema` uses it as the default DB user for remote connections (`DBUSER`). The `[prod]` section lists the prod servers by ZeroTier IP; the value is a comma-separated list of database names that server hosts (`ip=simo, analytics`), empty entries are app-only servers. Each database maps to exactly one server; a server may host several databases. `deploy` targets every `[prod]` host by default; a server with a non-empty list gets a MariaDB instance on `--init` (one instance serves all its databases).
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 
 ## Production Server Setup
@@ -104,8 +104,8 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   `reuter.ini` section.
 
 The production MariaDB instance is provisioned by `deploy --init` (framework
-`bin/provision.sh`) **only on the database host** (the non-empty `[prod]`
-entry in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
+`bin/provision.sh`) **only on database hosts** (the non-empty `[prod]`
+entries in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
 `/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
 enabled exactly once, durable across reboots. When app servers run on other

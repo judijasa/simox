@@ -6,9 +6,20 @@ DBMS=mariadb
 ADMIN_PASSWORD=
 READER_PASSWORD=
 
-[prod]
-SERVER=
+; Optional: a second local database on the dev sandbox socket.
+[local:analytics]
+SERVER=localhost
 PORT=3306
+DBNAME=analytics
+DBMS=mariadb
+ADMIN_PASSWORD=
+READER_PASSWORD=
+
+; Prod sections are generated per database by gen-reuter (one per mapped
+; database in etc/machines.ini [prod]).
+[simo]
+SERVER=10.147.x.10
+PORT=3307
 DBNAME=simo
 DBMS=mariadb
 ADMIN_PASSWORD=
