@@ -1,34 +1,10 @@
 
-[.] Currently we have `deploy --init` creating one mariadb instance per project (ie per repo) in the target server.
-    I want a config that restricts the deployment of such mariadb instance to specific target servers, assuming we
-    have more than one target server and that `deploy --init` deploys to all target servers in the config file.
+[.] Do we really need to generate reuter.init? If it can be generated why not simply reading the generating config files?
 
-[.] Make sure check-php-attributes.php enforces "#[CronJob] requires #[Agent]" in the framework;
-    in fact this enforcement should be consume from the framework by the consumer repos instead
-    of replicating the hook in the consumer repo.
+    I don't understand how etc/reuter.ini is going to be generated if it has passwords.
 
-[d] Currently in simox and php_daas_framework we only check import compatibility between php files
-    using git push hook, not git commit hook. This is to avoid scanning the whole codebase after each commit.
-    But, specially in php_daas_framework this is not a good idea because such repo gets into production
-    not only via git push... wait, it does get into production only via git push. What is true
-    is that it doesn't get into production only through deployment because it is sometimes
-    imported from external repos via nix, but that is an orthogonal issue. This
-    task is therefore DISCARDED.
-
-[.] Check the git hooks. Which one should stay in simox and which ones
-    should be relocated (or copied) to php_daas_framework.
-
-    All should be copied. Include phpstan configuration(s).
-    Also copy .gitignore and .git/info/exclude.
-
-    Makefile part RESOLVED (2026-08-17): the framework ships its own
-    dev-init Makefile + bin/dev scripts; simox keeps the consumer steps
-    (git hooks, hosts) and delegates the generic steps. Copying simox's
-    hooks/ + phpstan configs to the framework is still OPEN. deploy.sh
-    relocation DONE (framework deploy CLI).
-
-    deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
-
+[.] You still need to fill in (machine data, git-ignored): the actual ZeroTier IPs in each repo's etc/machines.ini and
+    DEPLOY_DB_PORT/DEPLOY_DB_BIND in simox's etc/deploy.conf; DB host firewall must allow the ZeroTier interface on the DB port.
 
 [.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
     [.] Add a way to drop a database with ema (see schematic for inspiration).
@@ -208,6 +184,41 @@
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] Check the git hooks. Which one should stay in simox and which ones
+    should be relocated (or copied) to php_daas_framework.
+
+    All should be copied. Include phpstan configuration(s).
+    Also copy .gitignore and .git/info/exclude.
+
+    Makefile part RESOLVED (2026-08-17): the framework ships its own
+    dev-init Makefile + bin/dev scripts; simox keeps the consumer steps
+    (git hooks, hosts) and delegates the generic steps. Copying simox's
+    hooks/ + phpstan configs to the framework is still OPEN. deploy.sh
+    relocation DONE (framework deploy CLI).
+
+    deepseek --resume 09f5da1c-28d4-46c1-911b-2c9b5a68dad0
+
+[x] Currently we have `deploy --init` creating one mariadb instance per project (ie per repo) in the target server.
+    I want a config that restricts the deployment of such mariadb instance to specific target servers, assuming we
+    have more than one target server and that `deploy --init` deploys to all target servers in the config file.
+
+[d] Make sure check-php-attributes.php enforces "#[CronJob] requires #[Agent]" in the framework;
+    in fact this enforcement should be consumed from the framework by the consumer repos instead
+    of replicating the hook in the consumer repo.
+
+    DISCARDED: The mechanism suggested by LLM for its enforcement is too complicated: relocate
+    check-php-attributes.php from hooks/ to bin/, add the new location to composer.json and
+    also modify flake.nix. Since php-run will already complain during runtime, we can simply
+    let the user add the hook replica manually.
+
+[d] Currently in simox and php_daas_framework we only check import compatibility between php files
+    using git push hook, not git commit hook. This is to avoid scanning the whole codebase after each commit.
+    But, specially in php_daas_framework this is not a good idea because such repo gets into production
+    not only via git push... wait, it does get into production only via git push. What is true
+    is that it doesn't get into production only through deployment because it is sometimes
+    imported from external repos via nix, but that is an orthogonal issue. This
+    task is therefore DISCARDED.
 
 [x] What /var/lib/simox/mariadb/data means:
 

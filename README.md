@@ -96,9 +96,10 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   hook `bin/deploy/post-nix.sh`), writing `REPO_PATH=/srv/apps/simox`,
   `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and
   `EMA_TARGET=prod`. The same hook then runs `gen-reuter "$REUTER_INI"` to
-  refresh the `/etc/simox/reuter.ini` `[prod]` section (SERVER/PORT/DBNAME)
-  from `etc/machines.ini` + `etc/deploy.conf` — the DB host's ZeroTier IP and
-  `DEPLOY_DB_PORT` — preserving the credentials already in the file.
+  refresh the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBNAME, one per
+  database) from `etc/machines.ini` + `etc/deploy.conf` — the DB host's
+  ZeroTier IP and `DEPLOY_DB_PORT` — preserving the credentials already in
+  the file.
   `gen-env` fails loudly if the file would be incomplete — a missing
   `EMA_TARGET=prod` would silently route cron jobs to the wrong
   `reuter.ini` section.
@@ -108,11 +109,10 @@ The production MariaDB instance is provisioned by `deploy --init` (framework
 entries in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
 `/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
-enabled exactly once, durable across reboots. When app servers run on other
-hosts, set `DEPLOY_DB_PORT` (and `DEPLOY_DB_BIND` to the DB host's ZeroTier
-IP) in `etc/deploy.conf`: the instance then listens on TCP over ZeroTier so
-both the DB host and the app-only servers can serve the website against the
-same database. Never start `mysqld` manually in production; re-deploys leave
+enabled exactly once, durable across reboots. `DEPLOY_DB_PORT` (required on the database host) and `DEPLOY_DB_BIND`
+(the DB host's ZeroTier IP) live in `etc/deploy.conf`: the instance listens
+on TCP over ZeroTier so both the DB host and the app-only servers can serve
+the website against the same database. Never start `mysqld` manually in production; re-deploys leave
 the running instance untouched.
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:

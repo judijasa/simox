@@ -65,7 +65,7 @@ runtime identity. The Debian defaults collide:
 
 | # | Conflict | Symptom | Avoid |
 |---|---|---|---|
-| 1 | TCP port 3306 | `Bind on TCP/IP port: Address already in use` (distro `mariadb.service` or another project) | per-project `port`, or `skip-networking` (socket-only, matches dev) |
+| 1 | TCP port 3306 | `Bind on TCP/IP port: Address already in use` (distro `mariadb.service` or another project) | per-project `port` (`DEPLOY_DB_PORT`, required on DB hosts) |
 | 2 | Default socket + pid (`/run/mysqld/*.sock`, `*.pid`) | second daemon fails; `mariadb` CLI silently hits the wrong instance | per-project `socket` + `pid-file` |
 | 3 | Global `/etc/mysql/` includes (`!includedir /etc/mysql/mariadb.conf.d/`) | even a "custom" datadir inherits distro paths → triggers 1/2 | `--no-defaults` or dedicated `--defaults-file=/etc/<proj>/my.cnf` |
 | 4 | Error log (default `/var/log/mysql/error.log`) | instances interleave/lock one file | per-project `log-error` (+ logrotate) |
@@ -143,8 +143,8 @@ decision (per-project profile vs documented disable); without it, the first
 
 - [x] `bin/provision.sh`: derives paths from `DEPLOY_DB_BASE` (datadir/socket/
       pid by convention); writes the per-project defaults file
-      `/etc/<instance>/my.cnf` (socket-only by default, `port =` when
-      `DEPLOY_DB_PORT` is set); installs the `mariadb@.service` template unit
+      `/etc/<instance>/my.cnf` (always `port = $DEPLOY_DB_PORT` and
+      `bind-address`; `DEPLOY_DB_PORT` is required on DB hosts); installs the `mariadb@.service` template unit
       (`--defaults-file=/etc/%i/my.cnf`, daemon drops privileges via
       `user = $PROD_USER` in the defaults file); `systemctl enable --now`.
       Idempotent: skips when the unit is already active; adopts a running
@@ -193,9 +193,9 @@ TCP-port-conflict fatal, port-enabled config (no `skip-networking`).
 ## Open decisions
 
 1. **`skip-networking` vs per-project TCP port in prod.** **Resolved
-   (2026-08-20), config-driven:** default is socket-only; `DEPLOY_DB_PORT` in
-   `etc/deploy.conf` switches to TCP on a per-project port (preflight checks
-   it). No code change needed to move later.
+   (2026-08-22), TCP-only:** `DEPLOY_DB_PORT` is required on database hosts;
+   `provision.sh` always writes `port = $DEPLOY_DB_PORT` + `bind-address`,
+   and `gen-reuter` requires `DEPLOY_DB_PORT` for the prod sections.
 2. **AppArmor approach.** Per-project profile (precise, more moving parts) vs
    documented disable of the distro profile. **Still open** — to be decided
    on the first Debian staging host (Phase 4).
@@ -212,7 +212,7 @@ install step, consumer names the instance, e.g. `mariadb@simox`); **`ema`
 is not part of this plan** (no `server` subcommand; dev keeps
 `init-cluster.sh`/`shell-enter.sh`); conflict diagnostics stay generic
 (`socket <path> already taken` — no pid/owner disclosure); preflight at
-provision time only; socket-only by default with `DEPLOY_DB_PORT` opt-in.
+provision time only; TCP on `DEPLOY_DB_PORT` (required on DB hosts).
 
 ## Notes
 
