@@ -17,8 +17,8 @@ policy**. The scripts derive everything from the target directory at runtime
 (`REPO_PATH` = canonicalized target dir; `REPO_LOG`/`MYSQL_*` under `var/`;
 `REUTER_INI = $REPO_PATH/etc/reuter.ini`) — no consumer paths are baked in.
 Consumer static config stays in consumer-owned files the framework already
-reads (`etc/env.prod` for `gen-env`, `etc/deploy.conf` for `deploy`,
-`etc/reuter.ini` for `Database`), and consumer-specific **steps** (git hooks,
+reads (`etc/deploy.conf` for `deploy` and `gen-env`, `etc/reuter.ini` for
+`Database`), and consumer-specific **steps** (git hooks,
 hosts, ...) stay in the consumer's Makefile — `init-git-hooks.sh` is a good
 example of a consumer-side script.
 

@@ -50,6 +50,9 @@ avoidance, are the subject of this plan.
   `MYSQL_UNIX_PORT` — `Database.php` connects via `host=localhost` → PDO's
   *default* socket. A per-project instance must either export `MYSQL_*` into
   prod `.env` or own the default socket. The plan closes this via `gen-env`.
+  *(2026-08-24: `etc/env.prod` merged into `etc/deploy.conf`; `gen-env` now
+  emits `MYSQL_*` on the database host only — `$DEPLOY_DB_BASE/mysql.sock`
+  present.)*
 - Dev: framework `init-cluster.sh <data-dir> <pid-file> <socket>` +
   `shell-enter.sh` resume; `mysqld --skip-networking` on a private socket under
   `var/mariadb/`; socket/pid/datadir come from `.env` (`MYSQL_*`).
@@ -170,6 +173,8 @@ TCP-port-conflict fatal, port-enabled config (no `skip-networking`).
       (`/var/lib/simox/mariadb`) + explicit `DEPLOY_DB_INSTANCE=simox`.
 - [x] `etc/env.prod`: emits `MYSQL_DATA_DIR`/`MYSQL_UNIX_PORT`/
       `MYSQL_PID_FILE` into prod `.env` (closes the runtime socket gap).
+      *(2026-08-24: `etc/env.prod` deleted; `gen-env` now projects these from
+      `etc/deploy.conf`, DB host only.)*
 
 ### Phase 3 — Docs — DONE (2026-08-20)
 

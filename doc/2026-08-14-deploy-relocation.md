@@ -78,7 +78,8 @@ environment, so it is the wrong home for project-static deploy parameters.
       consumer hook `bin/deploy/post-nix.sh` after nix closure + composer
       deps (resolves the cron-before-nix-php ordering issue; the swap-time
       `post-swap.sh` hook contract is unchanged). Simox: committed
-      `etc/env.prod` (template for `gen-env`), `bin/deploy/post-nix.sh`
+      `etc/env.prod` (template for `gen-env`; later merged into
+      `etc/deploy.conf` — 2026-08-24), `bin/deploy/post-nix.sh`
       (regenerates .env + installs cron), `bin/provision.sh` (consolidates
       the old assert-user/create-dirs/init-cluster; `DEPLOY_INIT_CMD` now
       points at it), `CRON_FILE`/`CRON_USER` added to `etc/deploy.conf`.
@@ -169,10 +170,12 @@ environment, so it is the wrong home for project-static deploy parameters.
   (default `root`), `CRON_NIX_BIN` (default
   `$DEPLOY_NIX_RESULT_DIR/result/bin`); prints the crontab to stdout.
   Output verified byte-identical to the old script (with the same env).
-- `bin/prod/gen-env.sh` → framework `gen-env [target-dir]`: copies the
-  consumer's committed `etc/env.prod` template → `.env` with a fail-fast
-  guard (every content line of the template must be present in the file).
-  Simox ships `etc/env.prod`.
+- `bin/prod/gen-env.sh` → framework `gen-env [target-dir]`: projects the
+  git-ignored `.env` from the consumer's committed `etc/deploy.conf` with a
+  fail-fast guard (required `deploy.conf` keys; every projected key present
+  in the file). `etc/env.prod` was deleted (2026-08-24) — `etc/deploy.conf`
+  is the single committed config source; see the framework's
+  `2026-08-24-env-prod-merge-into-deploy-conf.md`.
 - **Ordering fix (design revision):** the cron-before-nix-php issue meant
   the swap-time hook was the wrong home for .env+cron, so framework
   `deploy` now runs a second optional consumer hook `bin/deploy/post-nix.sh`

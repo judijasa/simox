@@ -91,18 +91,20 @@ Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be o
 No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
 
 - **dev** — `make dev-init` runs `init-local-env.sh` (shipped via the flake's `phpDaasFrameworkPkg`, on PATH inside `nix develop`), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/etc/reuter.ini` and `EMA_TARGET=local`.
-- **prod** — every deploy regenerates `/srv/apps/simox/.env` from the
-  committed `etc/env.prod` template via the framework `gen-env` CLI (consumer
-  hook `bin/deploy/post-nix.sh`), writing `REPO_PATH=/srv/apps/simox`,
-  `REPO_LOG=/var/log/simox`, `REUTER_INI=/etc/simox/reuter.ini` and
-  `EMA_TARGET=prod`. The same hook then runs `gen-reuter "$REUTER_INI"` to
-  refresh the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBNAME, one per
-  database) from `etc/machines.ini` + `etc/deploy.conf` — the DB host's
-  ZeroTier IP and `DEPLOY_DB_PORT` — preserving the credentials already in
-  the file.
-  `gen-env` fails loudly if the file would be incomplete — a missing
-  `EMA_TARGET=prod` would silently route cron jobs to the wrong
-  `reuter.ini` section.
+- **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
+  framework `gen-env` CLI (consumer hook `bin/deploy/post-nix.sh`), which
+  projects it from the committed `etc/deploy.conf` (no separate
+  `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
+  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod`, plus the
+  `MYSQL_*` paths on the database host (detected by the presence of
+  `/var/lib/simox/mariadb/mysql.sock`). The same hook then runs
+  `gen-reuter "$REUTER_INI"` to refresh the `/etc/simox/reuter.ini` sections
+  (SERVER/PORT/DBNAME, one per database) from `etc/machines.ini` +
+  `etc/deploy.conf` — the DB host's ZeroTier IP and `DEPLOY_DB_PORT` —
+  preserving the credentials already in the file.
+  `gen-env` fails loudly if a required `deploy.conf` key is missing or a
+  projected key is lost — a missing `EMA_TARGET=prod` would silently route
+  cron jobs to the wrong `reuter.ini` section.
 
 The production MariaDB instance is provisioned by `deploy --init` (framework
 `bin/provision.sh`) **only on database hosts** (the non-empty `[prod]`

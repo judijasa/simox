@@ -1,7 +1,5 @@
 
-[.] Do we really need to generate reuter.init? If it can be generated why not simply reading the generating config files?
-
-    I don't understand how etc/reuter.ini is going to be generated if it has passwords.
+[.] Checkout ema repo: doc/*.md (many issues to fix)
 
 [.] You still need to fill in (machine data, git-ignored): the actual ZeroTier IPs in each repo's etc/machines.ini and
     DEPLOY_DB_PORT/DEPLOY_DB_BIND in simox's etc/deploy.conf; DB host firewall must allow the ZeroTier interface on the DB port.
@@ -184,6 +182,12 @@
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] Do we really need to generate reuter.init? If it can be generated why not simply reading the generating config files?
+
+    I don't understand how etc/reuter.ini is going to be generated if it has passwords.
+
+    ANSWER: Passwords are not being generated (require manual input), only generic parts.
 
 [x] Check the git hooks. Which one should stay in simox and which ones
     should be relocated (or copied) to php_daas_framework.
