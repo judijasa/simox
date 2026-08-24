@@ -95,13 +95,15 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   framework `gen-env` CLI (consumer hook `bin/deploy/post-nix.sh`), which
   projects it from the committed `etc/deploy.conf` (no separate
   `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
-  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod`, plus the
-  `MYSQL_*` paths on the database host (detected by the presence of
-  `/var/lib/simox/mariadb/mysql.sock`). The same hook then runs
-  `gen-reuter "$REUTER_INI"` to refresh the `/etc/simox/reuter.ini` sections
-  (SERVER/PORT/DBNAME, one per database) from `etc/machines.ini` +
-  `etc/deploy.conf` — the DB host's ZeroTier IP and `DEPLOY_DB_PORT` —
-  preserving the credentials already in the file.
+  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod`. The `.env` stays
+  `MYSQL_*`-free — the socket lives in the `reuter.ini` section, not the
+  environment. The same hook then runs `gen-reuter "$REUTER_INI"` to refresh
+  the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBNAME and
+  `MYSQL_UNIX_PORT=$DEPLOY_DB_BASE/mysql.sock`, one per database) from
+  `etc/machines.ini` + `etc/deploy.conf` — the DB host's ZeroTier IP,
+  `DEPLOY_DB_PORT` and `DEPLOY_DB_BASE` — preserving the credentials already
+  in the file. `ema init db <name>` (run on the DB host) uses the section
+  socket for root auth; the app (`Database.php`) reads `.env` and stays TCP.
   `gen-env` fails loudly if a required `deploy.conf` key is missing or a
   projected key is lost — a missing `EMA_TARGET=prod` would silently route
   cron jobs to the wrong `reuter.ini` section.

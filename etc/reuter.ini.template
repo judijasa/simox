@@ -5,6 +5,7 @@ DBNAME=simo
 DBMS=mariadb
 ADMIN_PASSWORD=
 READER_PASSWORD=
+MYSQL_UNIX_PORT=var/mariadb/mysql.sock
 
 ; Optional: a second local database on the dev sandbox socket.
 [local:analytics]
@@ -14,9 +15,13 @@ DBNAME=analytics
 DBMS=mariadb
 ADMIN_PASSWORD=
 READER_PASSWORD=
+MYSQL_UNIX_PORT=var/mariadb/mysql.sock
 
 ; Prod sections are generated per database by gen-reuter (one per mapped
-; database in etc/machines.ini [prod]).
+; database in etc/machines.ini [prod]). gen-reuter writes MYSQL_UNIX_PORT
+; = $DEPLOY_DB_BASE/mysql.sock (the DB host's local socket) so
+; `ema init db <name>` run on the DB host authenticates as root over the
+; socket; the app layer ignores this key and stays on TCP.
 [simo]
 SERVER=10.147.x.10
 PORT=3307
@@ -24,3 +29,4 @@ DBNAME=simo
 DBMS=mariadb
 ADMIN_PASSWORD=
 READER_PASSWORD=
+MYSQL_UNIX_PORT=/path/to/mysql.sock
