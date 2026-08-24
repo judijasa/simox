@@ -11,8 +11,8 @@
 #
 # .env regeneration must complete before cron is installed: cron runs
 # `phprun` from the repo root, the nix wrapper sources .env, and a missing
-# key would silently fall back to the framework defaults (e.g. EMA_TARGET=
-# local -> wrong DB section in production). Hence gen-env runs first and
+# key would silently fall back to the framework defaults (e.g. EMA_MODE=
+# dev -> wrong DB section in production). Hence gen-env runs first and
 # fails loudly on a partial write.
 
 set -euo pipefail

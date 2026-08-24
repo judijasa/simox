@@ -87,19 +87,19 @@ SetEnv REUTER_INI /etc/simox/reuter.ini
 Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
 
 - **`REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class and the `ema` CLI (prod mode). If unset, `etc/reuter.ini` inside the repo is used.
-- **`EMA_TARGET`** — machine-mode signal for the `ema` CLI only: `local`
-  (default, dev sandbox — reads `var/reuter.local.ini`) or `prod` (reads
+- **`EMA_MODE`** — machine-mode signal for the `ema` CLI only: `dev`
+  (default, local sandbox — reads `var/reuter.local.ini`) or `prod` (reads
   `REUTER_INI`). The app layer ignores it; `Database.php` always resolves a
   database to its `[<dbname>]` section.
 
 No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
 
-- **dev** — `make dev-init` runs `init-local-env.sh` (shipped via the flake's `phpDaasFrameworkPkg`, on PATH inside `nix develop`), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_TARGET=local`.
+- **dev** — `make dev-init` runs `init-local-env.sh` (shipped via the flake's `phpDaasFrameworkPkg`, on PATH inside `nix develop`), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_MODE=dev`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
   framework `gen-env` CLI (consumer hook `bin/deploy/post-nix.sh`), which
   projects it from the committed `etc/deploy.conf` (no separate
   `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
-  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod`. The `.env` stays
+  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_MODE=prod`. The `.env` stays
   `MYSQL_*`-free — the socket lives in the `reuter.ini` section, not the
   environment. The same hook then runs `gen-reuter "$REUTER_INI"` to refresh
   the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBMS and
@@ -109,7 +109,7 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   in the file. `ema init db <name>` (run on the DB host) uses the section
   socket for root auth; the app (`Database.php`) reads `.env` and stays TCP.
   `gen-env` fails loudly if a required `deploy.conf` key is missing or a
-  projected key is lost — a missing `EMA_TARGET=prod` would silently put the
+  projected key is lost — a missing `EMA_MODE=prod` would silently put the
   `ema` CLI in dev-sandbox mode (the app layer ignores the variable and
   resolves `[<dbname>]` from `REUTER_INI`).
 
