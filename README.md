@@ -201,13 +201,11 @@ jakoch/phantomjs-installer further requires installation of the bz2 (`... instal
 #### 3. MariaDB Server >=10.6
 #### 4. PHP/MySQL support modules for the Web Server
 For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
-#### 5. jq - commandline JSON processor [version 1.6]
-Used in `src/init/tables.sh` to convert json to array in BASH.
-#### 6. Python
+#### 5. Python
 Required during phpcasperjs/phpcasperjs installation (`...install python-is-python3`).
-#### 7. libfontconfig.so.1
+#### 6. libfontconfig.so.1
 Required by the `phantomjs` binary (`... install libfontconfig1`).
-#### 8. Nix (optional)
+#### 7. Nix (optional)
 There is a shell.nix providing a Nix dev environment for local tests.
 
 ## PHP Casper Class

@@ -6,11 +6,6 @@
     # Main input for your everyday, up-to-date packages
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    # A specific historical commit chosen because it contains the exact version you need
-    # (in this case jq)
-    # Not all packages have an explicit version attribute like php84 or mariadb_118
-    # nixpkgs-pinned.url = "github:nixos/nixpkgs/e6f23dc08d3624daab7094b701aa3954923c6bbb";
-
     utils.url = "github:numtide/flake-utils";
 
     # Public repo. Fetched through git (respects .gitignore), so runtime
@@ -23,16 +18,11 @@
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        # Pinned packages evaluated strictly from our historical commit input
-        # pkgsPinned = import nixpkgs-pinned { inherit system; };
 
-        #bashPkg = pkgsPinned.bash;
-        bashPkg = pkgs.bash;
+        bashPkg = php_daas_framework.packages.${system}.bash;
         gitPkg = pkgs.git;
         # gnumakePkg = pkgs.gnumake; # reproducible makefiles
-        # jqPkg = pkgsPinned.jq;
-        jqPkg = pkgs.jq;
-        mariadbPkg = pkgs.mariadb_118;
+        mariadbPkg = php_daas_framework.packages.${system}.mariadb;
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         tmuxPkg = pkgs.tmux;
@@ -65,7 +55,6 @@
         commonPackages = [
           bashPkg
           # gnumakePkg
-          jqPkg
           # mariadbPkg  # nix build for stateful systems is anti-pattern
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
