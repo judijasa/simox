@@ -40,9 +40,11 @@
         # php/composer/ema come from php_daas_framework, which owns the PHP
         # runtime + required extension set (mysqli/pdo_mysql for the DB
         # layer, bz2 for its composer deps), the composer override, and the
-        # pinned `ema` input. `runtime` is a symlinkJoin of php + composer.
+        # pinned `ema` input — re-exported through packages.default, so
+        # simox gets the `ema` CLI + init-cluster.sh via phpDaasFrameworkPkg
+        # with a single reference. `runtime` is a symlinkJoin of php +
+        # composer.
         phpRuntime = php_daas_framework.packages.${system}.runtime;
-        emaPkg = php_daas_framework.packages.${system}.ema;
         phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
 
         # simox↔php_daas_framework integration point: the framework's own
@@ -67,7 +69,6 @@
           # mariadbPkg  # nix build for stateful systems is anti-pattern
           # vendor/ is in .gitignore. Generate vendor/ (via composer)
           # in prod server to avoid accidental dirty deployments.
-          emaPkg
           phpRuntime
           phpDaasFrameworkPkg
           tmuxPkg
