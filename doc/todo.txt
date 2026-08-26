@@ -1,7 +1,8 @@
+[x] the pattern `ema init tables mypkg-HASH mydb` should not be necessary; look
+    at schematic/ to see how they do it.
 
-[.] Checkout ema repo: doc/*.md (many issues to fix)
-
-[.] You still need to fill in (machine data, git-ignored): the actual ZeroTier IPs in each repo's etc/machines.ini and
+[.] You still need to fill in (machine data, git-ignored):
+    the actual ZeroTier IPs in each repo's etc/machines.ini and
     DEPLOY_DB_PORT/DEPLOY_DB_BIND in simox's etc/deploy.conf; DB host firewall must allow the ZeroTier interface on the DB port.
 
 [.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
