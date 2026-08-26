@@ -1,8 +1,8 @@
 # simox Makefile (dev-only; production deploy lives in the php_daas_framework
 # `deploy` CLI + consumer hooks bin/deploy/post-nix.sh and bin/deploy/provision-extra.sh).
-# Generic dev-init steps delegate to the framework scripts shipped by
-# phpDaasFrameworkPkg (init-cluster.sh, init-local-env.sh — on PATH inside
-# `nix develop`); this Makefile keeps only the consumer-specific steps
+# Generic dev-init steps delegate to the framework scripts on PATH inside
+# `nix develop` (init-cluster.sh from emaPkg, init-local-env.sh from
+# phpDaasFrameworkPkg); this Makefile keeps only the consumer-specific steps
 # (git hooks, hosts).
 
 SHELL := $(shell which bash 2>/dev/null)
