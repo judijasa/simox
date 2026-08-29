@@ -25,6 +25,7 @@
         mariadbPkg = php_daas_framework.packages.${system}.mariadb;
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
+        jqPkg = pkgs.jq; # jq: lock-sync hook + shellHook drift assert
         tmuxPkg = pkgs.tmux;
 
         # php/composer/ema come from php_daas_framework, which owns the PHP
@@ -78,6 +79,7 @@
             mariadbPkg
             phpLinter
             pre-commit
+            jqPkg
           ];
           shellHook = ''
             # .env (git-ignored) is the single machine settings file,
@@ -90,6 +92,12 @@
             # anymore - without .env there is no data dir, so MariaDB
             # cannot be started anyway.
             source "$(command -v shell-enter.sh)"
+
+            # Run repo checks (non-mutating, warn-only) after entering the shell.
+            # New checks are auto-discovered from checks/.
+            for check in checks/*.sh; do
+                [ -f "$check" ] && sh "$check"
+            done
 
             # Customize the prompt (PS1)
             # Define ANSI color codes for readability
