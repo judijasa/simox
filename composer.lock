@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "925e1d2558fd26b6a28957c6c122ca4c",
+    "content-hash": "54f00179736d216663110e458779f82b",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "6883f00cffcd7b07778ee18247d195622726faf0"
+                "reference": "78c2d83e8d19cff770cd5609b31045b63250d050"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/6883f00cffcd7b07778ee18247d195622726faf0",
-                "reference": "6883f00cffcd7b07778ee18247d195622726faf0",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/78c2d83e8d19cff770cd5609b31045b63250d050",
+                "reference": "78c2d83e8d19cff770cd5609b31045b63250d050",
                 "shasum": ""
             },
             "require": {
@@ -129,11 +129,15 @@
                 "php": ">=8.1",
                 "phpcasperjs/phpcasperjs": "^1.3"
             },
+            "require-dev": {
+                "composer/composer": "^2"
+            },
             "default-branch": true,
             "bin": [
                 "bin/phprun",
                 "bin/deploy",
                 "bin/gen-env",
+                "bin/gen-reuter",
                 "bin/cron-manifest"
             ],
             "type": "composer-plugin",
@@ -161,7 +165,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-08-14T23:17:44+00:00"
+            "time": "2026-08-27T00:38:19+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",
