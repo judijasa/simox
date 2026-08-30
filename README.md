@@ -92,9 +92,9 @@ Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be o
   `REUTER_INI`). The app layer ignores it; `Database.php` always resolves a
   database to its `[<dbname>]` section.
 
-No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via the flake's `phpDaasFrameworkPkg`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
+No `/etc/environment` entries are required: the framework's `phprun` CLI (shipped via Composer to `vendor/bin`) loads the `.env` file from the current working directory itself — no wrapper needed. The `.env` is generated per environment:
 
-- **dev** — `make dev-init` runs `init-local-env.sh` (shipped via the flake's `phpDaasFrameworkPkg`, on PATH inside `nix develop`), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_MODE=dev`.
+- **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_MODE=dev`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
   framework `gen-env` CLI (consumer hook `bin/deploy/post-nix.sh`), which
   projects it from the committed `etc/deploy.conf` (no separate
@@ -114,7 +114,7 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   resolves `[<dbname>]` from `REUTER_INI`).
 
 The production MariaDB instance is provisioned by `deploy --init` (framework
-`bin/provision.sh`) **only on database hosts** (the non-empty `[prod]`
+`vendor/bin/provision.sh`) **only on database hosts** (the non-empty `[prod]`
 entries in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
 `/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
@@ -129,7 +129,7 @@ the running instance untouched.
 deploy --init          # every [prod] host in etc/machines.ini
 deploy --init <host>   # a single prod host (must be in [prod])
 ```
-`deploy` runs the framework deploy CLI (shipped via the flake). `--init` runs the framework's generic `bin/provision.sh` on the remote
+`deploy` runs the framework deploy CLI (shipped via Composer to `vendor/bin`). `--init` runs the framework's generic `vendor/bin/provision.sh` on the remote
 (asserts the app user, creates system directories `/srv/apps`,
 `/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
 and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
@@ -142,55 +142,32 @@ attributes.
 
 ## Dependency Pinning
 
-The external repo `php_daas_framework` is integrated via both Nix (`flake.nix`) and Composer (`composer.json`). By default, both track the tip of the `main` branch, which is convenient during active co-development but dangerous for production: a breaking upstream change can silently enter the next deploy.
+Both external packages — `judijasa/php-daas-framework` and `judijasa/ema` —
+are delivered exclusively via Composer (single code delivery path). Each is
+pinned to a known-good commit in `composer.json` using the `dev-main#<hash>`
+form, recorded in `composer.lock`. There is no Nix-side pin to keep in step
+anymore: `flake.nix` supplies only the environment binaries (php + extensions,
+composer, mariadb, bash, tmux, jq), not the code of either package.
 
-To lock the integration to a known-good commit:
-
-### 1. flake.nix
-
-Replace the floating URL in the `inputs` section:
-
-```nix
-# Before (floating — tracks HEAD of main):
-php_daas_framework.url = "github:judijasa/php_daas_framework";
-
-# After (pinned to commit abc1234):
-php_daas_framework.url = "github:judijasa/php_daas_framework?rev=abc1234";
-```
-
-After changing the URL, update the lock file:
+To bump a package to a newer upstream commit, update its `require` entry in
+`composer.json` and refresh the lock:
 
 ```bash
-nix flake lock --update-input php_daas_framework
+composer require "judijasa/php-daas-framework:dev-main#<hash>" \
+                 "judijasa/ema:dev-main#<hash>"
 ```
 
-This bakes the exact revision into `flake.lock`, so every `nix build` / `nix develop` — whether locally, in CI, or on the production server — pulls the identical source tree.
-
-### 2. composer.json
-
-Pin the commit hash in the `require` field:
-
-```json
-// Before (floating — tracks tip of dev-main):
-"judijasa/php-daas-framework": "dev-main"
-
-// After (pinned to commit abc1234):
-"judijasa/php-daas-framework": "dev-main#abc1234"
-```
-
-Then refresh the lock file:
-
-```bash
-composer update judijasa/php-daas-framework
-```
-
-The `#<hash>` suffix tells Composer to resolve `dev-main` to that exact commit, recorded in `composer.lock`. Subsequent `composer install` runs (including on the production server) will always fetch that revision.
+The `#<hash>` suffix tells Composer to resolve `dev-main` to that exact commit,
+recorded in `composer.lock`. Subsequent `composer install` runs (including on
+the production server) always fetch that revision.
 
 ### When to bump
 
 - After validating a new upstream version locally (`nix develop` + full test run).
-- Always bump both files together so Nix and Composer agree on the same commit.
-- Commit the updated `flake.lock` and `composer.lock` so the pinned revision is tracked in git.
+- Bump each package independently — the nix env rev and each Composer code rev
+  are decoupled, so the two packages no longer have to agree with each other.
+- Commit the updated `composer.json` and `composer.lock` so the pinned
+  revisions are tracked in git.
 
 ## System Requirements
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require

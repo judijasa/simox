@@ -4,13 +4,14 @@
 #
 # Runs on the remote, as root, AFTER the deploy CLI has copied the nix
 # closure and composer deps (and, for --init, after provisioning). At this
-# point the framework CLIs (gen-env, cron-manifest) and nix php are available
-# under $DEPLOY_NIX_RESULT_DIR/result/bin. The swap-time post-swap.sh hook
-# runs earlier, before nix is copied — anything needing the nix result
-# belongs here.
+# point the framework CLIs (gen-env, gen-reuter, cron-manifest, phprun) are
+# Composer-delivered under $DEPLOY_TARGET_DIR/vendor/bin, and php + the
+# environment binaries live under $DEPLOY_NIX_RESULT_DIR/result/bin. The
+# swap-time post-swap.sh hook runs earlier, before nix is copied — anything
+# needing the nix result or vendor/bin belongs here.
 #
 # .env regeneration must complete before cron is installed: cron runs
-# `phprun` from the repo root, the nix wrapper sources .env, and a missing
+# `phprun` from the repo root, the phprun wrapper sources .env, and a missing
 # key would silently fall back to the framework defaults (e.g. EMA_MODE=
 # dev -> wrong DB section in production). Hence gen-env runs first and
 # fails loudly on a partial write.
@@ -29,8 +30,17 @@ set -a
 . ./etc/deploy.conf
 set +a
 
-# Framework CLIs + nix php live in the deployed nix result.
-export PATH="$DEPLOY_NIX_RESULT_DIR/result/bin:$PATH"
+# Framework CLIs (gen-env, gen-reuter, cron-manifest, phprun) are now
+# Composer-delivered ($DEPLOY_TARGET_DIR/vendor/bin); the nix result still
+# ships php + the environment binaries. vendor/bin goes first so the CLIs
+# resolve there, and the nix bin keeps php on PATH for the wrappers
+# (phprun/cron-manifest both invoke `php`).
+export PATH="$DEPLOY_TARGET_DIR/vendor/bin:$DEPLOY_NIX_RESULT_DIR/result/bin:$PATH"
+
+# Cron entries need both phprun (vendor/bin) and php (nix result bin) on
+# PATH; CRON_NIX_BIN is emitted by cron-manifest as the crontab `NIX_BIN=`
+# env assignment, prepended to each entry's PATH.
+export CRON_NIX_BIN="$DEPLOY_TARGET_DIR/vendor/bin:$DEPLOY_NIX_RESULT_DIR/result/bin"
 
 echo "    Regenerating production .env..."
 gen-env "$PWD"

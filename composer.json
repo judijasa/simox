@@ -9,12 +9,17 @@
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
     "phpmailer/phpmailer": "^6.5",
-    "judijasa/php-daas-framework": "dev-main#78c2d83e8d19cff770cd5609b31045b63250d050"
+    "judijasa/php-daas-framework": "dev-main#94b4ed0b7abebc09b692586d2f51b78ef4a70e1e",
+    "judijasa/ema": "dev-main#8ce8a1641fe7874502af1f7b104be1dac8a7505b"
   },
   "repositories": [
     {
       "type": "vcs",
       "url": "https://github.com/judijasa/php_daas_framework"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/judijasa/ema"
     }
   ]
 }

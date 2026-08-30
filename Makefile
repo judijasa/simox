@@ -1,9 +1,9 @@
 # simox Makefile (dev-only; production deploy lives in the php_daas_framework
 # `deploy` CLI + consumer hooks bin/deploy/post-nix.sh and bin/deploy/provision-extra.sh).
-# Generic dev-init steps delegate to the framework scripts on PATH inside
-# `nix develop` (init-cluster.sh from emaPkg, init-local-env.sh from
-# phpDaasFrameworkPkg); this Makefile keeps only the consumer-specific steps
-# (git hooks, hosts).
+# Generic dev-init steps delegate to the Composer-delivered scripts in
+# vendor/bin (init-cluster.sh from the `judijasa/ema` package, init-local-env.sh
+# from the `judijasa/php-daas-framework` package); this Makefile keeps only the
+# consumer-specific steps (git hooks, hosts).
 
 SHELL := $(shell which bash 2>/dev/null)
 
@@ -43,7 +43,9 @@ _dev-assert-nix:
 	    exit 1; \
 	fi
 
-_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
+# composer runs before cluster: init-cluster.sh is Composer-delivered
+# (vendor/bin/init-cluster.sh), so vendor/bin must exist first.
+_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-cluster _dev-update-hosts _dev-init-local-env
 	@echo "Developer environment successfully initialized."
 
 _dev-init-git-hooks:
@@ -54,7 +56,7 @@ _dev-create-dirs:
 	mkdir -p $(DEV_LOG_DIR) $(DEV_DB_DATA_DIR)
 
 _dev-init-cluster:
-	@init-cluster.sh "$(DEV_DB_DATA_DIR)" "$(DEV_DB_PID_FILE)" "$(DEV_DB_UNIX_PORT)"
+	@vendor/bin/init-cluster.sh "$(DEV_DB_DATA_DIR)" "$(DEV_DB_PID_FILE)" "$(DEV_DB_UNIX_PORT)"
 
 _dev-init-composer:
 	@echo "Removing vendor/ if exists..." 
@@ -66,4 +68,4 @@ _dev-update-hosts:
 	@bin/dev/update-hosts.sh "$(TAG_BEGIN)" "$(TAG_END)"
 
 _dev-init-local-env:
-	@init-local-env.sh
+	@vendor/bin/init-local-env.sh

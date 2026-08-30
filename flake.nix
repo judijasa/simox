@@ -7,66 +7,65 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     utils.url = "github:numtide/flake-utils";
-
-    # Public repo. Fetched through git (respects .gitignore), so runtime
-    # artifacts such as var/mariadb/mysql.sock never enter the Nix store
-    # (Nix rejects sockets with "unsupported type").
-    php_daas_framework.url = "github:judijasa/php_daas_framework";
   };
 
-  outputs = { self, nixpkgs, utils, php_daas_framework }:
+  outputs = { self, nixpkgs, utils }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
 
-        bashPkg = php_daas_framework.packages.${system}.bash;
+        # Environment binaries are declared locally: simox no longer imports
+        # the php_daas_framework flake. Code for both packages — the
+        # framework's src/ + CLIs + dev scripts and the ema CLI + its
+        # init-cluster.sh — arrives via Composer (vendor/bin); the flake only
+        # supplies the PHP runtime + extension set, composer, mariadb, bash,
+        # tmux, and jq.
+        #
+        # The PHP extension set mirrors the framework's composer.json `ext-*`
+        # contract (mysqli/pdo_mysql for the DB layer, bz2 for the
+        # jakoch/phantomjs-installer composer side-effect): the flake makes
+        # the extensions exist/loadable, and composer.json enforces them at
+        # install (missing → hard failure).
+        phpPkg = pkgs.php84.withExtensions ({ all, enabled }:
+          enabled ++ [
+            all.mysqli
+            all.pdo_mysql
+            all.bz2
+          ]
+        );
+        # Make sure Composer uses this php, as it has the required extensions.
+        phpComposer = pkgs.php84Packages.composer.override {
+          php = phpPkg;
+        };
+
+        bashPkg = pkgs.bash;
         gitPkg = pkgs.git;
-        # gnumakePkg = pkgs.gnumake; # reproducible makefiles
-        mariadbPkg = php_daas_framework.packages.${system}.mariadb;
+        mariadbPkg = pkgs.mariadb_118;
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
-        jqPkg = pkgs.jq; # jq: lock-sync hook + shellHook drift assert
+        # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
+        # not of a lock-sync hook (that hook was removed in the
+        # single-code-delivery-path migration).
+        jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
 
-        # php/composer/ema come from php_daas_framework, which owns the PHP
-        # runtime + required extension set (mysqli/pdo_mysql for the DB
-        # layer, bz2 for its composer deps), the composer override, and the
-        # pinned `ema` input — re-exported through packages.default, so
-        # simox gets the `ema` CLI + init-cluster.sh via phpDaasFrameworkPkg
-        # with a single reference. `runtime` is a symlinkJoin of php +
-        # composer.
-        phpRuntime = php_daas_framework.packages.${system}.runtime;
-        phpDaasFrameworkPkg = php_daas_framework.packages.${system}.default;
-
-        # simox↔php_daas_framework integration point: the framework's own
-        # bin/phprun loads the repo-root .env from the CWD at runtime, so
-        # simox ships that binary directly (phpDaasFrameworkPkg in
-        # commonPackages below) — no wrapper, no baked paths, no dev/prod
-        # flags. Configuration lives in .env at the repo root: `make
-        # dev-init` generates it in dev; on deploy the framework `gen-env`
-        # CLI regenerates it on the remote (consumer hook
-        # bin/deploy/post-nix.sh — the deployed repo directory is replaced
-        # on each deploy, so the gitignored .env is recreated there before
-        # cron is installed). Project-agnostic: whichever `phprun` binary
-        # wins the PATH race, it loads the .env of the directory it runs in.
-
-        # Common packages shared by dev and prod. phpDaasFrameworkPkg ships
-        # the phprun CLI: its bin/phprun loads the repo-root .env from the
-        # CWD, so it can be dropped directly into both environments.
+        # Common packages shared by dev and prod: the environment binaries
+        # only. Framework + ema code (CLIs, dev scripts, provision.sh) is
+        # Composer-delivered to vendor/bin, so it is absent here; `make
+        # dev-init` runs composer install to populate vendor/bin.
         commonPackages = [
           bashPkg
-          # gnumakePkg
-          # mariadbPkg  # nix build for stateful systems is anti-pattern
-          # vendor/ is in .gitignore. Generate vendor/ (via composer)
-          # in prod server to avoid accidental dirty deployments.
-          phpRuntime
-          phpDaasFrameworkPkg
+          phpPkg
+          phpComposer
+          mariadbPkg
+          jqPkg
           tmuxPkg
         ];
       in
       {
         # PRODUCTION ARTIFACT (Built when running 'nix build')
-        # This builds the raw binaries, but DOES NOT spin up background services.
+        # This builds the raw environment binaries, but DOES NOT spin up
+        # background services.
         packages.default = pkgs.symlinkJoin {
           name = "prod-dependencies";
           paths = commonPackages;
@@ -76,22 +75,24 @@
         devShells.default = pkgs.mkShell {
           buildInputs = commonPackages ++ [
             gitPkg
-            mariadbPkg
             phpLinter
             pre-commit
-            jqPkg
           ];
           shellHook = ''
+            # Code (framework + ema CLIs, the dev scripts, provision.sh) is
+            # Composer-delivered: `make dev-init` runs composer install, which
+            # populates vendor/bin. On first `nix develop` entry vendor/bin
+            # may not exist yet, so both references below are conditional;
+            # re-entering the shell after `make dev-init` puts vendor/bin on
+            # PATH.
+            [ -d vendor/bin ] && export PATH="$PWD/vendor/bin:$PATH"
+
             # .env (git-ignored) is the single machine settings file,
             # generated by `make dev-init` via the framework's
-            # init-local-env.sh (shipped on PATH by phpDaasFrameworkPkg).
-            # shell-enter.sh loads it and resumes the local MariaDB daemon;
-            # it must be sourced (not executed) from the repo root.
-            # PROD_USER/DEPLOY_* live in the committed etc/deploy.conf
-            # (framework `deploy` CLI contract). Nothing is exported here
-            # anymore - without .env there is no data dir, so MariaDB
-            # cannot be started anyway.
-            source "$(command -v shell-enter.sh)"
+            # init-local-env.sh (vendor/bin). shell-enter.sh loads it and
+            # resumes the local MariaDB daemon; it must be sourced (not
+            # executed) from the repo root.
+            [ -x vendor/bin/shell-enter.sh ] && source vendor/bin/shell-enter.sh
 
             # Run repo checks (non-mutating, warn-only) after entering the shell.
             # New checks are auto-discovered from checks/.

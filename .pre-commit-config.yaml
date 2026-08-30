@@ -32,16 +32,6 @@ repos:
         files: .*
         stages: [pre-commit]
 
-      # php_daas_framework integration: assert nix (flake.lock) and Composer
-      # (composer.lock) agree on the pinned php_daas_framework/ema commits.
-      # Integration hook scripts live in hooks/pf/.
-      - id: lock-sync
-        name: Nix/Composer lock pin sync check
-        entry: ./hooks/pf/pre-commit-lock-sync.sh
-        language: script
-        files: .*
-        stages: [pre-commit]
-
       # PHP Linter (scoped, commit-time)
       # pass_filenames: true -> pre-commit passes the staged .php files as
       # arguments, so phpstan only REPORTS errors in the files being committed.
