@@ -1,4 +1,5 @@
 {
+  "license": "MIT",
   "minimum-stability": "dev",
   "prefer-stable": true,
   "config": {
@@ -9,7 +10,7 @@
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
     "phpmailer/phpmailer": "^6.5",
-    "judijasa/php-daas-framework": "dev-main#94b4ed0b7abebc09b692586d2f51b78ef4a70e1e",
+    "judijasa/php-daas-framework": "dev-main#16aa76c075732d760d69dc7af55484d85e447afa",
     "judijasa/ema": "dev-main#8ce8a1641fe7874502af1f7b104be1dac8a7505b"
   },
   "repositories": [

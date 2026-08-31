@@ -14,13 +14,6 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
-        # Environment binaries are declared locally: simox no longer imports
-        # the php_daas_framework flake. Code for both packages — the
-        # framework's src/ + CLIs + dev scripts and the ema CLI + its
-        # init-cluster.sh — arrives via Composer (vendor/bin); the flake only
-        # supplies the PHP runtime + extension set, composer, mariadb, bash,
-        # tmux, and jq.
-        #
         # The PHP extension set mirrors the framework's composer.json `ext-*`
         # contract (mysqli/pdo_mysql for the DB layer, bz2 for the
         # jakoch/phantomjs-installer composer side-effect): the flake makes
@@ -44,8 +37,6 @@
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
         pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
-        # not of a lock-sync hook (that hook was removed in the
-        # single-code-delivery-path migration).
         jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
 
