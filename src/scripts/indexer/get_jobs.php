@@ -1,7 +1,6 @@
 <?php
 require 'vendor/autoload.php';
 require __DIR__ . '/helpers.php';
-require 'src/utils/indexing.php';
 
 use Utils\Agent;
 use Utils\CronJob;

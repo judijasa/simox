@@ -3,22 +3,24 @@
     Name: get_new_jobs.php (old: sampling_new_jobs.php)
     Description: Generate a sample of OPEC values from available job offers
      */
-    require 'src/utils/connectivity.php';
+    require __DIR__ . '/../../../vendor/autoload.php';
+
+    use Utils\Connectivity\Database;
 
     class TableRows extends RecursiveIteratorIterator {
         function __construct($it) {
             parent::__construct($it, self::LEAVES_ONLY);
         }
 
-        function current() {
+        function current(): mixed {
             return "<td style='width:150px;border:1px solid black;'>" . parent::current(). "</td>";
         }
 
-        function beginChildren() {
+        function beginChildren(): void {
             echo "<tr>";
         }
 
-        function endChildren() {
+        function endChildren(): void {
             echo "</tr>" . "\n";
         }
     }
@@ -30,7 +32,7 @@
 
     try {
         $dbname='simo';
-        $conn = new adminPDO($dbname);
+        $conn = Database::admin($dbname);
 
         $sql = <<<SQL
         SELECT

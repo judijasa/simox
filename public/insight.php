@@ -90,6 +90,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $por_definir = $stmt->fetchColumn();
             } catch (PDOException $e) {
                 echo "Error: ". $e->getMessage(). PHP_EOL;
+                exit;
             } finally {
                 $conn = null;
             }

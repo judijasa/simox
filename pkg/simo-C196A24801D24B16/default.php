@@ -22,4 +22,3 @@ $dependencies = array(
     // 'activity_monitor-A170276C72D14319'
 );
 ?>
-

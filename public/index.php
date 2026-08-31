@@ -94,6 +94,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             if (isset($_GET["width"])) {
                 $width = intval($_GET["width"]);
             }
+            else {
+                $width = 0;
+            }
 
             //***********************************
             // Get total pages...
@@ -109,6 +112,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 $conn = Database::public($dbname);
             } catch (PDOException $e) {
                 echo 'Connection failed: ' . $e->getMessage();
+                exit;
             }
 
             // ORDER BY to guarantee No_Aplica option is last.
