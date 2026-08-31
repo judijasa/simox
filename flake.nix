@@ -41,7 +41,7 @@
         tmuxPkg = pkgs.tmux;
 
         # Common packages shared by dev and prod: the environment binaries
-        # only. Framework + ema code (CLIs, dev scripts, provision.sh) is
+        # only. Framework + ema code (CLIs, dev scripts, pf-provision.sh) is
         # Composer-delivered to vendor/bin, so it is absent here; `make
         # dev-init` runs composer install to populate vendor/bin.
         commonPackages = [
@@ -70,7 +70,7 @@
             pre-commit
           ];
           shellHook = ''
-            # Code (framework + ema CLIs, the dev scripts, provision.sh) is
+            # Code (framework + ema CLIs, the dev scripts, pf-provision.sh) is
             # Composer-delivered: `make dev-init` runs composer install, which
             # populates vendor/bin. On first `nix develop` entry vendor/bin
             # may not exist yet, so both references below are conditional;

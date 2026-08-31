@@ -114,7 +114,7 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   resolves `[<dbname>]` from `REUTER_INI`).
 
 The production MariaDB instance is provisioned by `deploy --init` (framework
-`vendor/bin/provision.sh`) **only on database hosts** (the non-empty `[prod]`
+`vendor/bin/pf-provision.sh`) **only on database hosts** (the non-empty `[prod]`
 entries in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
 `/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
@@ -129,7 +129,7 @@ the running instance untouched.
 deploy --init          # every [prod] host in etc/machines.ini
 deploy --init <host>   # a single prod host (must be in [prod])
 ```
-`deploy` runs the framework deploy CLI (shipped via Composer to `vendor/bin`). `--init` runs the framework's generic `vendor/bin/provision.sh` on the remote
+`deploy` runs the framework deploy CLI (shipped via Composer to `vendor/bin`). `--init` runs the framework's generic `vendor/bin/pf-provision.sh` on the remote
 (asserts the app user, creates system directories `/srv/apps`,
 `/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
 and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
