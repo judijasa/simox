@@ -96,12 +96,13 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_MODE=dev`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
-  framework `gen-env` CLI (consumer hook `bin/deploy/post-nix.sh`), which
+  framework `gen-env` CLI, invoked from the deploy wrapper's
+  `bin/deploy/post-nix.sh` step; it
   projects it from the committed `etc/deploy.conf` (no separate
   `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
   `REUTER_INI=/etc/simox/reuter.ini` and `EMA_MODE=prod`. The `.env` stays
   `MYSQL_*`-free — the socket lives in the `reuter.ini` section, not the
-  environment. The same hook then runs `gen-reuter "$REUTER_INI"` to refresh
+  environment. That step then runs `gen-reuter "$REUTER_INI"` to refresh
   the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBMS and
   `MYSQL_UNIX_PORT=$DEPLOY_DB_BASE/mysql.sock`, one per database) from
   `etc/machines.ini` + `etc/deploy.conf` — the DB host's ZeroTier IP,
@@ -126,18 +127,21 @@ the running instance untouched.
 
 **2. Initial deploy** — run from the dev machine inside `nix develop`:
 ```bash
-deploy --init          # every [prod] host in etc/machines.ini
-deploy --init <host>   # a single prod host (must be in [prod])
+make deploy ARGS="--init"          # every [prod] host in etc/machines.ini
+make deploy ARGS="--init <host>"   # a single prod host (must be in [prod])
 ```
-`deploy` runs the framework deploy CLI (shipped via Composer to `vendor/bin`). `--init` runs the framework's generic `vendor/bin/pf-provision.sh` on the remote
+`make deploy` runs the deploy wrapper (`bin/deploy-wrapper.sh`), which first
+runs the framework deploy CLI (shipped via Composer to `vendor/bin`) and then
+the per-host post-deploy step. `--init` runs the framework's generic
+`vendor/bin/pf-provision.sh` on the remote
 (asserts the app user, creates system directories `/srv/apps`,
 `/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
 and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
-Every deploy then runs `bin/deploy/post-nix.sh` on the remote,
-regenerating `.env`, refreshing `/etc/simox/reuter.ini` `[prod]` via
-`gen-reuter`, and installing cron
-(`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
+After the framework CLI returns, the deploy wrapper runs
+`bin/deploy/post-nix.sh` on each `[prod]` host, regenerating `.env`,
+refreshing `/etc/simox/reuter.ini` `[prod]` via `gen-reuter`, and installing
+cron (`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
 attributes.
 
 ## Dependency Pinning

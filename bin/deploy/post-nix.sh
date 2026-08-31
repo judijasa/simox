@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# Consumer post-nix hook for the framework `deploy` CLI (consumer data:
-# which mechanisms to run at which point of the deploy flow).
-#
-# Runs on the remote, as root, AFTER the deploy CLI has copied the nix
-# closure and composer deps (and, for --init, after provisioning). At this
-# point the framework CLIs (gen-env, gen-reuter, cron-manifest, phprun) are
-# Composer-delivered under $DEPLOY_TARGET_DIR/vendor/bin, and php + the
-# environment binaries live under $DEPLOY_NIX_RESULT_DIR/result/bin. The
-# swap-time post-swap.sh hook runs earlier, before nix is copied — anything
-# needing the nix result or vendor/bin belongs here.
+# Consumer post-deploy step (simox data): run on each prod host by the deploy
+# wrapper (bin/deploy-wrapper.sh) AFTER the framework `deploy` CLI has copied
+# the nix closure and composer deps (and, for --init, after provisioning). At
+# this point the framework CLIs (gen-env, gen-reuter, cron-manifest, phprun)
+# are Composer-delivered under $DEPLOY_TARGET_DIR/vendor/bin, and php + the
+# environment binaries live under $DEPLOY_NIX_RESULT_DIR/result/bin.
 #
 # .env regeneration must complete before cron is installed: cron runs
 # `phprun` from the repo root, the phprun wrapper sources .env, and a missing
@@ -19,8 +15,8 @@
 set -euo pipefail
 
 # Runtime config (REPO_PATH) + project-static deploy config (PROD_USER,
-# DEPLOY_*, CRON_FILE) — the deployed repo root is the CWD (the deploy CLI
-# cds there before invoking the hook).
+# DEPLOY_*, CRON_FILE) — the deployed repo root is the CWD (the deploy wrapper
+# cds there before running this step).
 if [[ -f .env ]]; then
     set -a
     . ./.env
