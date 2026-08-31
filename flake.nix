@@ -83,7 +83,7 @@
             # init-local-env.sh (vendor/bin). shell-enter.sh loads it and
             # resumes the local MariaDB daemon; it must be sourced (not
             # executed) from the repo root.
-            [ -x vendor/bin/shell-enter.sh ] && source vendor/bin/shell-enter.sh
+            [ -x vendor/bin/shell-enter.sh ] && source vendor/bin/shell-enter.sh simox
 
             # Run repo checks (non-mutating, warn-only) after entering the shell.
             # New checks are auto-discovered from checks/.
@@ -98,11 +98,6 @@
             GREEN='\033[0;32m'
             NC='\033[0m' # No Color
             export PS1="\[$CYAN\] \u@\h:\[$GREEN\]\w\[$NC\]\$ "
-
-            # Inherit nix shell env in tmux (doesn't include PS1)
-            # Requires `set -g default-command ...` in .tmux.conf
-            PROJECT_NAME="simox"
-            alias tmux="command tmux -L \$PROJECT_NAME new-session -A -s \$PROJECT_NAME"
           '';
         };
       }
