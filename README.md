@@ -66,7 +66,7 @@ Navigate to the website: `http://localhost:8000/public/index.php`
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
 
-- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[dev]` section maps your machine hostname to your prod DB username (`hostname=dbuser`) — run `hostname` to find yours; `ema` uses it as the default DB user for remote connections (`DBUSER`). The `[prod]` section lists the prod servers by ZeroTier IP; the value is a comma-separated list of database names that server hosts (`ip=simo, analytics`), empty entries are app-only servers. Each database maps to exactly one server; a server may host several databases. `deploy` targets every `[prod]` host by default; a server with a non-empty list gets a MariaDB instance on `--init` (one instance serves all its databases).
+- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[dev]` section maps your machine hostname to your prod DB username (`hostname=dbuser`) — run `hostname` to find yours; `ema` uses it as the default DB user for remote connections (`DBUSER`). The `[prod]` section lists the prod servers by ZeroTier IP; the value is a comma-separated list of database names that server hosts (`ip=simo, analytics`), empty entries are app-only servers. Each database maps to exactly one server; a server may host several databases. `pf-deploy.sh` targets every `[prod]` host by default; a server with a non-empty list gets a MariaDB instance on `--init` (one instance serves all its databases).
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 
 ## Production Server Setup
@@ -96,8 +96,8 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_MODE=dev`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
-  framework `gen-env` CLI, invoked from the deploy wrapper's
-  `bin/deploy/post-nix.sh` step; it
+  framework `gen-env` CLI, invoked from the deploy entrypoint's
+  `bin/deploy/post-pf-deploy.sh` step; it
   projects it from the committed `etc/deploy.conf` (no separate
   `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
   `REUTER_INI=/etc/simox/reuter.ini` and `EMA_MODE=prod`. The `.env` stays
@@ -114,7 +114,7 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   `ema` CLI in dev-sandbox mode (the app layer ignores the variable and
   resolves `[<dbname>]` from `REUTER_INI`).
 
-The production MariaDB instance is provisioned by `deploy --init` (framework
+The production MariaDB instance is provisioned by `pf-deploy.sh --init` (framework
 `vendor/bin/pf-provision.sh`) **only on database hosts** (the non-empty `[prod]`
 entries in `etc/machines.ini`); app-only servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
@@ -130,16 +130,16 @@ the running instance untouched.
 make deploy ARGS="--init"          # every [prod] host in etc/machines.ini
 make deploy ARGS="--init <host>"   # a single prod host (must be in [prod])
 ```
-`make deploy` runs the deploy wrapper (`bin/deploy-wrapper.sh`), which first
-runs the framework deploy CLI (shipped via Composer to `vendor/bin`) and then
+`make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first
+runs the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and then
 the per-host post-deploy step. `--init` runs the framework's generic
 `vendor/bin/pf-provision.sh` on the remote
 (asserts the app user, creates system directories `/srv/apps`,
 `/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
 and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
-After the framework CLI returns, the deploy wrapper runs
-`bin/deploy/post-nix.sh` on each `[prod]` host, regenerating `.env`,
+After the framework CLI returns, the deploy entrypoint runs
+`bin/deploy/post-pf-deploy.sh` on each `[prod]` host, regenerating `.env`,
 refreshing `/etc/simox/reuter.ini` `[prod]` via `gen-reuter`, and installing
 cron (`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]`
 attributes.

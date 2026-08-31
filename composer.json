@@ -10,7 +10,7 @@
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
     "phpmailer/phpmailer": "^6.5",
-    "judijasa/php-daas-framework": "dev-main#3b4889f5d1fcbe64d6026f827f5780474d8a721c",
+    "judijasa/php-daas-framework": "dev-main#77692d1ccb1f3581d456b54c407748d828f70c8f",
     "judijasa/ema": "dev-main#8b53fedf1c5be902b779a4e78cf34e557e2ffc10"
   },
   "repositories": [

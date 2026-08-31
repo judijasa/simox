@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Consumer post-deploy step (simox data): run on each prod host by the deploy
-# wrapper (bin/deploy-wrapper.sh) AFTER the framework `deploy` CLI has copied
+# entrypoint (bin/deploy.sh) AFTER the framework `pf-deploy.sh` CLI has copied
 # the nix closure and composer deps (and, for --init, after provisioning). At
 # this point the framework CLIs (gen-env, gen-reuter, cron-manifest, phprun)
 # are Composer-delivered under $DEPLOY_TARGET_DIR/vendor/bin, and php + the
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # Runtime config (REPO_PATH) + project-static deploy config (PROD_USER,
-# DEPLOY_*, CRON_FILE) — the deployed repo root is the CWD (the deploy wrapper
+# DEPLOY_*, CRON_FILE) — the deployed repo root is the CWD (bin/deploy.sh
 # cds there before running this step).
 if [[ -f .env ]]; then
     set -a

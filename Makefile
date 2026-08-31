@@ -1,7 +1,7 @@
 # simox Makefile (dev-init + deploy entrypoints).
-# Production deploy is the consumer wrapper bin/deploy-wrapper.sh: it runs the
-# framework `deploy` CLI (vendor/bin/deploy), then the per-host post-deploy
-# step bin/deploy/post-nix.sh (provisioning extra stays
+# Production deploy is the consumer entrypoint bin/deploy.sh: it runs the
+# framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh), then the per-host
+# post-deploy step bin/deploy/post-pf-deploy.sh (provisioning extra stays
 # bin/deploy/provision-extra.sh via DEPLOY_INIT_CMD).
 # Generic dev-init steps delegate to the Composer-delivered scripts in
 # vendor/bin (init-cluster.sh from the `judijasa/ema` package, init-local-env.sh
@@ -44,7 +44,7 @@ dev-init: _dev-assert-nix _dev-init
 # Production deploy: wrap the framework CLI, then run the consumer post-deploy
 # step per host. Pass deploy args via ARGS (empty = every [prod] host).
 deploy:
-	@bin/deploy-wrapper.sh $(ARGS)
+	@bin/deploy.sh $(ARGS)
 
 _dev-assert-nix:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
