@@ -1,7 +1,7 @@
 # simox Makefile (dev-init + deploy entrypoints).
 # Production deploy is the consumer entrypoint bin/deploy.sh: it runs the
 # framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh), then the per-host
-# post-deploy step bin/deploy/post-pf-deploy.sh (provisioning extra stays
+# post-deploy step bin/deploy/server-side-post-deploy.sh (provisioning extra stays
 # bin/deploy/provision-extra.sh via DEPLOY_INIT_CMD).
 # Generic dev-init steps delegate to the Composer-delivered scripts in
 # vendor/bin (init-cluster.sh from the `judijasa/ema` package, init-local-env.sh

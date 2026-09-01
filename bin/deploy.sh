@@ -5,8 +5,10 @@
 # The framework `pf-deploy.sh` is a closed operation: it swaps the repo, copies the
 # nix closure, installs composer deps and (with --init) runs one-time
 # provisioning — it invokes no consumer hooks. This wrapper forwards its args
-# verbatim to it, then re-derives the [prod] roster from etc/machines.ini and
-# runs the consumer post-deploy step (bin/deploy/post-pf-deploy.sh) on each host.
+# verbatim to it, then re-derives the [prod] roster (host → tags) from
+# etc/machines.ini via the shared pf-roster CLI and runs the consumer
+# server-side post-deploy step (bin/deploy/server-side-post-deploy.sh) on each
+# host, passing that host's tag list via DEPLOY_TAGS.
 #
 # Usage (from the repo root, inside `nix develop`):
 #   bin/deploy.sh                 # every [prod] host
@@ -26,43 +28,36 @@ set -a
 . ./etc/deploy.conf
 set +a
 
-# 3. Re-derive the [prod] roster (one host per line), mirroring the
-#    framework's own roster read.
+# 3. Shared roster parse (framework pf-roster CLI): "host=tags" per line.
 read_prod_roster() {
-  php -r '
-    $cnf = parse_ini_file($argv[1], true, INI_SCANNER_RAW);
-    if (!$cnf || !isset($cnf["prod"])) {
-      fwrite(STDERR, "deploy: no [prod] section in etc/machines.ini\n");
-      exit(1);
-    }
-    foreach ($cnf["prod"] as $host => $db) {
-      echo $host, PHP_EOL;
-    }
-  ' ./etc/machines.ini
+  vendor/bin/pf-roster --list
 }
 
-# 4. Which host(s) get the post-deploy step: the positional host argument (if
-#    any), else every [prod] host. The framework CLI has already validated any
-#    host and deployed to exactly this set.
+# 4. Which host(s) get the post-deploy step: the first non-flag positional arg
+#    (if any), else every [prod] host. The framework CLI has already validated
+#    any host and deployed to exactly this set.
 wanted=""
 for arg in "$@"; do
-  case "$arg" in
-    --init) ;;
-    -*) ;;
-    *) wanted="$arg" ;;
-  esac
+  [[ "$arg" == -* ]] || { wanted="$arg"; break; }
 done
 
 post_deploy_one() {
   local host="$1"
-  ssh "root@$host" "cd '$DEPLOY_TARGET_DIR' && bin/deploy/post-pf-deploy.sh"
+  local tags="$2"
+  ssh "root@$host" "cd '$DEPLOY_TARGET_DIR' && DEPLOY_TAGS='$tags' bin/deploy/server-side-post-deploy.sh"
 }
 
 if [ -n "$wanted" ]; then
-  post_deploy_one "$wanted"
-else
-  while IFS= read -r host; do
+  while IFS='=' read -r host tags; do
     [ -n "$host" ] || continue
-    post_deploy_one "$host"
+    if [ "$host" = "$wanted" ]; then
+      post_deploy_one "$host" "$tags"
+      break
+    fi
+  done < <(read_prod_roster)
+else
+  while IFS='=' read -r host tags; do
+    [ -n "$host" ] || continue
+    post_deploy_one "$host" "$tags"
   done < <(read_prod_roster)
 fi
