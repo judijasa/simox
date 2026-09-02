@@ -11,7 +11,7 @@
     "sunra/php-simple-html-dom-parser": "1.5.2",
     "phpmailer/phpmailer": "^6.5",
     "judijasa/php-daas-framework": "dev-main#8caff751a0b3bac0d5c3b32fc576e328bf746471",
-    "judijasa/ema": "dev-main#8b53fedf1c5be902b779a4e78cf34e557e2ffc10"
+    "judijasa/ema": "dev-main#10cefc679116fb11b9dfd5ce7d41799fe7027274"
   },
   "repositories": [
     {
