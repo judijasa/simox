@@ -8,4 +8,4 @@ CREATE OR REPLACE TABLE nivel (
     UNIQUE KEY uk_nivel_code(code)
 );
 
-GRANT SELECT ON {{dbname}}.nivel TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.nivel TO 'public'@'%';

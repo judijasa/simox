@@ -7,4 +7,4 @@ CREATE OR REPLACE TABLE funcion (
     UNIQUE INDEX uk_funcion_code(code)
 );
 
-GRANT SELECT ON {{dbname}}.funcion TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.funcion TO 'public'@'%';

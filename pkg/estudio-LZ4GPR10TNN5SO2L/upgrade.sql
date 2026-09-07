@@ -7,4 +7,4 @@ CREATE OR REPLACE TABLE estudio (
     PRIMARY KEY(id)
 );
 
-GRANT SELECT ON {{dbname}}.estudio TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.estudio TO 'public'@'%';

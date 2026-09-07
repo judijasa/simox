@@ -31,4 +31,4 @@ INSERT INTO departamento (
     ('Vaupés', 'VAU'), ('Vichada', 'VID'),
     ('No_Aplica', 'N.A.');
 
-GRANT SELECT ON {{dbname}}.departamento TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.departamento TO 'public'@'%';

@@ -11,4 +11,4 @@ CREATE OR REPLACE TABLE denominacion (
     REFERENCES nivel(id)
 );
 
-GRANT SELECT ON {{dbname}}.denominacion TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.denominacion TO 'public'@'%';

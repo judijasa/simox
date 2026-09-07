@@ -9,4 +9,4 @@ CREATE OR REPLACE TABLE empleo_funcion (
         REFERENCES funcion(id)
 );
 
-GRANT SELECT ON {{dbname}}.empleo_funcion TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.empleo_funcion TO 'public'@'%';

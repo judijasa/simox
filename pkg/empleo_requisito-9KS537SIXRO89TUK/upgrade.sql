@@ -9,4 +9,4 @@ CREATE OR REPLACE TABLE empleo_requisito (
         REFERENCES requisito(id)
 );
 
-GRANT SELECT ON {{dbname}}.empleo_requisito TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.empleo_requisito TO 'public'@'%';

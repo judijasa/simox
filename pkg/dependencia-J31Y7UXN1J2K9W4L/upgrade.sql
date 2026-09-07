@@ -7,4 +7,4 @@ CREATE OR REPLACE TABLE dependencia (
     UNIQUE KEY uk_dependencia_code(code)
 );
 
-GRANT SELECT ON {{dbname}}.dependencia TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.dependencia TO 'public'@'%';

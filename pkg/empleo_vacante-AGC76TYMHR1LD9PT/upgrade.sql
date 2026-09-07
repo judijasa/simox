@@ -9,4 +9,4 @@ CREATE OR REPLACE TABLE empleo_vacante (
         REFERENCES vacante(id)
 );
 
-GRANT SELECT ON {{dbname}}.empleo_vacante TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.empleo_vacante TO 'public'@'%';

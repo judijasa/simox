@@ -42,4 +42,4 @@ CREATE OR REPLACE TABLE empleo (
         -- ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-GRANT SELECT ON {{dbname}}.empleo TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.empleo TO 'public'@'%';

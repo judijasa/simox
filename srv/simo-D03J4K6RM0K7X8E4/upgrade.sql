@@ -1,18 +1,10 @@
+-- simo database bootstrap, consumed by
+--   ema sandbox srv/simo-D03J4K6RM0K7X8E4 (dev) and
+--   ema create srv/simo-D03J4K6RM0K7X8E4 (prod). Placeholders are filled from
+-- default.php defaults: {{dbname}}, {{charset}}, {{collation}}.
 SET check_constraint_checks = OFF;
 DROP DATABASE IF EXISTS {{dbname}}; -- To avoid foreign key error (not sure why)
 CREATE OR REPLACE DATABASE {{dbname}}
 COMMENT 'Ofertas de trabajo de la plataforma SIMO del Gobierno de Colombia'
-CHARACTER SET = 'utf8'
-COLLATE = 'utf8_spanish_ci';
-
-DROP USER IF EXISTS 'admin'@'{{servername}}';
-CREATE USER 'admin'@'{{servername}}' IDENTIFIED BY '{{admin_password}}';
-
-DROP USER IF EXISTS 'reader'@{{servername}};
-CREATE USER 'reader'@'{{servername}}' IDENTIFIED BY '{{reader_password}}';
-
-DROP USER IF EXISTS 'public'@'{{servername}}';
-CREATE USER 'public'@'{{servername}}' IDENTIFIED BY '';
-
-GRANT SELECT ON simo.* TO 'reader'@'{{servername}}';
-GRANT SELECT, INSERT, UPDATE, DELETE ON {{dbname}}.* TO 'admin'@'{{servername}}';
+CHARACTER SET = '{{charset}}'
+COLLATE = '{{collation}}';

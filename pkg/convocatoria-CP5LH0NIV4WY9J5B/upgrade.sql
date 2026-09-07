@@ -20,4 +20,4 @@ CREATE OR REPLACE TABLE convocatoria (
     REFERENCES entidad(id)
 );
 
-GRANT SELECT ON {{dbname}}.convocatoria TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.convocatoria TO 'public'@'%';

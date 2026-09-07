@@ -20,4 +20,4 @@ CREATE OR REPLACE TABLE vacante (
         REFERENCES dependencia(id)
 );
 
-GRANT SELECT ON {{dbname}}.vacante TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.vacante TO 'public'@'%';

@@ -11,4 +11,4 @@ CREATE OR REPLACE TABLE requisito (
     UNIQUE INDEX uk_requisito_code(code)
 );
 
-GRANT SELECT ON {{dbname}}.requisito TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.requisito TO 'public'@'%';

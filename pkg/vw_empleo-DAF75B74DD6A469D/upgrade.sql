@@ -125,4 +125,4 @@ SELECT
     e.access
 FROM empleo e;
 
-GRANT SELECT ON {{dbname}}.vw_empleo TO 'public'@'{{servername}}';
+GRANT SELECT ON {{dbname}}.vw_empleo TO 'public'@'%';
