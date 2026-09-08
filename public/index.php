@@ -109,7 +109,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             $dbname = 'simo';
             try {
-                $conn = Database::public($dbname);
+                $conn = Database::connectAs($dbname, 'public');
             } catch (PDOException $e) {
                 echo 'Connection failed: ' . $e->getMessage();
                 exit;

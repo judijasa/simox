@@ -32,7 +32,7 @@
 
     try {
         $dbname='simo';
-        $conn = Database::admin($dbname);
+        $conn = Database::connectAs($dbname, 'admin');
 
         $sql = <<<SQL
         SELECT

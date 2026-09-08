@@ -1,0 +1,200 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// gen-service-users - simox service-account provisioning (consumer-owned).
+//
+// ema provisions schema only (ema sandbox / ema create): it creates the
+// database and applies schema packages, never users or grants. The service
+// accounts are this repo's policy, so this script creates them:
+//
+//   admin   @ SERVERNAME   GRANT ALL PRIVILEGES ON <db>.*   (read-write app)
+//   reader  @ SERVERNAME   GRANT SELECT ON <db>.*            (read-only app)
+//   public  @ '%'          no database-level grant            (anonymous read;
+//                             per-table SELECT grants live in pkg/, applied by ema)
+//
+// All three are passwordless (empty <ACCOUNT>_PASSWORD), matching the
+// host-pinned model. SERVERNAME (default "localhost") is read from the [<db>]
+// section; set it to the DB host's ZeroTier IP (or "%") there when the app
+// servers reach the database over the overlay network.
+//
+// It emits transient SQL (never persisted) and, unless -n/--dry-run, applies
+// it as root through "ema mariadb <db> < file.sql" (DBUSER=root; run as root
+// on the DB host - root/unix_socket auth over the socket written by
+// gen-reuter). It also writes the three <ACCOUNT>_PASSWORD keys (empty) into
+// the section, which gen-reuter then preserves on every refresh.
+//
+// Usage: gen-service-users <db> [-n|--dry-run] [--help]
+
+const HELP = <<<'TXT'
+Usage: gen-service-users <db> [flags]
+
+Create simox's service accounts (admin/reader/public) for one database and
+persist their (empty) <ACCOUNT>_PASSWORD keys in the [<db>] section.
+
+  <db>              database name (the [<db>] section in reuter.ini).
+  -n, --dry-run     print the SQL without applying it or writing keys.
+  -h, --help        show this help.
+TXT;
+
+const ACCOUNT_PRIVILEGES = array(
+    'admin' => 'ALL PRIVILEGES',
+    'reader' => 'SELECT',
+);
+
+function config_path(): string
+{
+    $override = getenv('REUTER_INI');
+    if ($override !== false && $override !== '') {
+        return $override;
+    }
+    return getcwd() . '/etc/reuter.ini';
+}
+
+function load_section(string $path, string $db): array
+{
+    $cnf = parse_ini_file($path, true, INI_SCANNER_RAW);
+    if (!is_array($cnf) || !isset($cnf[$db]) || !is_array($cnf[$db])) {
+        fwrite(STDERR, "gen-service-users: no [{$db}] section in {$path}" . PHP_EOL);
+        exit(1);
+    }
+    return $cnf[$db];
+}
+
+function sql_quote(string $value): string
+{
+    return str_replace("'", "''", $value);
+}
+
+function build_sql(string $db, string $servername): string
+{
+    $sql = '-- gen-service-users for ' . $db . ' (transient; never persisted)' . PHP_EOL;
+    $sql .= PHP_EOL . '-- Service accounts (passwordless, host-pinned)' . PHP_EOL;
+    $sql .= "CREATE USER IF NOT EXISTS 'admin'@'" . sql_quote($servername) . "' IDENTIFIED BY '';" . PHP_EOL;
+    $sql .= "CREATE USER IF NOT EXISTS 'reader'@'" . sql_quote($servername) . "' IDENTIFIED BY '';" . PHP_EOL;
+    $sql .= "CREATE USER IF NOT EXISTS 'public'@'%' IDENTIFIED BY '';" . PHP_EOL;
+    $sql .= PHP_EOL . '-- Database-level grants (public per-table SELECT grants live in pkg/, applied by ema)' . PHP_EOL;
+    foreach (ACCOUNT_PRIVILEGES as $account => $privilege) {
+        $sql .= 'GRANT ' . $privilege . ' ON ' . $db . ".* TO '" . $account . "'@'" . sql_quote($servername) . "';" . PHP_EOL;
+    }
+    return $sql;
+}
+
+function apply_sql(string $db, string $sql): int
+{
+    $tmp = tempnam(sys_get_temp_dir(), 'gen_service_users_');
+    if ($tmp === false || file_put_contents($tmp, $sql) === false) {
+        fwrite(STDERR, "gen-service-users: could not write the temporary SQL file" . PHP_EOL);
+        return 1;
+    }
+    $root = getcwd();
+    $ema = is_executable($root . '/vendor/bin/ema') ? $root . '/vendor/bin/ema' : 'ema';
+    $cmd = 'DBUSER=root ' . escapeshellarg($ema) . ' mariadb ' . escapeshellarg($db) . ' < ' . escapeshellarg($tmp);
+    passthru($cmd, $code);
+    @unlink($tmp);
+    return $code;
+}
+
+// Ensure each <ACCOUNT>_PASSWORD key exists in the [<db>] section, inserting
+// empty keys after the section header when missing. Line-based so unrelated
+// sections and comments are left untouched.
+function ensure_password_keys(string $path, string $db, array $accounts): bool
+{
+    $lines = file($path, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        return false;
+    }
+    $header = '[' . $db . ']';
+    $present = array();
+    $headerIndex = null;
+    $inSection = false;
+    foreach ($lines as $i => $line) {
+        $trimmed = trim($line);
+        if ($trimmed === $header) {
+            $headerIndex = $i;
+            $inSection = true;
+            continue;
+        }
+        if ($inSection) {
+            if ($trimmed === '' || $trimmed[0] === '[') {
+                break;
+            }
+            $eq = strpos($trimmed, '=');
+            if ($eq !== false) {
+                $present[trim(substr($trimmed, 0, $eq))] = true;
+            }
+        }
+    }
+    if ($headerIndex === null) {
+        return false;
+    }
+    $missing = array();
+    foreach ($accounts as $account) {
+        $key = strtoupper($account) . '_PASSWORD';
+        if (!isset($present[$key])) {
+            $missing[] = $key . '=';
+        }
+    }
+    if (count($missing) === 0) {
+        return true;
+    }
+    array_splice($lines, $headerIndex + 1, 0, $missing);
+    return file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL) !== false;
+}
+
+function main(array $argv): int
+{
+    $db = null;
+    $dryRun = false;
+    foreach (array_slice($argv, 1) as $arg) {
+        if ($arg === '-n' || $arg === '--dry-run') {
+            $dryRun = true;
+        } elseif ($arg === '-h' || $arg === '--help') {
+            fwrite(STDOUT, HELP);
+            return 0;
+        } elseif ($db === null) {
+            $db = $arg;
+        } else {
+            fwrite(STDERR, "gen-service-users: unexpected argument: {$arg}" . PHP_EOL);
+            return 1;
+        }
+    }
+    if ($db === null) {
+        fwrite(STDERR, "gen-service-users: missing <db> argument" . PHP_EOL);
+        fwrite(STDERR, HELP);
+        return 1;
+    }
+
+    $path = config_path();
+    if (!is_file($path)) {
+        fwrite(STDERR, "gen-service-users: {$path} not found (set REUTER_INI or run from the repo root)" . PHP_EOL);
+        return 1;
+    }
+    $section = load_section($path, $db);
+    $servername = (string) ($section['SERVERNAME'] ?? 'localhost');
+
+    $sql = build_sql($db, $servername);
+    fwrite(STDOUT, $sql);
+
+    if ($dryRun) {
+        fwrite(STDERR, "gen-service-users: dry-run; SQL printed, not applied, no keys written" . PHP_EOL);
+        return 0;
+    }
+
+    $code = apply_sql($db, $sql);
+    if ($code !== 0) {
+        return $code;
+    }
+
+    $accounts = array('admin', 'reader', 'public');
+    if (!ensure_password_keys($path, $db, $accounts)) {
+        fwrite(STDERR, "gen-service-users: could not write the <ACCOUNT>_PASSWORD keys into {$path}" . PHP_EOL);
+        return 1;
+    }
+
+    fwrite(STDOUT, 'gen-service-users: accounts created; <ACCOUNT>_PASSWORD keys ensured in ' . $path . PHP_EOL);
+    return 0;
+}
+
+exit(main($argv));

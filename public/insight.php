@@ -78,7 +78,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             try {
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo';
-                $conn = Database::public($dbname);
+                $conn = Database::connectAs($dbname, 'public');
                 $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now()) OR fecha_inscripcion IS NULL";
                 $stmt = $conn->query($query);
                 $total = $stmt->fetchColumn();
