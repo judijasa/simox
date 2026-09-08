@@ -15,4 +15,5 @@
 /etc/team.ini
 /etc/hosts
 .env
+.private-source
 .phpstan-result-cache.php
