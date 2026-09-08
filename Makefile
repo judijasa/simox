@@ -4,9 +4,11 @@
 # post-deploy step bin/deploy/server-side-post-deploy.sh (provisioning extra stays
 # bin/deploy/provision-extra.sh via DEPLOY_INIT_CMD).
 # Generic dev-init steps delegate to the Composer-delivered scripts in
-# vendor/bin (init-cluster.sh from the `judijasa/ema` package, init-local-env.sh
-# from the `judijasa/php-daas-framework` package); this Makefile keeps only the
-# consumer-specific steps (git hooks, hosts) plus the `deploy` entrypoint.
+# vendor/bin (init-local-env.sh from the `judijasa/php-daas-framework` package);
+# this Makefile keeps only the consumer-specific steps (git hooks, hosts) plus
+# the `deploy` entrypoint. The dev MariaDB daemon is owned by ema's
+# per-instance sandbox lifecycle (`ema sandbox` / `ema start` / `ema stop`) —
+# this Makefile no longer initializes or starts a shared daemon.
 
 SHELL := $(shell which bash 2>/dev/null)
 
@@ -17,22 +19,13 @@ SHELL := $(shell which bash 2>/dev/null)
 REPO_PATH = $(CURDIR)
 REPO_VAR = $(REPO_PATH)/var
 REPO_LOG = $(REPO_VAR)/log
-MYSQL_BASE_DIR = $(REPO_VAR)/mariadb
-MYSQL_DATA_DIR = $(MYSQL_BASE_DIR)/data
-MYSQL_UNIX_PORT = $(MYSQL_BASE_DIR)/mysql.sock
-MYSQL_PID_FILE = $(MYSQL_BASE_DIR)/mysql.pid
 
-_dev-init: DEV_VAR_DIR = $(REPO_VAR)
-_dev-init: DEV_DB_DIR = $(MYSQL_BASE_DIR)
-_dev-init: DEV_DB_DATA_DIR = $(MYSQL_DATA_DIR)
-_dev-init: DEV_DB_UNIX_PORT = $(MYSQL_UNIX_PORT)
-_dev-init: DEV_DB_PID_FILE = $(MYSQL_PID_FILE)
 _dev-init: DEV_LOG_DIR = $(REPO_LOG)
 _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
 
 .PHONY: help dev-init deploy _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
-    _dev-init-cluster _dev-init-composer _dev-update-hosts _dev-init-local-env
+    _dev-init-composer _dev-update-hosts _dev-init-local-env
 
 help:
 	@echo "Available targets:"
@@ -52,9 +45,7 @@ _dev-assert-nix:
 	    exit 1; \
 	fi
 
-# composer runs before cluster: init-cluster.sh is Composer-delivered
-# (vendor/bin/init-cluster.sh), so vendor/bin must exist first.
-_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-cluster _dev-update-hosts _dev-init-local-env
+_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-update-hosts _dev-init-local-env
 	@echo "Developer environment successfully initialized."
 
 _dev-init-git-hooks:
@@ -62,15 +53,12 @@ _dev-init-git-hooks:
 
 _dev-create-dirs:
 	@echo "Creating local logging and storage directories..."
-	mkdir -p $(DEV_LOG_DIR) $(DEV_DB_DATA_DIR)
-
-_dev-init-cluster:
-	@vendor/bin/init-cluster.sh "$(DEV_DB_DATA_DIR)" "$(DEV_DB_PID_FILE)" "$(DEV_DB_UNIX_PORT)"
+	mkdir -p $(DEV_LOG_DIR)
 
 _dev-init-composer:
-	@echo "Removing vendor/ if exists..." 
+	@echo "Removing vendor/ if exists..."
 	-rm -rf vendor
-	@echo "Running composer install..."; 
+	@echo "Running composer install..."
 	composer install
 
 _dev-update-hosts:

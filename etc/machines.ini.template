@@ -1,14 +1,13 @@
-# Machine registry: dev + prod machines.
+# Machine registry: prod machines only.
 # Copy to etc/machines.ini (git-ignored; commit it only in a private fork) and
-# fill in your entries. `deploy` (bin/deploy.sh) reads the [prod] roster;
-# `init-local-env.sh` reads [dev] for the local machine's DBUSER; `gen-reuter`
-# reads [prod] for the database -> server mapping.
+# fill in your entries. `pf-deploy.sh` (the framework CLI wrapped by
+# bin/deploy.sh) and `gen-reuter` read the [prod] roster; the dev-machine
+# `DBUSER` mapping now lives in etc/team.ini (see etc/team.ini.template), not
+# here.
 #
-# [dev]  dev machine hostname -> prod DB username (DBUSER) used for remote DB
-#        access. Run `hostname` to find yours.
 # [prod] prod deploy targets. Each key is the server's ZeroTier IP (the same
-#        address `deploy` uses for SSH). The value is a comma-separated list
-#        of `tag[:name]` tokens:
+#        address `pf-deploy.sh` uses for SSH). The value is a comma-separated
+#        list of `tag[:name]` tokens:
 #          bare tag    `web`      -> boolean flag (a deploy step on this host)
 #          named tag   `db:simo`  -> a `db` resource named `simo`
 #        `db` is the framework's built-in tag (a MariaDB instance +
@@ -23,9 +22,6 @@
 #        hence no uniqueness constraint. A server may host no database
 #        (code-only), one database, or several databases in its MariaDB
 #        instance.
-
-[dev]
-# juan-workstation=juan
 
 [prod]
 # 10.147.x.10=db:simo, db:analytics, web, worker
