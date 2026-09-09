@@ -30,7 +30,7 @@ _dev-init: TAG_END   = \# end: simox-hosts
 help:
 	@echo "Available targets:"
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
-	@echo "  deploy     - Deploy to [prod] (args via ARGS, e.g. make deploy ARGS=\"--init\")"
+	@echo "  deploy     - Deploy to [prod] (args via ARGS)"
 
 dev-init: _dev-assert-nix _dev-init
 

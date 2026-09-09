@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Consumer provisioning extra (simox data): Apache/www-data traversal.
-# Runs as root on the remote via `deploy --init` (DEPLOY_INIT_CMD), after the
+# Runs as root on the remote via `deploy` (DEPLOY_INIT_CMD), after the
 # framework's generic provisioning (bin/pf-provision.sh).
 set -euo pipefail
 set -a

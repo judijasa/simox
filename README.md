@@ -60,7 +60,7 @@ Navigate to the website: `http://localhost:8000/public/index.php`
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
 
-- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[prod]` section lists the prod servers by ZeroTier IP; the value is a comma-separated list of `tag[:name]` tokens (`ip=db:simo, db:analytics, web, worker`): `db` is the framework's built-in tag (a MariaDB instance + `gen-reuter` connectivity), `web` restores Apache www-data traversal, and `worker` installs the cron-manifest output. Each named token maps to exactly one server; a server may host several databases. `pf-deploy.sh` targets every `[prod]` host by default; a server with a `db:<name>` token gets a MariaDB instance on `--init` (one instance serves all its `db:` names).
+- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored; commit it only in a private fork). The `[prod]` section lists the prod servers by ZeroTier IP; the value is a comma-separated list of `tag[:name]` tokens (`ip=db:simo, db:analytics, web, worker`): `db` is the framework's built-in tag (a MariaDB instance + `gen-reuter` connectivity), `web` restores Apache www-data traversal, and `worker` installs the cron-manifest output. Each named token maps to exactly one server; a server may host several databases. `pf-deploy.sh` targets every `[prod]` host by default; a server with a `db:<name>` token gets a MariaDB instance during provisioning (one instance serves all its `db:` names).
 - `etc/team.ini` — copy from `etc/team.ini.template` (git-ignored). One section per team member (the section name IS their DB username) with a `subject` key (their client-certificate subject DN) and `hostname=ZeroTier-IP` entries pinning their dev machine(s). `make dev-init` resolves your `DBUSER` from here (the section whose entries include your `hostname`) for remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 - `.private-source` — optional: instead of copying `etc/machines.ini.template`/`etc/team.ini.template` directly, keep `etc/machines.ini` and `etc/team.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
@@ -110,7 +110,7 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   `ema` CLI in sandbox mode (the app layer ignores the variable and
   resolves `[<dbname>]` from `REUTER_INI`).
 
-The production MariaDB instance is provisioned by `pf-deploy.sh --init` (framework
+The production MariaDB instance is provisioned by `pf-deploy.sh` (framework
 `vendor/bin/pf-provision.sh`) **only on database hosts** (the `[prod]` entries
 carrying a `db:<name>` tag in `etc/machines.ini`); other servers skip it. datadir/socket/pid
 live under `/var/lib/simox/mariadb`, the per-project defaults file is
@@ -121,18 +121,18 @@ on TCP over ZeroTier so both the DB host and the app-only servers can serve
 the website against the same database. Never start `mysqld` manually in production; re-deploys leave
 the running instance untouched.
 
-**2. Initial deploy** — run from the dev machine inside `nix develop`:
+**2. Deploy** — run from the dev machine inside `nix develop`:
 ```bash
-make deploy ARGS="--init"          # every [prod] host in etc/machines.ini
-make deploy ARGS="--init <host>"   # a single prod host (must be in [prod])
+make deploy                        # every [prod] host in etc/machines.ini
+make deploy <host>                 # a single prod host (must be in [prod])
 ```
 `make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first
 runs the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and then
-the per-host post-deploy step. `--init` runs the framework's generic
-`vendor/bin/pf-provision.sh` on the remote
-(asserts the app user, creates system directories `/srv/apps`,
+the per-host post-deploy step. On every deploy, the framework's generic
+`vendor/bin/pf-provision.sh` runs on the remote (idempotently)
+to assert the app user and create system directories (`/srv/apps`,
 `/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
-and initializes MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
+and initialize MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
 After the framework CLI returns, the deploy entrypoint runs
 `bin/deploy/server-side-post-deploy.sh` on each `[prod]` host (passing that

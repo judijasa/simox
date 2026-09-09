@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Consumer server-side post-deploy step (simox data): run on each prod host
 # by the deploy entrypoint (bin/deploy.sh) AFTER the framework `pf-deploy.sh`
-# CLI has copied the nix closure and composer deps (and, for --init, after
-# provisioning). It runs ON the prod server (not locally), hence the
+# CLI has copied the nix closure and composer deps (after provisioning). It
+# runs ON the prod server (not locally), hence the
 # "server-side" name. At this point the framework CLIs (gen-env, gen-reuter,
 # cron-manifest, phprun) are Composer-delivered under
 # $DEPLOY_TARGET_DIR/vendor/bin, and php + the environment binaries live
