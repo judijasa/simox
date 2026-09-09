@@ -9,14 +9,16 @@
 # [prod] prod deploy targets. Each key is the server's ZeroTier IP (the same
 #        address `pf-deploy.sh` uses for SSH). The value is a comma-separated
 #        list of `tag[:name]` tokens:
-#          bare tag    `web`      -> boolean flag (a deploy step on this host)
 #          named tag   `db:simo`  -> a `db` resource named `simo`
-#        `db` is the framework's built-in tag (a MariaDB instance +
-#        `gen-reuter` connectivity); every other tag is consumer-owned:
+#          bare tag    `worker`   -> boolean flag (install cron on this host)
+#        `db` (named) and `worker` (bare) are the framework's built-in tags:
+#        a `db:<name>` token provisions a MariaDB instance + `gen-reuter`
+#        connectivity; `worker` installs the `cron-manifest` output (cron
+#        jobs) on every deploy. Every other tag is consumer-owned:
 #          `web`     restore Apache www-data traversal on the repo dir
-#          `worker`  install the cron-manifest output (cron jobs)
-#        A host with a `db:<name>` token is a database host; an empty value is
-#        a code-only server (it deploys the codebase but runs no tagged step).
+#        A host with a `db:<name>` token is a database host; a bare `worker`
+#        token adds cron install on that host; an empty value is a code-only
+#        server (it deploys the codebase but runs no tagged step).
 #
 #        Constraint: a named token may appear on exactly ONE server
 #        (`db:simo` and `web` are independent). Bare flags carry no name,

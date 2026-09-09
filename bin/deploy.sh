@@ -3,12 +3,16 @@
 # `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh).
 #
 # The framework `pf-deploy.sh` is a closed operation: it swaps the repo, copies the
-# nix closure, installs composer deps and runs idempotent provisioning — it
-# invokes no consumer hooks. This wrapper forwards its args
+# nix closure, installs composer deps, runs idempotent provisioning and — as
+# built-in steps on every host — regenerates .env (gen-env) and refreshes
+# /etc/<instance>/reuter.ini (gen-reuter); on hosts tagged `worker` it also
+# installs the cron-manifest output (cron jobs). `db` and `worker` are the
+# framework's built-in tags, so this wrapper forwards its args
 # verbatim to it, then re-derives the [prod] roster (host → tags) from
 # etc/machines.ini via the shared pf-roster CLI and runs the consumer
 # server-side post-deploy step (bin/deploy/server-side-post-deploy.sh) on each
-# host, passing that host's tag list via DEPLOY_TAGS.
+# host, passing that host's tag list via DEPLOY_TAGS — it now covers only the
+# consumer-owned tags (`web`).
 #
 # Usage (from the repo root, inside `nix develop`):
 #   bin/deploy.sh                 # every [prod] host

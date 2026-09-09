@@ -1,8 +1,11 @@
 # simox Makefile (dev-init + deploy entrypoints).
 # Production deploy is the consumer entrypoint bin/deploy.sh: it runs the
-# framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh), then the per-host
-# post-deploy step bin/deploy/server-side-post-deploy.sh (provisioning extra stays
-# bin/deploy/provision-extra.sh via DEPLOY_INIT_CMD).
+# framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh) — which also runs the
+# built-in per-host steps (gen-env/gen-reuter on every host, cron install on
+# `worker` hosts) — then the consumer post-deploy step
+# bin/deploy/server-side-post-deploy.sh, covering only simox's own tags
+# (`web`). The provisioning extra stays bin/deploy/provision-extra.sh via
+# DEPLOY_INIT_CMD.
 # Generic dev-init steps delegate to the Composer-delivered scripts in
 # vendor/bin (init-local-env.sh from the `judijasa/php-daas-framework` package);
 # this Makefile keeps only the consumer-specific steps (git hooks, hosts) plus
@@ -35,7 +38,7 @@ help:
 dev-init: _dev-assert-nix _dev-init
 
 # Production deploy: wrap the framework CLI, then run the consumer post-deploy
-# step per host. Pass deploy args via ARGS (empty = every [prod] host).
+# step (`web`) per host. Pass deploy args via ARGS (empty = every [prod] host).
 deploy:
 	@bin/deploy.sh $(ARGS)
 
