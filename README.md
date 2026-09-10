@@ -65,16 +65,17 @@ To connect to a production server via `ema`, the machine registry config is need
   servers by ZeroTier IP; the value is a comma-separated list of
   `tag[:name]` tokens (`ip=db:simo, db:analytics, web, worker`): `db` (named)
   and `worker` (bare) are the framework's built-in tags — a `db:<name>` token
-  provisions a MariaDB instance + `gen-reuter` connectivity, and `worker`
+  is the advisory anchor for the framework's warn-only `db-check` (the
+  instance itself is provisioned by `ema create`, not by deploy), and `worker`
   installs the `cron-manifest` output on every deploy — while `web` is
   simox's own step (restore Apache www-data traversal). Each named token maps
   to exactly one server; a server may host several databases. `pf-deploy.sh`
   targets every `[prod]` host by default; a server with a `db:<name>` token
-  gets a MariaDB instance during provisioning (one instance serves all its
-  `db:` names).
+  hosts one or more databases, each with its own MariaDB instance created by
+  `ema create`.
 - `etc/team.ini` — copy from `etc/team.ini.template` (git-ignored). One section per team member (the section name IS their DB username) with a `subject` key (their client-certificate subject DN) and `hostname=ZeroTier-IP` entries pinning their dev machine(s). `make dev-init` resolves your `DBUSER` from here (the section whose entries include your `hostname`) for remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
-- `.private-source` — optional: instead of copying `etc/machines.ini.template`/`etc/team.ini.template` directly, keep `etc/machines.ini` and `etc/team.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
+- `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
 
 ## Production Server Setup
 
@@ -89,11 +90,16 @@ DocumentRoot "/srv/apps/simox/public"
 <Directory "/srv/apps/simox/public">
     Require all granted
 </Directory>
-SetEnv REUTER_INI /etc/simox/reuter.ini
+SetEnv REUTER_INI /srv/apps/simox/etc/reuter.ini
 ```
-Config files inside the repo (e.g. `etc/reuter.ini`) are gitignored but can be overwritten by `git clean`. Store production config outside the repo and point to it via:
+`etc/reuter.ini` is git-ignored and injected as private data by the framework's
+`fetch-private-data` (never regenerated — see `doc/system/private-config.md` and
+the contract in `etc/reuter.ini.template`). The Apache vhost and `.env` point at
+it via:
 
-- **`REUTER_INI`** — path to the `reuter.ini` file (e.g. `/etc/simox/reuter.ini`), consumed by the framework's `Database` class and the `ema` CLI (prod mode). If unset, `etc/reuter.ini` inside the repo is used.
+- **`REUTER_INI`** — path to the `reuter.ini` file (`/srv/apps/simox/etc/reuter.ini`,
+  the `DEPLOY_REUTER_INI` value), consumed by the framework's `Database` class and
+  the `ema` CLI (prod mode). If unset, `etc/reuter.ini` inside the repo is used.
 - **`EMA_TARGET`** — operation-mode flag for the `ema` CLI only: `sandbox`
   (default, per-instance sandbox) or `prod` (reads
   `REUTER_INI`). The app layer ignores it; `Database.php` always resolves a
@@ -104,34 +110,33 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_TARGET=sandbox`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
   framework `gen-env` CLI, run by the framework's `pf-deploy.sh` as a built-in
-  per-host step; it
-  projects it from the committed `etc/deploy.conf` (no separate
-  `etc/env.prod`): `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
-  `REUTER_INI=/etc/simox/reuter.ini` and `EMA_TARGET=prod`. The `.env` stays
-  `MYSQL_*`-free — the socket lives in the `reuter.ini` section, not the
-  environment. That same built-in step then runs
-  `gen-reuter "$REUTER_INI"` to refresh
-  the `/etc/simox/reuter.ini` sections (SERVER/PORT/DBMS and
-  `MYSQL_UNIX_PORT=$DEPLOY_DB_BASE/mysql.sock`, one per database) from
-  `etc/machines.ini` + `etc/deploy.conf` — the DB host's ZeroTier IP,
-  `DEPLOY_DB_PORT` and `DEPLOY_DB_BASE` — preserving the credentials already
-  in the file. `ema create srv/<name>-<GUID>` (run on the DB host) uses the section
-  socket for root auth; the app (`Database.php`) reads `.env` and stays TCP.
-  `gen-env` fails loudly if a required `deploy.conf` key is missing or a
-  projected key is lost — a missing `EMA_TARGET=prod` would silently put the
-  `ema` CLI in sandbox mode (the app layer ignores the variable and
-  resolves `[<dbname>]` from `REUTER_INI`).
+  per-host step; it projects it from the committed `etc/deploy.conf` (no
+  separate `etc/env.prod`): `REPO_PATH=/srv/apps/simox`,
+  `REPO_LOG=/var/log/simox`, `REUTER_INI=/srv/apps/simox/etc/reuter.ini` and
+  `EMA_TARGET=prod`. The `.env` stays `MYSQL_*`-free — the socket lives in the
+  `reuter.ini` section, not the environment. `reuter.ini` itself is a
+  manually-maintained private file (values recorded from `ema create` output),
+  injected into `etc/` by `fetch-private-data`; `gen-env` only projects its
+  path (`DEPLOY_REUTER_INI`), never its contents. On the same per-host pass,
+  `pf-deploy.sh` runs `db-check` (warn-only) to verify each `reuter.ini`
+  section's TCP endpoint is reachable. `ema create srv/<name>-<GUID>` (run on
+  the DB host) uses the section socket for root auth; the app (`Database.php`)
+  reads `.env` and stays TCP. `gen-env` fails loudly if a required
+  `deploy.conf` key is missing or a projected key is lost — a missing
+  `EMA_TARGET=prod` would silently put the `ema` CLI in sandbox mode (the app
+  layer ignores the variable and resolves `[<dbname>]` from `REUTER_INI`).
 
-The production MariaDB instance is provisioned by `pf-deploy.sh` (framework
-`vendor/bin/pf-provision.sh`) **only on database hosts** (the `[prod]` entries
-carrying a `db:<name>` tag in `etc/machines.ini`); other servers skip it. datadir/socket/pid
-live under `/var/lib/simox/mariadb`, the per-project defaults file is
-`/etc/simox/my.cnf`, and the daemon runs as a systemd unit `mariadb@simox` —
-enabled exactly once, durable across reboots. `DEPLOY_DB_PORT` (required on the database host) and `DEPLOY_DB_BIND`
-(the DB host's ZeroTier IP) live in `etc/deploy.conf`: the instance listens
+The production MariaDB instance is created by `ema create srv/<name>-<GUID>`
+(run on the database host) — one instance per database, not provisioned by
+deploy. `ema create` provisions the datadir/socket/pid/log under
+`/var/lib/mariadb/<db>/`, the per-instance defaults file `/etc/<db>/my.cnf`,
+and a `mariadb@<db>` systemd unit (enabled once, durable across reboots), then
+prints the `[<dbname>]` connectivity values (`SERVER`/`PORT`/`DBMS`/
+`MYSQL_UNIX_PORT`) to record in the manual `reuter.ini`. The instance listens
 on TCP over ZeroTier so both the DB host and the app-only servers can serve
-the website against the same database. Never start `mysqld` manually in production; re-deploys leave
-the running instance untouched.
+the website against the same database. `ema values <db>` recovers a lost
+record. Never start `mysqld` manually in production; re-deploys leave running
+instances untouched.
 
 **2. Deploy** — run from the dev machine inside `nix develop`:
 ```bash
@@ -143,11 +148,10 @@ runs the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and
 the per-host post-deploy step. On every deploy, the framework's generic
 `vendor/bin/pf-provision.sh` runs on the remote (idempotently)
 to assert the app user and create system directories (`/srv/apps`,
-`/var/log/simox`, and — on the database host only — `/var/lib/simox/mariadb`
-and initialize MariaDB), then the consumer-specific `DEPLOY_INIT_CMD`
+`/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
 The framework CLI also runs its built-in per-host steps — regenerating `.env`,
-refreshing `/etc/simox/reuter.ini` via `gen-reuter`, and, on hosts tagged
+verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
 `worker`, installing cron (`/etc/cron.d/simo-orchestrator`) from the
 `#[CronJob]`/`#[Agent]` attributes. After it returns, the deploy entrypoint
 runs `bin/deploy/server-side-post-deploy.sh` on each `[prod]` host (passing

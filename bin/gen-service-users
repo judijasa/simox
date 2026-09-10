@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 // gen-service-users - simox service-account provisioning (consumer-owned).
 //
-// ema provisions schema only (ema sandbox / ema create): it creates the
-// database and applies schema packages, never users or grants. The service
-// accounts are this repo's policy, so this script creates them:
+// ema provisions the instance and schema (ema sandbox / ema create): it
+// creates the database and applies schema packages, never users or grants.
+// The service accounts are this repo's policy, so this script creates them:
 //
 //   admin   @ SERVERNAME   GRANT ALL PRIVILEGES ON <db>.*   (read-write app)
 //   reader  @ SERVERNAME   GRANT SELECT ON <db>.*            (read-only app)
@@ -21,9 +21,10 @@ declare(strict_types=1);
 //
 // It emits transient SQL (never persisted) and, unless -n/--dry-run, applies
 // it as root through "ema mariadb <db> < file.sql" (DBUSER=root; run as root
-// on the DB host - root/unix_socket auth over the socket written by
-// gen-reuter). It also writes the three <ACCOUNT>_PASSWORD keys (empty) into
-// the section, which gen-reuter then preserves on every refresh.
+// on the DB host - root/unix_socket auth over the MYSQL_UNIX_PORT socket from
+// the manual reuter.ini section). It does NOT write the <ACCOUNT>_PASSWORD
+// keys into reuter.ini: that file is the manual source of truth, recorded by
+// the operator (empty = passwordless).
 //
 // Usage: gen-service-users <db> [-n|--dry-run] [--help]
 
@@ -31,10 +32,11 @@ const HELP = <<<'TXT'
 Usage: gen-service-users <db> [flags]
 
 Create simox's service accounts (admin/reader/public) for one database and
-persist their (empty) <ACCOUNT>_PASSWORD keys in the [<db>] section.
+apply their grants. The <ACCOUNT>_PASSWORD keys are NOT written back — the
+manual reuter.ini [<db>] section is the source of truth.
 
   <db>              database name (the [<db>] section in reuter.ini).
-  -n, --dry-run     print the SQL without applying it or writing keys.
+  -n, --dry-run     print the SQL without applying it.
   -h, --help        show this help.
 TXT;
 
@@ -96,53 +98,6 @@ function apply_sql(string $db, string $sql): int
     return $code;
 }
 
-// Ensure each <ACCOUNT>_PASSWORD key exists in the [<db>] section, inserting
-// empty keys after the section header when missing. Line-based so unrelated
-// sections and comments are left untouched.
-function ensure_password_keys(string $path, string $db, array $accounts): bool
-{
-    $lines = file($path, FILE_IGNORE_NEW_LINES);
-    if ($lines === false) {
-        return false;
-    }
-    $header = '[' . $db . ']';
-    $present = array();
-    $headerIndex = null;
-    $inSection = false;
-    foreach ($lines as $i => $line) {
-        $trimmed = trim($line);
-        if ($trimmed === $header) {
-            $headerIndex = $i;
-            $inSection = true;
-            continue;
-        }
-        if ($inSection) {
-            if ($trimmed === '' || $trimmed[0] === '[') {
-                break;
-            }
-            $eq = strpos($trimmed, '=');
-            if ($eq !== false) {
-                $present[trim(substr($trimmed, 0, $eq))] = true;
-            }
-        }
-    }
-    if ($headerIndex === null) {
-        return false;
-    }
-    $missing = array();
-    foreach ($accounts as $account) {
-        $key = strtoupper($account) . '_PASSWORD';
-        if (!isset($present[$key])) {
-            $missing[] = $key . '=';
-        }
-    }
-    if (count($missing) === 0) {
-        return true;
-    }
-    array_splice($lines, $headerIndex + 1, 0, $missing);
-    return file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL) !== false;
-}
-
 function main(array $argv): int
 {
     $db = null;
@@ -178,7 +133,7 @@ function main(array $argv): int
     fwrite(STDOUT, $sql);
 
     if ($dryRun) {
-        fwrite(STDERR, "gen-service-users: dry-run; SQL printed, not applied, no keys written" . PHP_EOL);
+        fwrite(STDERR, "gen-service-users: dry-run; SQL printed, not applied" . PHP_EOL);
         return 0;
     }
 
@@ -187,13 +142,7 @@ function main(array $argv): int
         return $code;
     }
 
-    $accounts = array('admin', 'reader', 'public');
-    if (!ensure_password_keys($path, $db, $accounts)) {
-        fwrite(STDERR, "gen-service-users: could not write the <ACCOUNT>_PASSWORD keys into {$path}" . PHP_EOL);
-        return 1;
-    }
-
-    fwrite(STDOUT, 'gen-service-users: accounts created; <ACCOUNT>_PASSWORD keys ensured in ' . $path . PHP_EOL);
+    fwrite(STDOUT, 'gen-service-users: accounts created for ' . $db . '; reuter.ini keys are manual (not written)' . PHP_EOL);
     return 0;
 }
 

@@ -1,7 +1,7 @@
 # simox Makefile (dev-init + deploy entrypoints).
 # Production deploy is the consumer entrypoint bin/deploy.sh: it runs the
 # framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh) — which also runs the
-# built-in per-host steps (gen-env/gen-reuter on every host, cron install on
+# built-in per-host steps (gen-env/db-check on every host, cron install on
 # `worker` hosts) — then the consumer post-deploy step
 # bin/deploy/server-side-post-deploy.sh, covering only simox's own tags
 # (`web`). The provisioning extra stays bin/deploy/provision-extra.sh via

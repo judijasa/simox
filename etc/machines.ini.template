@@ -2,7 +2,7 @@
 # Copy to etc/machines.ini (git-ignored; commit it only in a private fork) and
 # fill in your entries — or keep it in a private config repo and inject it via
 # .private-source (see doc/system/private-config.md). `pf-deploy.sh` (the
-# framework CLI wrapped by bin/deploy.sh) and `gen-reuter` read the [prod]
+# framework CLI wrapped by bin/deploy.sh) and `db-check` read the [prod]
 # roster; the dev-machine `DBUSER` mapping now lives in etc/team.ini (see
 # etc/team.ini.template), not here.
 #
@@ -12,9 +12,11 @@
 #          named tag   `db:simo`  -> a `db` resource named `simo`
 #          bare tag    `worker`   -> boolean flag (install cron on this host)
 #        `db` (named) and `worker` (bare) are the framework's built-in tags:
-#        a `db:<name>` token provisions a MariaDB instance + `gen-reuter`
-#        connectivity; `worker` installs the `cron-manifest` output (cron
-#        jobs) on every deploy. Every other tag is consumer-owned:
+#        a `db:<name>` token is the advisory anchor for `db-check` (it
+#        verifies that database exists and is reachable on its host — the
+#        instance itself is provisioned by `ema create`, not by deploy);
+#        `worker` installs the `cron-manifest` output (cron jobs) on every
+#        deploy. Every other tag is consumer-owned:
 #          `web`     restore Apache www-data traversal on the repo dir
 #        A host with a `db:<name>` token is a database host; a bare `worker`
 #        token adds cron install on that host; an empty value is a code-only
@@ -23,8 +25,8 @@
 #        Constraint: a named token may appear on exactly ONE server
 #        (`db:simo` and `web` are independent). Bare flags carry no name,
 #        hence no uniqueness constraint. A server may host no database
-#        (code-only), one database, or several databases in its MariaDB
-#        instance.
+#        (code-only), one database, or several databases (one MariaDB
+#        instance each, created by `ema create`).
 
 [prod]
 # 10.147.x.10=db:simo, db:analytics, web, worker

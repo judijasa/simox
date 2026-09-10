@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "203545b6361cccf8125050a036127de6",
+    "content-hash": "2e425a30cd6f55293939002dcbaca52e",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/ema.git",
-                "reference": "bd034bc384f4b83fa948a94c0a5cf7e46f0388e5"
+                "reference": "317d679bdabf3ae8751056682eee263ff8a30274"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/ema/zipball/bd034bc384f4b83fa948a94c0a5cf7e46f0388e5",
-                "reference": "bd034bc384f4b83fa948a94c0a5cf7e46f0388e5",
+                "url": "https://api.github.com/repos/judijasa/ema/zipball/317d679bdabf3ae8751056682eee263ff8a30274",
+                "reference": "317d679bdabf3ae8751056682eee263ff8a30274",
                 "shasum": ""
             },
             "require": {
@@ -147,12 +147,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "cfd5728acd328d1faa5ee02376f559245f2c97ad"
+                "reference": "d736eb6e9fd0db195460c4d142d1d37adb776512"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/cfd5728acd328d1faa5ee02376f559245f2c97ad",
-                "reference": "cfd5728acd328d1faa5ee02376f559245f2c97ad",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/d736eb6e9fd0db195460c4d142d1d37adb776512",
+                "reference": "d736eb6e9fd0db195460c4d142d1d37adb776512",
                 "shasum": ""
             },
             "require": {

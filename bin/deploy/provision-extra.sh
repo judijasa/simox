@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Consumer provisioning extra (simox data): Apache/www-data traversal.
 # Runs as root on the remote via `deploy` (DEPLOY_INIT_CMD), after the
-# framework's generic provisioning (bin/pf-provision.sh).
+# framework's generic provisioning (bin/pf-provision.sh, which asserts the
+# app user and creates permanent dirs but no longer provisions MariaDB — DB
+# instances are created by `ema create`). Only web traversal is consumer-owned.
 set -euo pipefail
 set -a
 . ./etc/deploy.conf
