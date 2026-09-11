@@ -22,7 +22,7 @@ This page only records what is private *here*.
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
 no secrets). `etc/hosts` is git-ignored but is a local convenience mapping,
 not injected by `fetch-private-data`. The `reuter.ini` connectivity sections
-(and their `SIMOX_PASSWORD` / `PUBLIC_PASSWORD` keys) are private data and
+(and their `SIMOX_PASSWORD` key) are private data and
 live only in the private repo, never in the public history —
 `bin/gen-service-users` no longer writes those keys; they are committed empty
 for now. The service-account policy itself (which accounts exist and on which

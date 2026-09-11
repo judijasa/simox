@@ -73,10 +73,10 @@ To connect to a production server via `ema`, the machine registry config is need
   is the advisory anchor for the framework's warn-only `db-check` (the
   instance itself is provisioned by `ema create`, not by deploy), and `worker`
   installs the `cron-manifest` output on every deploy — while `web` is
-  simox's own step (restore Apache www-data traversal). The `worker` and `web`
-  tags also feed the service-account host pins that `bin/gen-service-users`
-  reconciles (`worker` → `simox`, `web` → `public`; see
-  `etc/service-users.sql`). Each named token maps to exactly one server; a
+  simox's own step (restore Apache www-data traversal). Only `worker` feeds
+  the service-account host pin that `bin/gen-service-users` reconciles
+  (`worker` → `simox`; see `etc/service-users.sql`); `web` feeds no account
+  pin. Each named token maps to exactly one server; a
   server may host several databases. `pf-deploy.sh` targets every `[prod]`
   host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
@@ -176,23 +176,22 @@ there — restoring Apache www-data traversal on the repo dir.
 MariaDB users/grants are not provisioned by `ema` (which creates instances
 and schema only). They are this repo's policy, declared in
 `etc/service-users.sql` and applied by `bin/gen-service-users` as a
-reconcile: it creates the declared accounts and drops stale ones (the legacy
-`admin`/`reader`, accounts on the wrong database, and removed host pins).
+closed-world reconcile: it creates the declared account and drops every live
+account not in the declared set plus a fixed allow-list (`root`,
+`mariadb.sys`, `replication`).
 
-Two accounts, both passwordless — the security boundary is ZeroTier
+A single account, passwordless — the security boundary is ZeroTier
 membership plus the source-IP host pin:
 
 - `simox` — `ALL PRIVILEGES` on the primary `simo0`, `SELECT` on the replica
   `simo1`; host-pinned to `etc/team.ini` member IPs and the `worker` hosts in
   `etc/machines.ini`.
-- `public` — `SELECT` on `simo1` only; host-pinned to the `web` hosts in
-  `etc/machines.ini`. Never created on `simo0`.
 
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
-`simo1` via `public`; the indexer and pipeline agents write to `simo0` via
+`simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
 `simox`. The `replication` transport account (used only by the replica's
 replication thread) is created by the replica bootstrap on the primary and is
-deliberately outside `etc/service-users.sql`.
+deliberately outside `etc/service-users.sql` (allow-listed, never dropped).
 
 The read replica `simo1` is built by ema's replica flow (`type=replica`,
 `--from-snapshot`). See `doc/system/replica-bootstrap.md` for the full

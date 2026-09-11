@@ -12,17 +12,19 @@ declare(strict_types=1);
 //
 //   - creates the declared accounts (passwordless, host-pinned) and applies
 //     their per-database grants;
-//   - drops stale accounts: the legacy admin/reader pair, accounts on a
-//     database they are not declared for (e.g. public on simo0), and host
-//     pins no longer in the current source set (revocation).
+//   - drops stale accounts in a closed-world pass: every live account not in
+//     the declared set plus a fixed allow-list (root, mariadb.sys,
+//     replication) is dropped. Accounts are global in mysql.user; only the
+//     GRANT is per-database, so the drop set is the union of the declared
+//     accounts across all databases.
 //
 // Host-pin sources (see the @directives in etc/service-users.sql):
 //   member  every IP value in etc/team.ini
 //   worker  every etc/machines.ini [prod] host tagged `worker`
-//   web     every etc/machines.ini [prod] host tagged `web`
 //
 // The `replication` transport account is not managed here: the replica
-// bootstrap creates it on the primary (doc/system/replica-bootstrap.md).
+// bootstrap creates it on the primary (doc/system/replica-bootstrap.md). It
+// is allow-listed so the closed-world pass never touches it.
 //
 // Each target database is reconciled by running the generated SQL as root
 // through "ema mariadb <db> < file.sql" (DBUSER=root; run as root on the DB
@@ -35,7 +37,7 @@ declare(strict_types=1);
 const HELP = <<<'TXT'
 Usage: gen-service-users [db...] [flags]
 
-Reconcile simox's service accounts (simox/public) against etc/service-users.sql.
+Reconcile simox's service account (simox) against etc/service-users.sql.
 With no <db> arguments, every database named in the @db directives is
 reconciled; pass one or more <db> names to reconcile only those (each must be
 declared in etc/service-users.sql).
@@ -45,7 +47,7 @@ declared in etc/service-users.sql).
 TXT;
 
 const SERVICE_USERS_FILE = 'etc/service-users.sql';
-const LEGACY_ACCOUNTS = array('admin', 'reader');
+const ALLOWED_ACCOUNTS = array('root', 'mariadb.sys', 'replication');
 
 function repo_file(string $path): string
 {
@@ -150,7 +152,7 @@ function machine_tag_hosts(string $path, string $tag): array
 }
 
 // Resolve one account's host-pin sources into a concrete IP set.
-function account_hosts(array $account, array $member, array $worker, array $web): array
+function account_hosts(array $account, array $member, array $worker): array
 {
     $hosts = array();
     foreach ($account['hosts'] as $src) {
@@ -161,9 +163,6 @@ function account_hosts(array $account, array $member, array $worker, array $web)
             case 'worker':
                 $hosts = array_merge($hosts, $worker);
                 break;
-            case 'web':
-                $hosts = array_merge($hosts, $web);
-                break;
             default:
                 fwrite(STDERR, "gen-service-users: unknown host source '{$src}'" . PHP_EOL);
                 exit(1);
@@ -173,12 +172,12 @@ function account_hosts(array $account, array $member, array $worker, array $web)
 }
 
 // desired[db][account] = privilege; accountHosts[account] = host list.
-function build_desired(array $accounts, array $member, array $worker, array $web): array
+function build_desired(array $accounts, array $member, array $worker): array
 {
     $desired = array();
     $accountHosts = array();
     foreach ($accounts as $name => $account) {
-        $accountHosts[$name] = account_hosts($account, $member, $worker, $web);
+        $accountHosts[$name] = account_hosts($account, $member, $worker);
         foreach ($account['dbs'] as $db => $privilege) {
             $desired[$db][$name] = $privilege;
         }
@@ -186,21 +185,13 @@ function build_desired(array $accounts, array $member, array $worker, array $web
     return array($desired, $accountHosts);
 }
 
-// Every account name the reconcile manages (declared + legacy), used to
-// enumerate and drop stale accounts.
-function scope_accounts(array $accounts): array
-{
-    return array_values(array_unique(array_merge(array_keys($accounts), LEGACY_ACCOUNTS)));
-}
-
-// Enumerate live simox/public/admin/reader accounts as "user@host" strings.
+// Enumerate every live account as "user@host" strings.
 // Returns [] on failure (reconcile degrades to create-only and warns).
-function existing_users(string $db, array $scope): array
+function existing_users(string $db): array
 {
     $root = getcwd();
     $ema = is_executable($root . '/vendor/bin/ema') ? $root . '/vendor/bin/ema' : 'ema';
-    $list = "'" . implode("','", array_map('sql_quote', $scope)) . "'";
-    $sql = 'SELECT CONCAT(User, 0x40, Host) FROM mysql.user WHERE User IN (' . $list . ')';
+    $sql = 'SELECT CONCAT(User, 0x40, Host) FROM mysql.user';
     $cmd = 'DBUSER=root ' . escapeshellarg($ema) . ' mariadb ' . escapeshellarg($db)
         . ' -N -e ' . escapeshellarg($sql) . ' 2>&1';
     exec($cmd, $out, $code);
@@ -230,23 +221,25 @@ function split_account_host(string $accountAtHost): array
     return array(substr($accountAtHost, 0, $pos), substr($accountAtHost, $pos + 1));
 }
 
-// desired[account] = privilege (accounts declared for this database only).
+// desired[account] = privilege (declared for this database); accountHosts[account]
+// = host pins (all declared accounts, across all databases — the drop set).
 function build_sql(string $db, array $desired, array $accountHosts, array $existing): string
 {
     $wanted = array();
-    foreach ($desired as $account => $_privilege) {
-        foreach ($accountHosts[$account] as $host) {
+    foreach ($accountHosts as $account => $hosts) {
+        foreach ($hosts as $host) {
             $wanted[$account . '@' . $host] = true;
         }
     }
+    $allowed = array_fill_keys(ALLOWED_ACCOUNTS, true);
 
     $sql = '-- gen-service-users reconcile for ' . $db . ' (transient; never persisted)' . PHP_EOL;
-    $sql .= PHP_EOL . '-- Drops (stale: legacy, wrong-db, or removed host pins)' . PHP_EOL;
+    $sql .= PHP_EOL . '-- Drops (closed-world: not declared and not allow-listed, or removed host pins)' . PHP_EOL;
     foreach ($existing as $accountAtHost) {
-        if (isset($wanted[$accountAtHost])) {
+        list($account, $host) = split_account_host($accountAtHost);
+        if (isset($allowed[$account]) || isset($wanted[$accountAtHost])) {
             continue;
         }
-        list($account, $host) = split_account_host($accountAtHost);
         $sql .= "DROP USER IF EXISTS '" . sql_quote($account) . "'@'" . sql_quote($host) . "';" . PHP_EOL;
     }
 
@@ -302,9 +295,8 @@ function main(array $argv): int
     $accounts = parse_accounts($serviceFile);
     $member = member_hosts(repo_file('etc/team.ini'));
     $worker = machine_tag_hosts(repo_file('etc/machines.ini'), 'worker');
-    $web = machine_tag_hosts(repo_file('etc/machines.ini'), 'web');
 
-    list($desiredByDb, $accountHosts) = build_desired($accounts, $member, $worker, $web);
+    list($desiredByDb, $accountHosts) = build_desired($accounts, $member, $worker);
     $allDbs = array_keys($desiredByDb);
     sort($allDbs);
 
@@ -318,11 +310,9 @@ function main(array $argv): int
         }
     }
 
-    $scope = scope_accounts($accounts);
-
     $code = 0;
     foreach ($dbs as $db) {
-        $existing = existing_users($db, $scope);
+        $existing = existing_users($db);
         $sql = build_sql($db, $desiredByDb[$db], $accountHosts, $existing);
         fwrite(STDOUT, $sql);
         if (!$dryRun) {

@@ -5,14 +5,13 @@
 ;
 ;   $conn = Database::connectAs($dbname, $account)
 ;
-; $account is one of this repo's service accounts (declared in
+; $account is this repo's single service account (declared in
 ; etc/service-users.sql): `simox` (read-write on the primary, read on the
-; replica) and `public` (read-only on the replica). The connector reads the
-; password from the <ACCOUNT>_PASSWORD key (uppercased account name +
-; _PASSWORD); an empty value means a passwordless account. This repo is
-; passwordless by policy — the security boundary is ZeroTier membership plus
-; the source-IP host pin that bin/gen-service-users derives from
-; etc/team.ini / etc/machines.ini.
+; replica). The connector reads the password from the <ACCOUNT>_PASSWORD key
+; (uppercased account name + _PASSWORD); an empty value means a passwordless
+; account. This repo is passwordless by policy — the security boundary is
+; ZeroTier membership plus the source-IP host pin that bin/gen-service-users
+; derives from etc/team.ini / etc/machines.ini.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data, injected into etc/ by fetch-private-data — see
@@ -25,14 +24,14 @@
 ;
 ; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
 ; here by hand; empty = passwordless). bin/gen-service-users reconciles the
-; accounts (create + drop stale) against etc/service-users.sql but does NOT
+; account (create + drop stale) against etc/service-users.sql but does NOT
 ; write these keys back — this file is the manual source of truth.
 ;
 ; Two databases: `simo0` is the writable primary and `simo1` is its read-only
 ; replica (replication is established by ema's replica build — see
-; doc/system/replica-bootstrap.md). Each has its own section below. `simo0`
-; carries the `simox` password key only (`public` is never created there);
-; `simo1` carries both (`simox` may also read it).
+; doc/system/replica-bootstrap.md). Each has its own section below; both carry
+; the single `simox` password key (`simox` is ALL on `simo0`, SELECT on
+; `simo1`, and the website reads `simo1` through the same account).
 ;
 ; Transport: the section is authoritative for the 'ema' CLI. When
 ; MYSQL_UNIX_PORT is set, ema connects via that socket (root/unix_socket
@@ -52,5 +51,4 @@ SERVER=10.147.x.11
 PORT=3308
 DBMS=mariadb
 SIMOX_PASSWORD=
-PUBLIC_PASSWORD=
 MYSQL_UNIX_PORT=/path/to/mysql.sock

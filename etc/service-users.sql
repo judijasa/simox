@@ -2,26 +2,31 @@
 --
 -- DO NOT apply this file directly. The reconcile (bin/gen-service-users) reads
 -- the @directives below, expands {{dbname}}/{{host}}/{{privilege}}, and applies
--- the result to each database; it also drops stale accounts (legacy
--- admin/reader, accounts on the wrong database, and hosts no longer in the pin
--- set). The DDL lines in each block document the statements the reconcile
--- generates and are ignored by it.
+-- the result to each database; it is a closed-world reconcile: it creates the
+-- declared accounts and drops every live account not in the declared set plus
+-- a fixed allow-list (root, mariadb.sys, replication). Accounts are global in
+-- mysql.user; only the GRANT is per-database. The DDL lines in each block
+-- document the statements the reconcile generates and are ignored by it.
 --
 -- Directive syntax (a leading `--` and any indentation are stripped; only
 -- lines that then begin with `@` are read):
 --   `@account <name>`           starts an account block
 --   `@hosts <source>[,<src>]`   host-pin source(s): `member` (every IP value
---                               in etc/team.ini) and/or `worker`, `web`
---                               (etc/machines.ini [prod] tags)
+--                               in etc/team.ini) and/or `worker`
+--                               (etc/machines.ini [prod] tag)
 --   `@db <name> <privilege>`    one per database the account is created on;
 --                               the GRANT privilege for that database (e.g.
 --                               SELECT, ALL PRIVILEGES)
 --
--- Account policy (doc/plans/2026-09-10-simox-service-account-and-read-replica.md):
---   simox   writer — ALL on simo0, SELECT on simo1 — team members ∪ worker hosts
---   public  reader — SELECT on simo1 only — web hosts (never on simo0)
+-- Account policy (doc/plans/2026-09-11-drop-public-account.md):
+--   simox  the single service account — ALL on simo0, SELECT on simo1 —
+--          team members ∪ worker hosts (the website also reads via simox).
+--   The former `public` reader account is dropped: the account name is not a
+--   credential (both are passwordless; enforcement is the user@host pin), so
+--   the closed-world reconcile removes it and any other undeclared account.
 -- The `replication` transport account is NOT here: it is created on the
--- primary by the replica bootstrap (see doc/system/replica-bootstrap.md).
+-- primary by the replica bootstrap (see doc/system/replica-bootstrap.md) and
+-- is on the allow-list, never dropped by the reconcile.
 
 -- @account simox
 -- @hosts member, worker
@@ -29,9 +34,3 @@
 -- @db simo1 SELECT
 CREATE USER IF NOT EXISTS 'simox'@'{{host}}' IDENTIFIED BY '';
 GRANT {{privilege}} ON `{{dbname}}`.* TO 'simox'@'{{host}}';
-
--- @account public
--- @hosts web
--- @db simo1 SELECT
-CREATE USER IF NOT EXISTS 'public'@'{{host}}' IDENTIFIED BY '';
-GRANT {{privilege}} ON `{{dbname}}`.* TO 'public'@'{{host}}';

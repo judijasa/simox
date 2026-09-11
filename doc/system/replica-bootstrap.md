@@ -1,7 +1,7 @@
 # Read-replica bootstrap (simo0 -> simo1)
 
 How `simo1` is created as the read-only replica of the writable primary
-`simo0`. The replica serves the website (`public` account) and can offload
+`simo0`. The replica serves the website (`simox` account) and can offload
 reads from `simox`. Naming convention: the primary is `0`-suffixed (`simo0`),
 its replica `1`-suffixed (`simo1`).
 

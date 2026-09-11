@@ -22,12 +22,11 @@
 #        token adds cron install on that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
 #
-#        Service-account pins (bin/gen-service-users derives the host-pin
-#        sets from these tags, never from a hardcoded map):
-#          `worker`  hosts the writer account `simox` may connect from
-#          `web`     hosts the reader account `public` may connect from
-#        See etc/service-users.sql for the account -> source mapping. The
-#        third source, `member` (team members), comes from etc/team.ini.
+#        Service-account pins (bin/gen-service-users derives the single
+#        `simox` host-pin set from the `worker` tag plus etc/team.ini, never
+#        from a hardcoded map). `web` feeds no account pin: it is only the
+#        Apache-traversal deploy step tag. See etc/service-users.sql for the
+#        account -> source mapping.
 #
 #        Constraint: a named token may appear on exactly ONE server
 #        (`db:simo0` and `db:simo1` are independent databases; `web` is
