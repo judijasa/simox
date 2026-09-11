@@ -12,5 +12,3 @@ CREATE OR REPLACE TABLE documento (
     PRIMARY KEY pk_documento_id(id),
     UNIQUE INDEX uk_documento_code(code)
 );
-
-GRANT SELECT ON {{dbname}}.documento TO 'public'@'%';

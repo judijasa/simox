@@ -10,5 +10,3 @@ CREATE OR REPLACE TABLE requisito (
     PRIMARY KEY pk_requisito_id(id),
     UNIQUE INDEX uk_requisito_code(code)
 );
-
-GRANT SELECT ON {{dbname}}.requisito TO 'public'@'%';

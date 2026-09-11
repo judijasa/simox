@@ -374,7 +374,7 @@ function process_batch(PDO $conn, array $rows, int $batch_size): void
 }
 
 #[CronJob(schedule: '0 5 * * *')]
-#[Agent(dbTarget: 'simo', dbAccount: 'admin')]
+#[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function main(PDO $conn): void
 {
     $table_name = 'empleo_snapshot';

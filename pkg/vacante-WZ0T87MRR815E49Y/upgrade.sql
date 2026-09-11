@@ -19,5 +19,3 @@ CREATE OR REPLACE TABLE vacante (
     FOREIGN KEY fk_vacante_dependencia_id(dependencia_id)
         REFERENCES dependencia(id)
 );
-
-GRANT SELECT ON {{dbname}}.vacante TO 'public'@'%';

@@ -3,65 +3,53 @@
 
 declare(strict_types=1);
 
-// gen-service-users - simox service-account provisioning (consumer-owned).
+// gen-service-users - reconcile simox's service accounts (consumer-owned).
 //
-// ema provisions the instance and schema (ema sandbox / ema create): it
-// creates the database and applies schema packages, never users or grants.
-// The service accounts are this repo's policy, so this script creates them:
+// ema provisions instances and schema (ema sandbox / ema create): it creates
+// databases and applies schema packages, never users or grants. Service
+// accounts are this repo's policy, declared in etc/service-users.sql. This
+// script reconciles the live MariaDB instances against that declaration:
 //
-//   admin   @ SERVERNAME   GRANT ALL PRIVILEGES ON <db>.*   (read-write app)
-//   reader  @ SERVERNAME   GRANT SELECT ON <db>.*            (read-only app)
-//   public  @ '%'          no database-level grant            (anonymous read;
-//                             per-table SELECT grants live in pkg/, applied by ema)
+//   - creates the declared accounts (passwordless, host-pinned) and applies
+//     their per-database grants;
+//   - drops stale accounts: the legacy admin/reader pair, accounts on a
+//     database they are not declared for (e.g. public on simo0), and host
+//     pins no longer in the current source set (revocation).
 //
-// All three are passwordless (empty <ACCOUNT>_PASSWORD), matching the
-// host-pinned model. SERVERNAME (default "localhost") is read from the [<db>]
-// section; set it to the DB host's ZeroTier IP (or "%") there when the app
-// servers reach the database over the overlay network.
+// Host-pin sources (see the @directives in etc/service-users.sql):
+//   member  every IP value in etc/team.ini
+//   worker  every etc/machines.ini [prod] host tagged `worker`
+//   web     every etc/machines.ini [prod] host tagged `web`
 //
-// It emits transient SQL (never persisted) and, unless -n/--dry-run, applies
-// it as root through "ema mariadb <db> < file.sql" (DBUSER=root; run as root
-// on the DB host - root/unix_socket auth over the MYSQL_UNIX_PORT socket from
-// the manual reuter.ini section). It does NOT write the <ACCOUNT>_PASSWORD
-// keys into reuter.ini: that file is the manual source of truth, recorded by
-// the operator (empty = passwordless).
+// The `replication` transport account is not managed here: the replica
+// bootstrap creates it on the primary (doc/system/replica-bootstrap.md).
 //
-// Usage: gen-service-users <db> [-n|--dry-run] [--help]
+// Each target database is reconciled by running the generated SQL as root
+// through "ema mariadb <db> < file.sql" (DBUSER=root; run as root on the DB
+// host - root/unix_socket auth over the MYSQL_UNIX_PORT socket from the
+// manual reuter.ini section). It does NOT write <ACCOUNT>_PASSWORD keys into
+// reuter.ini: that file is the manual source of truth (empty = passwordless).
+//
+// Usage: gen-service-users [db...] [-n|--dry-run] [--help]
 
 const HELP = <<<'TXT'
-Usage: gen-service-users <db> [flags]
+Usage: gen-service-users [db...] [flags]
 
-Create simox's service accounts (admin/reader/public) for one database and
-apply their grants. The <ACCOUNT>_PASSWORD keys are NOT written back — the
-manual reuter.ini [<db>] section is the source of truth.
+Reconcile simox's service accounts (simox/public) against etc/service-users.sql.
+With no <db> arguments, every database named in the @db directives is
+reconciled; pass one or more <db> names to reconcile only those (each must be
+declared in etc/service-users.sql).
 
-  <db>              database name (the [<db>] section in reuter.ini).
   -n, --dry-run     print the SQL without applying it.
   -h, --help        show this help.
 TXT;
 
-const ACCOUNT_PRIVILEGES = array(
-    'admin' => 'ALL PRIVILEGES',
-    'reader' => 'SELECT',
-);
+const SERVICE_USERS_FILE = 'etc/service-users.sql';
+const LEGACY_ACCOUNTS = array('admin', 'reader');
 
-function config_path(): string
+function repo_file(string $path): string
 {
-    $override = getenv('REUTER_INI');
-    if ($override !== false && $override !== '') {
-        return $override;
-    }
-    return getcwd() . '/etc/reuter.ini';
-}
-
-function load_section(string $path, string $db): array
-{
-    $cnf = parse_ini_file($path, true, INI_SCANNER_RAW);
-    if (!is_array($cnf) || !isset($cnf[$db]) || !is_array($cnf[$db])) {
-        fwrite(STDERR, "gen-service-users: no [{$db}] section in {$path}" . PHP_EOL);
-        exit(1);
-    }
-    return $cnf[$db];
+    return getcwd() . '/' . $path;
 }
 
 function sql_quote(string $value): string
@@ -69,16 +57,205 @@ function sql_quote(string $value): string
     return str_replace("'", "''", $value);
 }
 
-function build_sql(string $db, string $servername): string
+// Parse etc/service-users.sql @directives into:
+//   name => array('hosts' => array<string>, 'dbs' => array<db, privilege>)
+function parse_accounts(string $file): array
 {
-    $sql = '-- gen-service-users for ' . $db . ' (transient; never persisted)' . PHP_EOL;
-    $sql .= PHP_EOL . '-- Service accounts (passwordless, host-pinned)' . PHP_EOL;
-    $sql .= "CREATE USER IF NOT EXISTS 'admin'@'" . sql_quote($servername) . "' IDENTIFIED BY '';" . PHP_EOL;
-    $sql .= "CREATE USER IF NOT EXISTS 'reader'@'" . sql_quote($servername) . "' IDENTIFIED BY '';" . PHP_EOL;
-    $sql .= "CREATE USER IF NOT EXISTS 'public'@'%' IDENTIFIED BY '';" . PHP_EOL;
-    $sql .= PHP_EOL . '-- Database-level grants (public per-table SELECT grants live in pkg/, applied by ema)' . PHP_EOL;
-    foreach (ACCOUNT_PRIVILEGES as $account => $privilege) {
-        $sql .= 'GRANT ' . $privilege . ' ON ' . $db . ".* TO '" . $account . "'@'" . sql_quote($servername) . "';" . PHP_EOL;
+    $lines = file($file, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        fwrite(STDERR, "gen-service-users: could not read {$file}" . PHP_EOL);
+        exit(1);
+    }
+    $accounts = array();
+    $current = null;
+    foreach ($lines as $line) {
+        $trimmed = ltrim($line);
+        if (str_starts_with($trimmed, '--')) {
+            $trimmed = ltrim(substr($trimmed, 2));
+        }
+        if (!str_starts_with($trimmed, '@')) {
+            continue;
+        }
+        $fields = preg_split('/\s+/', trim($trimmed));
+        if ($fields === false) {
+            continue;
+        }
+        $directive = $fields[0] ?? '';
+        if ($directive === '@account' && isset($fields[1])) {
+            $current = $fields[1];
+            $accounts[$current] = array('hosts' => array(), 'dbs' => array());
+        } elseif ($directive === '@hosts' && $current !== null && isset($fields[1])) {
+            foreach (explode(',', implode(' ', array_slice($fields, 1))) as $src) {
+                $src = trim($src);
+                if ($src !== '') {
+                    $accounts[$current]['hosts'][] = $src;
+                }
+            }
+        } elseif ($directive === '@db' && $current !== null && isset($fields[1], $fields[2])) {
+            $accounts[$current]['dbs'][$fields[1]] = implode(' ', array_slice($fields, 2));
+        }
+    }
+    if ($accounts === array()) {
+        fwrite(STDERR, "gen-service-users: no @account blocks found in {$file}" . PHP_EOL);
+        exit(1);
+    }
+    return $accounts;
+}
+
+// Every IP value in etc/team.ini (all keys except the member `subject`).
+function member_hosts(string $path): array
+{
+    if (!is_file($path)) {
+        return array();
+    }
+    $ini = parse_ini_file($path, true, INI_SCANNER_RAW);
+    if (!is_array($ini)) {
+        return array();
+    }
+    $hosts = array();
+    foreach ($ini as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+        foreach ($section as $key => $value) {
+            if (strtolower((string) $key) === 'subject') {
+                continue;
+            }
+            if (is_string($value) && $value !== '') {
+                $hosts[] = $value;
+            }
+        }
+    }
+    return array_values(array_unique($hosts));
+}
+
+// Host IPs in etc/machines.ini [prod] carrying the given bare tag.
+function machine_tag_hosts(string $path, string $tag): array
+{
+    if (!is_file($path)) {
+        return array();
+    }
+    $ini = parse_ini_file($path, true, INI_SCANNER_RAW);
+    if (!is_array($ini) || !isset($ini['prod']) || !is_array($ini['prod'])) {
+        return array();
+    }
+    $hosts = array();
+    foreach ($ini['prod'] as $host => $value) {
+        $tags = array_map('trim', explode(',', (string) $value));
+        if (in_array($tag, $tags, true)) {
+            $hosts[] = (string) $host;
+        }
+    }
+    return array_values(array_unique($hosts));
+}
+
+// Resolve one account's host-pin sources into a concrete IP set.
+function account_hosts(array $account, array $member, array $worker, array $web): array
+{
+    $hosts = array();
+    foreach ($account['hosts'] as $src) {
+        switch ($src) {
+            case 'member':
+                $hosts = array_merge($hosts, $member);
+                break;
+            case 'worker':
+                $hosts = array_merge($hosts, $worker);
+                break;
+            case 'web':
+                $hosts = array_merge($hosts, $web);
+                break;
+            default:
+                fwrite(STDERR, "gen-service-users: unknown host source '{$src}'" . PHP_EOL);
+                exit(1);
+        }
+    }
+    return array_values(array_unique($hosts));
+}
+
+// desired[db][account] = privilege; accountHosts[account] = host list.
+function build_desired(array $accounts, array $member, array $worker, array $web): array
+{
+    $desired = array();
+    $accountHosts = array();
+    foreach ($accounts as $name => $account) {
+        $accountHosts[$name] = account_hosts($account, $member, $worker, $web);
+        foreach ($account['dbs'] as $db => $privilege) {
+            $desired[$db][$name] = $privilege;
+        }
+    }
+    return array($desired, $accountHosts);
+}
+
+// Every account name the reconcile manages (declared + legacy), used to
+// enumerate and drop stale accounts.
+function scope_accounts(array $accounts): array
+{
+    return array_values(array_unique(array_merge(array_keys($accounts), LEGACY_ACCOUNTS)));
+}
+
+// Enumerate live simox/public/admin/reader accounts as "user@host" strings.
+// Returns [] on failure (reconcile degrades to create-only and warns).
+function existing_users(string $db, array $scope): array
+{
+    $root = getcwd();
+    $ema = is_executable($root . '/vendor/bin/ema') ? $root . '/vendor/bin/ema' : 'ema';
+    $list = "'" . implode("','", array_map('sql_quote', $scope)) . "'";
+    $sql = 'SELECT CONCAT(User, 0x40, Host) FROM mysql.user WHERE User IN (' . $list . ')';
+    $cmd = 'DBUSER=root ' . escapeshellarg($ema) . ' mariadb ' . escapeshellarg($db)
+        . ' -N -e ' . escapeshellarg($sql) . ' 2>&1';
+    exec($cmd, $out, $code);
+    if ($code !== 0) {
+        $detail = trim(implode(PHP_EOL, $out));
+        fwrite(STDERR, "gen-service-users: warning: could not enumerate existing users for {$db}"
+            . ($detail !== '' ? ": {$detail}" : '') . PHP_EOL);
+        fwrite(STDERR, 'gen-service-users: continuing create-only (no stale-account drops)' . PHP_EOL);
+        return array();
+    }
+    $users = array();
+    foreach ($out as $line) {
+        $line = trim((string) $line);
+        if ($line !== '') {
+            $users[] = $line;
+        }
+    }
+    return $users;
+}
+
+function split_account_host(string $accountAtHost): array
+{
+    $pos = strpos($accountAtHost, '@');
+    if ($pos === false) {
+        return array($accountAtHost, '');
+    }
+    return array(substr($accountAtHost, 0, $pos), substr($accountAtHost, $pos + 1));
+}
+
+// desired[account] = privilege (accounts declared for this database only).
+function build_sql(string $db, array $desired, array $accountHosts, array $existing): string
+{
+    $wanted = array();
+    foreach ($desired as $account => $_privilege) {
+        foreach ($accountHosts[$account] as $host) {
+            $wanted[$account . '@' . $host] = true;
+        }
+    }
+
+    $sql = '-- gen-service-users reconcile for ' . $db . ' (transient; never persisted)' . PHP_EOL;
+    $sql .= PHP_EOL . '-- Drops (stale: legacy, wrong-db, or removed host pins)' . PHP_EOL;
+    foreach ($existing as $accountAtHost) {
+        if (isset($wanted[$accountAtHost])) {
+            continue;
+        }
+        list($account, $host) = split_account_host($accountAtHost);
+        $sql .= "DROP USER IF EXISTS '" . sql_quote($account) . "'@'" . sql_quote($host) . "';" . PHP_EOL;
+    }
+
+    $sql .= PHP_EOL . '-- Creates + grants (passwordless, host-pinned)' . PHP_EOL;
+    foreach ($desired as $account => $privilege) {
+        foreach ($accountHosts[$account] as $host) {
+            $sql .= "CREATE USER IF NOT EXISTS '" . sql_quote($account) . "'@'" . sql_quote($host) . "' IDENTIFIED BY '';" . PHP_EOL;
+            $sql .= 'GRANT ' . $privilege . ' ON ' . $db . ".* TO '" . sql_quote($account) . "'@'" . sql_quote($host) . "';" . PHP_EOL;
+        }
     }
     return $sql;
 }
@@ -87,7 +264,7 @@ function apply_sql(string $db, string $sql): int
 {
     $tmp = tempnam(sys_get_temp_dir(), 'gen_service_users_');
     if ($tmp === false || file_put_contents($tmp, $sql) === false) {
-        fwrite(STDERR, "gen-service-users: could not write the temporary SQL file" . PHP_EOL);
+        fwrite(STDERR, 'gen-service-users: could not write the temporary SQL file' . PHP_EOL);
         return 1;
     }
     $root = getcwd();
@@ -100,7 +277,7 @@ function apply_sql(string $db, string $sql): int
 
 function main(array $argv): int
 {
-    $db = null;
+    $dbs = array();
     $dryRun = false;
     foreach (array_slice($argv, 1) as $arg) {
         if ($arg === '-n' || $arg === '--dry-run') {
@@ -108,42 +285,60 @@ function main(array $argv): int
         } elseif ($arg === '-h' || $arg === '--help') {
             fwrite(STDOUT, HELP);
             return 0;
-        } elseif ($db === null) {
-            $db = $arg;
+        } elseif (str_starts_with($arg, '-')) {
+            fwrite(STDERR, "gen-service-users: unknown flag: {$arg}" . PHP_EOL);
+            return 1;
         } else {
-            fwrite(STDERR, "gen-service-users: unexpected argument: {$arg}" . PHP_EOL);
+            $dbs[] = $arg;
+        }
+    }
+
+    $serviceFile = repo_file(SERVICE_USERS_FILE);
+    if (!is_file($serviceFile)) {
+        fwrite(STDERR, "gen-service-users: {$serviceFile} not found (run from the repo root)" . PHP_EOL);
+        return 1;
+    }
+
+    $accounts = parse_accounts($serviceFile);
+    $member = member_hosts(repo_file('etc/team.ini'));
+    $worker = machine_tag_hosts(repo_file('etc/machines.ini'), 'worker');
+    $web = machine_tag_hosts(repo_file('etc/machines.ini'), 'web');
+
+    list($desiredByDb, $accountHosts) = build_desired($accounts, $member, $worker, $web);
+    $allDbs = array_keys($desiredByDb);
+    sort($allDbs);
+
+    if ($dbs === array()) {
+        $dbs = $allDbs;
+    } else {
+        $unknown = array_diff($dbs, $allDbs);
+        if ($unknown !== array()) {
+            fwrite(STDERR, 'gen-service-users: unknown database(s): ' . implode(', ', $unknown) . PHP_EOL);
             return 1;
         }
     }
-    if ($db === null) {
-        fwrite(STDERR, "gen-service-users: missing <db> argument" . PHP_EOL);
-        fwrite(STDERR, HELP);
-        return 1;
-    }
 
-    $path = config_path();
-    if (!is_file($path)) {
-        fwrite(STDERR, "gen-service-users: {$path} not found (set REUTER_INI or run from the repo root)" . PHP_EOL);
-        return 1;
-    }
-    $section = load_section($path, $db);
-    $servername = (string) ($section['SERVERNAME'] ?? 'localhost');
+    $scope = scope_accounts($accounts);
 
-    $sql = build_sql($db, $servername);
-    fwrite(STDOUT, $sql);
+    $code = 0;
+    foreach ($dbs as $db) {
+        $existing = existing_users($db, $scope);
+        $sql = build_sql($db, $desiredByDb[$db], $accountHosts, $existing);
+        fwrite(STDOUT, $sql);
+        if (!$dryRun) {
+            $rc = apply_sql($db, $sql);
+            if ($rc !== 0) {
+                $code = $rc;
+            }
+        }
+    }
 
     if ($dryRun) {
-        fwrite(STDERR, "gen-service-users: dry-run; SQL printed, not applied" . PHP_EOL);
-        return 0;
+        fwrite(STDERR, 'gen-service-users: dry-run; SQL printed, not applied' . PHP_EOL);
+    } elseif ($code === 0) {
+        fwrite(STDOUT, 'gen-service-users: reconciled ' . implode(', ', $dbs) . '; reuter.ini keys are manual (not written)' . PHP_EOL);
     }
-
-    $code = apply_sql($db, $sql);
-    if ($code !== 0) {
-        return $code;
-    }
-
-    fwrite(STDOUT, 'gen-service-users: accounts created for ' . $db . '; reuter.ini keys are manual (not written)' . PHP_EOL);
-    return 0;
+    return $code;
 }
 
 exit(main($argv));

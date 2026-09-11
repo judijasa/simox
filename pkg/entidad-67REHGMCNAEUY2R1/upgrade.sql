@@ -11,6 +11,3 @@ CREATE OR REPLACE TABLE entidad (
     FOREIGN KEY fk_entidad_tipo_entidad_id(tipo_entidad_id)
     REFERENCES tipo_entidad(id)
 );
-
-GRANT SELECT ON {{dbname}}.entidad TO 'public'@'%';
-

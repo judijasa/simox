@@ -6,5 +6,3 @@ CREATE OR REPLACE TABLE dependencia (
     PRIMARY KEY(id),
     UNIQUE KEY uk_dependencia_code(code)
 );
-
-GRANT SELECT ON {{dbname}}.dependencia TO 'public'@'%';

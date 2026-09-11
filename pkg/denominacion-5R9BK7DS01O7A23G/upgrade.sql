@@ -10,5 +10,3 @@ CREATE OR REPLACE TABLE denominacion (
     FOREIGN KEY fk_denominacion_nivel_id(nivel_id)
     REFERENCES nivel(id)
 );
-
-GRANT SELECT ON {{dbname}}.denominacion TO 'public'@'%';

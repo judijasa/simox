@@ -9,7 +9,7 @@
 # [prod] prod deploy targets. Each key is the server's ZeroTier IP (the same
 #        address `pf-deploy.sh` uses for SSH). The value is a comma-separated
 #        list of `tag[:name]` tokens:
-#          named tag   `db:simo`  -> a `db` resource named `simo`
+#          named tag   `db:simo0` -> a `db` resource named `simo0`
 #          bare tag    `worker`   -> boolean flag (install cron on this host)
 #        `db` (named) and `worker` (bare) are the framework's built-in tags:
 #        a `db:<name>` token is the advisory anchor for `db-check` (it
@@ -22,11 +22,20 @@
 #        token adds cron install on that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
 #
+#        Service-account pins (bin/gen-service-users derives the host-pin
+#        sets from these tags, never from a hardcoded map):
+#          `worker`  hosts the writer account `simox` may connect from
+#          `web`     hosts the reader account `public` may connect from
+#        See etc/service-users.sql for the account -> source mapping. The
+#        third source, `member` (team members), comes from etc/team.ini.
+#
 #        Constraint: a named token may appear on exactly ONE server
-#        (`db:simo` and `web` are independent). Bare flags carry no name,
-#        hence no uniqueness constraint. A server may host no database
-#        (code-only), one database, or several databases (one MariaDB
-#        instance each, created by `ema create`).
+#        (`db:simo0` and `db:simo1` are independent databases; `web` is
+#        independent of both). Bare flags carry no name, hence no uniqueness
+#        constraint. A server may host no database (code-only), one database,
+#        or several databases (one MariaDB instance each, created by
+#        `ema create`).
 
 [prod]
-# 10.147.x.10=db:simo, db:analytics, web, worker
+# 10.147.x.10=db:simo0, worker
+# 10.147.x.11=db:simo1, web

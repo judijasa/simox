@@ -31,8 +31,8 @@
     //************************************
 
     try {
-        $dbname='simo';
-        $conn = Database::connectAs($dbname, 'admin');
+        $dbname='simo0';
+        $conn = Database::connectAs($dbname, 'simox');
 
         $sql = <<<SQL
         SELECT

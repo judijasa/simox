@@ -124,5 +124,3 @@ SELECT
     e.nivel_nombre,
     e.access
 FROM empleo e;
-
-GRANT SELECT ON {{dbname}}.vw_empleo TO 'public'@'%';

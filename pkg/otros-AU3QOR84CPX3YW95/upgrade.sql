@@ -5,5 +5,3 @@ CREATE OR REPLACE TABLE otros (
 
     PRIMARY KEY(id) -- TODO: Complete this schema
 );
-
-GRANT SELECT ON {{dbname}}.otros TO 'public'@'%';

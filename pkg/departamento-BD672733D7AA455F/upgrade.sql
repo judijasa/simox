@@ -30,5 +30,3 @@ INSERT INTO departamento (
     ('Tolima', 'TOL'), ('Valle del Cauca', 'VAC'),
     ('Vaupés', 'VAU'), ('Vichada', 'VID'),
     ('No_Aplica', 'N.A.');
-
-GRANT SELECT ON {{dbname}}.departamento TO 'public'@'%';

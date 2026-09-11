@@ -8,7 +8,7 @@ use Utils\DatabaseOps\CursorSeq;
 use Utils\Logger;
 
 #[CronJob(schedule: '0 2 * * *')]
-#[Agent(dbTarget: 'simo', dbAccount: 'admin')]
+#[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function main($conn, $batch_size_limit = 200, $jobs_per_page = 50, $timeout =  60 * 45){
     $base_url = "https://simo.cnsc.gov.co";
     indexer(

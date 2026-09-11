@@ -16,15 +16,17 @@ This page only records what is private *here*.
 | File | Public template | Private data |
 |---|---|---|
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster |
-| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections (recorded from `ema create`) |
+| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs |
 
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
 no secrets). `etc/hosts` is git-ignored but is a local convenience mapping,
 not injected by `fetch-private-data`. The `reuter.ini` connectivity sections
-(and any `<ACCOUNT>_PASSWORD` keys) are private data and live only in the
-private repo, never in the public history — `bin/gen-service-users` no longer
-writes those keys; they are committed empty for now.
+(and their `SIMOX_PASSWORD` / `PUBLIC_PASSWORD` keys) are private data and
+live only in the private repo, never in the public history —
+`bin/gen-service-users` no longer writes those keys; they are committed empty
+for now. The service-account policy itself (which accounts exist and on which
+databases) is committed in `etc/service-users.sql`, not private.
 
 ## Usage
 

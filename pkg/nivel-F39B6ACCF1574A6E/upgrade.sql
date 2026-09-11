@@ -7,5 +7,3 @@ CREATE OR REPLACE TABLE nivel (
     PRIMARY KEY pk_nivel_id(id),
     UNIQUE KEY uk_nivel_code(code)
 );
-
-GRANT SELECT ON {{dbname}}.nivel TO 'public'@'%';

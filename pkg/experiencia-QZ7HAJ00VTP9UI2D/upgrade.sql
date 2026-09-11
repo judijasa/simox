@@ -5,5 +5,3 @@ CREATE OR REPLACE TABLE experiencia (
 
     PRIMARY KEY(id) -- TODO: Complete this schema
 );
-
-GRANT SELECT ON {{dbname}}.experiencia TO 'public'@'%';

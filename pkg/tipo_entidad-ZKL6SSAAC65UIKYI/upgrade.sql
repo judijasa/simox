@@ -6,6 +6,3 @@ CREATE OR REPLACE TABLE tipo_entidad (
     PRIMARY KEY pk_tipo_entidad_id(id),
     UNIQUE KEY uk_tipo_entidad_code(code)
 );
-
-GRANT SELECT ON {{dbname}}.tipo_entidad TO 'public'@'%';
-

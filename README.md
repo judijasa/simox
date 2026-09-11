@@ -19,9 +19,9 @@ Initialize developer environment (install mariadb locally, etc):
 make dev-init
 ```
 
-Create the `simo` database + dev sandbox (git-ignored):
+Create the `simo0` database + dev sandbox (git-ignored):
 ```bash
-ema sandbox srv/simo-D03J4K6RM0K7X8E4
+ema sandbox srv/simo0-D03J4K6RM0K7X8E4
 ```
 
 
@@ -30,9 +30,9 @@ Run indexer:
 phprun 'src/scripts/indexer/get_jobs.php:main($batch_size_limit=15, $jobs_per_page=5, $timeout=15)'
 ```
 
-Access local `simo` database:
+Access local `simo0` database:
 ```bash
-ema mariadb simo
+ema mariadb simo0
 ```
 
 Verify content in the empleo_snapshot:
@@ -57,23 +57,36 @@ php -S localhost:8000
 
 Navigate to the website: `http://localhost:8000/public/index.php`
 
+Note: the website (`public/index.php`, `public/insight.php`) reads from the
+read-only replica `simo1`, not `simo0`. A dev sandbox for `simo1` needs
+upstream ema replica support (`type=replica`, `--from-snapshot`); until then
+the website is exercised against prod or a manually-provisioned replica.
+
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
 
 - `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored;
   commit it only in a private fork). The `[prod]` section lists the prod
   servers by ZeroTier IP; the value is a comma-separated list of
-  `tag[:name]` tokens (`ip=db:simo, db:analytics, web, worker`): `db` (named)
+  `tag[:name]` tokens (`ip=db:simo0, db:simo1, web, worker`): `db` (named)
   and `worker` (bare) are the framework's built-in tags — a `db:<name>` token
   is the advisory anchor for the framework's warn-only `db-check` (the
   instance itself is provisioned by `ema create`, not by deploy), and `worker`
   installs the `cron-manifest` output on every deploy — while `web` is
-  simox's own step (restore Apache www-data traversal). Each named token maps
-  to exactly one server; a server may host several databases. `pf-deploy.sh`
-  targets every `[prod]` host by default; a server with a `db:<name>` token
-  hosts one or more databases, each with its own MariaDB instance created by
-  `ema create`.
-- `etc/team.ini` — copy from `etc/team.ini.template` (git-ignored). One section per team member (the section name IS their DB username) with a `subject` key (their client-certificate subject DN) and `hostname=ZeroTier-IP` entries pinning their dev machine(s). `make dev-init` resolves your `DBUSER` from here (the section whose entries include your `hostname`) for remote DB access.
+  simox's own step (restore Apache www-data traversal). The `worker` and `web`
+  tags also feed the service-account host pins that `bin/gen-service-users`
+  reconciles (`worker` → `simox`, `web` → `public`; see
+  `etc/service-users.sql`). Each named token maps to exactly one server; a
+  server may host several databases. `pf-deploy.sh` targets every `[prod]`
+  host by default; a server with a `db:<name>` token hosts one or more
+  databases, each with its own MariaDB instance created by `ema create`.
+- `etc/team.ini` — copy from `etc/team.ini.template` (git-ignored). One
+  section per team member with a `subject` key (their client-certificate
+  subject DN, used for cert issuance) and `hostname=ZeroTier-IP` entries.
+  There is no longer one DB account per member: every member IP is a pin for
+  the single shared `simox` writer account (the `member` source in
+  `etc/service-users.sql`). `make dev-init` resolves your `DBUSER` from here
+  (the section whose entries include your `hostname`) for remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 - `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
 
@@ -157,6 +170,34 @@ verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
 runs `bin/deploy/server-side-post-deploy.sh` on each `[prod]` host (passing
 that host's tag list via `DEPLOY_TAGS`); only simox's own `web` step remains
 there — restoring Apache www-data traversal on the repo dir.
+
+## Service Accounts & Read Replica
+
+MariaDB users/grants are not provisioned by `ema` (which creates instances
+and schema only). They are this repo's policy, declared in
+`etc/service-users.sql` and applied by `bin/gen-service-users` as a
+reconcile: it creates the declared accounts and drops stale ones (the legacy
+`admin`/`reader`, accounts on the wrong database, and removed host pins).
+
+Two accounts, both passwordless — the security boundary is ZeroTier
+membership plus the source-IP host pin:
+
+- `simox` — `ALL PRIVILEGES` on the primary `simo0`, `SELECT` on the replica
+  `simo1`; host-pinned to `etc/team.ini` member IPs and the `worker` hosts in
+  `etc/machines.ini`.
+- `public` — `SELECT` on `simo1` only; host-pinned to the `web` hosts in
+  `etc/machines.ini`. Never created on `simo0`.
+
+Routing: the website (`public/index.php`, `public/insight.php`) reads from
+`simo1` via `public`; the indexer and pipeline agents write to `simo0` via
+`simox`. The `replication` transport account (used only by the replica's
+replication thread) is created by the replica bootstrap on the primary and is
+deliberately outside `etc/service-users.sql`.
+
+The read replica `simo1` is built by ema's replica flow (`type=replica`,
+`--from-snapshot`). See `doc/system/replica-bootstrap.md` for the full
+bootstrap procedure (snapshot, GTID coordinate, and `replication` account
+preconditions).
 
 ## Dependency Pinning
 

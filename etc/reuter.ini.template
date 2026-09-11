@@ -5,10 +5,14 @@
 ;
 ;   $conn = Database::connectAs($dbname, $account)
 ;
-; $account is a service-account name owned by this repo: admin (read-write),
-; reader (read), public (anonymous read). The connector reads its password
-; from the <ACCOUNT>_PASSWORD key (uppercased account name + _PASSWORD); an
-; empty value means a passwordless account.
+; $account is one of this repo's service accounts (declared in
+; etc/service-users.sql): `simox` (read-write on the primary, read on the
+; replica) and `public` (read-only on the replica). The connector reads the
+; password from the <ACCOUNT>_PASSWORD key (uppercased account name +
+; _PASSWORD); an empty value means a passwordless account. This repo is
+; passwordless by policy — the security boundary is ZeroTier membership plus
+; the source-IP host pin that bin/gen-service-users derives from
+; etc/team.ini / etc/machines.ini.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data, injected into etc/ by fetch-private-data — see
@@ -20,16 +24,15 @@
 ; 'ema sandbox srv/<name>-<GUID>'), not here.
 ;
 ; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
-; here by hand; the service-account auth policy is a deferred decision).
-; bin/gen-service-users creates the accounts and applies their grants but does
-; NOT write these keys back — this file is the manual source of truth.
+; here by hand; empty = passwordless). bin/gen-service-users reconciles the
+; accounts (create + drop stale) against etc/service-users.sql but does NOT
+; write these keys back — this file is the manual source of truth.
 ;
-; SERVERNAME (optional): host pin for the admin/reader accounts (default
-; 'localhost'). Set it to the DB host's ZeroTier IP (or '%') here when the app
-; servers reach this database over the overlay network, before running
-; bin/gen-service-users. The public account is always pinned to '%'
-; (anonymous, any-host read; its per-table SELECT grants live in pkg/,
-; applied by ema).
+; Two databases: `simo0` is the writable primary and `simo1` is its read-only
+; replica (replication is established by ema's replica build — see
+; doc/system/replica-bootstrap.md). Each has its own section below. `simo0`
+; carries the `simox` password key only (`public` is never created there);
+; `simo1` carries both (`simox` may also read it).
 ;
 ; Transport: the section is authoritative for the 'ema' CLI. When
 ; MYSQL_UNIX_PORT is set, ema connects via that socket (root/unix_socket
@@ -37,11 +40,17 @@
 ; (Utils\Connectivity\Database) reads MYSQL_UNIX_PORT from .env, not from
 ; this file, so in prod it stays TCP-only (.env is MYSQL_*-free).
 
-[simo]
+[simo0]
 SERVER=10.147.x.10
 PORT=3307
 DBMS=mariadb
-ADMIN_PASSWORD=
-READER_PASSWORD=
+SIMOX_PASSWORD=
+MYSQL_UNIX_PORT=/path/to/mysql.sock
+
+[simo1]
+SERVER=10.147.x.11
+PORT=3308
+DBMS=mariadb
+SIMOX_PASSWORD=
 PUBLIC_PASSWORD=
 MYSQL_UNIX_PORT=/path/to/mysql.sock

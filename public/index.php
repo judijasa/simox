@@ -107,7 +107,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             require_once __DIR__ . '/../vendor/autoload.php';
             use Utils\Connectivity\Database;
 
-            $dbname = 'simo';
+            $dbname = 'simo1';
             try {
                 $conn = Database::connectAs($dbname, 'public');
             } catch (PDOException $e) {

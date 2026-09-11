@@ -41,5 +41,3 @@ CREATE OR REPLACE TABLE empleo (
         REFERENCES denominacion(id)
         -- ON UPDATE CASCADE ON DELETE RESTRICT
 );
-
-GRANT SELECT ON {{dbname}}.empleo TO 'public'@'%';

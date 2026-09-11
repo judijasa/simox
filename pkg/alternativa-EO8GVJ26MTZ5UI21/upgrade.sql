@@ -5,5 +5,3 @@ CREATE OR REPLACE TABLE alternativa (
 
     PRIMARY KEY(id) -- TODO: Complete this schema
 );
-
-GRANT SELECT ON {{dbname}}.alternativa TO 'public'@'%';

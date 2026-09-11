@@ -19,5 +19,3 @@ CREATE OR REPLACE TABLE convocatoria (
     FOREIGN KEY fk_convocatoria_entidad_id(entidad_id)
     REFERENCES entidad(id)
 );
-
-GRANT SELECT ON {{dbname}}.convocatoria TO 'public'@'%';
