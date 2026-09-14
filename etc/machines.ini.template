@@ -22,11 +22,14 @@
 #        token adds cron install on that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
 #
-#        Service-account pins (bin/gen-service-users derives the single
-#        `simox` host-pin set from the `worker` tag plus etc/team.ini, never
-#        from a hardcoded map). `web` feeds no account pin: it is only the
-#        Apache-traversal deploy step tag. See etc/service-users.sql for the
-#        account -> source mapping.
+#        Service-account pins — the framework `gen-service-accounts` CLI
+#        reconciles passwordless host-pinned accounts and roles from the
+#        shared srv/roles-<GUID> declaration plus etc/team.ini (the `member`
+#        source) and this roster. Each token is a role-pin source: `worker`
+#        -> `simox_worker`, every `db:<name>` -> `simox_db`, `web` ->
+#        `simox_web` (see README "Service Accounts"). Removing a tag (or a
+#        whole host) here revokes the corresponding role on the next
+#        reconcile; the `member` IPs come from etc/team.ini, not here.
 #
 #        Constraint: a named token may appear on exactly ONE server
 #        (`db:simo0` and `db:simo1` are independent databases; `web` is

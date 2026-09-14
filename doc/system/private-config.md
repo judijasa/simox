@@ -24,9 +24,11 @@ no secrets). `etc/hosts` is git-ignored but is a local convenience mapping,
 not injected by `fetch-private-data`. The `reuter.ini` connectivity sections
 (and their `SIMOX_PASSWORD` key) are private data and
 live only in the private repo, never in the public history —
-`bin/gen-service-users` no longer writes those keys; they are committed empty
-for now. The service-account policy itself (which accounts exist and on which
-databases) is committed in `etc/service-users.sql`, not private.
+The framework `gen-service-accounts` no longer writes those keys; they are
+committed empty for now. The service-account policy itself (which accounts
+exist and on which databases, via the shared `srv/roles-<GUID>` declaration
+and the per-database `srv/<db>.roles-<GUID>` grants) is committed, not
+private.
 
 ## Usage
 

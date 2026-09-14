@@ -2,7 +2,8 @@
 // Default database definition for 'simo0' (the writable primary). Non-secret
 // defaults shared by dev and prod (the connection file carries the endpoint).
 // ema creates schema only - users/grants are consumer policy and never live
-// here (see etc/service-users.sql + bin/gen-service-users).
+// here (see srv/roles-<GUID> + srv/simo0.roles-<GUID>, reconciled by the
+// framework gen-service-accounts).
 $db = array(
     'dbname' => 'simo0',
     'charset' => 'utf8',

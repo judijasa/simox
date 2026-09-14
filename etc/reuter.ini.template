@@ -5,13 +5,13 @@
 ;
 ;   $conn = Database::connectAs($dbname, $account)
 ;
-; $account is this repo's single service account (declared in
-; etc/service-users.sql): `simox` (read-write on the primary, read on the
+; $account is this repo's single service account (declared in the shared
+; srv/roles-<GUID> package): `simox` (read-write on the primary, read on the
 ; replica). The connector reads the password from the <ACCOUNT>_PASSWORD key
 ; (uppercased account name + _PASSWORD); an empty value means a passwordless
 ; account. This repo is passwordless by policy — the security boundary is
-; ZeroTier membership plus the source-IP host pin that bin/gen-service-users
-; derives from etc/team.ini / etc/machines.ini.
+; ZeroTier membership plus the source-IP host pin that the framework
+; gen-service-accounts derives from etc/team.ini / etc/machines.ini.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data, injected into etc/ by fetch-private-data — see
@@ -23,9 +23,10 @@
 ; 'ema sandbox srv/<name>-<GUID>'), not here.
 ;
 ; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
-; here by hand; empty = passwordless). bin/gen-service-users reconciles the
-; account (create + drop stale) against etc/service-users.sql but does NOT
-; write these keys back — this file is the manual source of truth.
+; here by hand; empty = passwordless). The framework gen-service-accounts
+; reconciles the account (create + drop stale, role-based) against the shared
+; srv/roles-<GUID> declaration but does NOT write these keys back — this file
+; is the manual source of truth.
 ;
 ; Two databases: `simo0` is the writable primary and `simo1` is its read-only
 ; replica (replication is established by ema's replica build — see

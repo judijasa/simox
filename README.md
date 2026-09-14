@@ -73,10 +73,12 @@ To connect to a production server via `ema`, the machine registry config is need
   is the advisory anchor for the framework's warn-only `db-check` (the
   instance itself is provisioned by `ema create`, not by deploy), and `worker`
   installs the `cron-manifest` output on every deploy — while `web` is
-  simox's own step (restore Apache www-data traversal). Only `worker` feeds
-  the service-account host pin that `bin/gen-service-users` reconciles
-  (`worker` → `simox`; see `etc/service-users.sql`); `web` feeds no account
-  pin. Each named token maps to exactly one server; a
+  simox's own step (restore Apache www-data traversal). `worker`, `web` and
+  every `db:<name>` token are the role-pin sources the framework
+  `gen-service-accounts` reconciles against the shared `srv/roles-<GUID>`
+  declaration (`worker` → `simox_worker`, `db:<name>` → `simox_db`, `web` →
+  `simox_web`); see the Service Accounts section. Each named token maps to
+  exactly one server; a
   server may host several databases. `pf-deploy.sh` targets every `[prod]`
   host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
@@ -84,9 +86,10 @@ To connect to a production server via `ema`, the machine registry config is need
   section per team member with a `subject` key (their client-certificate
   subject DN, used for cert issuance) and `hostname=ZeroTier-IP` entries.
   There is no longer one DB account per member: every member IP is a pin for
-  the single shared `simox` writer account (the `member` source in
-  `etc/service-users.sql`). `make dev-init` resolves your `DBUSER` from here
-  (the section whose entries include your `hostname`) for remote DB access.
+  the single shared `simox` writer account (the `member` source, mapped to the
+  `simox_member` role in `srv/roles-<GUID>`). `make dev-init` resolves your
+  `DBUSER` from here (the section whose entries include your `hostname`) for
+  remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
 - `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
 
@@ -174,24 +177,41 @@ there — restoring Apache www-data traversal on the repo dir.
 ## Service Accounts & Read Replica
 
 MariaDB users/grants are not provisioned by `ema` (which creates instances
-and schema only). They are this repo's policy, declared in
-`etc/service-users.sql` and applied by `bin/gen-service-users` as a
-closed-world reconcile: it creates the declared account and drops every live
-account not in the declared set plus a fixed allow-list (`root`,
-`mariadb.sys`, `replication`).
+and schema only). They are this repo's policy, declared in the shared
+`srv/roles-<GUID>` package (role definitions + the `$sources`/`$accounts`
+mapping) and the per-database `srv/<db>.roles-<GUID>` grant packages, then
+reconciled by the framework's `gen-service-accounts` CLI (shipped via
+Composer to `vendor/bin`). The reconcile is closed-world on **role
+memberships**: the desired state per account per host is the union of the
+roles for that host's sources; excess roles and any direct (non-role) grants
+are revoked, and undeclared accounts/roles are dropped. See the framework's
+`doc/system/service-accounts.md` for the full contract.
 
 A single account, passwordless — the security boundary is ZeroTier
-membership plus the source-IP host pin:
+membership plus the source-IP host pin. Each source maps to a role; a host
+carrying a tag gets the corresponding role, and a host carrying several tags
+gets the union:
 
-- `simox` — `ALL PRIVILEGES` on the primary `simo0`, `SELECT` on the replica
-  `simo1`; host-pinned to `etc/team.ini` member IPs and the `worker` hosts in
-  `etc/machines.ini`.
+| Source     | Role           | `simo0`        | `simo1` |
+|------------|----------------|----------------|---------|
+| `member`   | `simox_member` | ALL PRIVILEGES | SELECT  |
+| `worker`   | `simox_worker` | ALL PRIVILEGES | SELECT  |
+| `db:simo0` | `simox_db`     | ALL PRIVILEGES | SELECT  |
+| `db:simo1` | `simox_db`     | ALL PRIVILEGES | SELECT  |
+| `web`      | `simox_web`    | —              | SELECT  |
+
+`member` resolves to the `etc/team.ini` member IPs; the other sources are
+`etc/machines.ini` `[prod]` tags matched exactly (`worker`, `web`, and each
+`db:<name>`). A role with no grant on a database means the account is not
+wanted there, so `simox_web`'s absence from `simo0` drops `simox@<web-ip>` on
+`simo0` for a dedicated (non-worker) web host. Today `web == worker`, so the
+`simo0` grant still arrives via the `worker`/`db` roles.
 
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
 `simox`. The `replication` transport account (used only by the replica's
 replication thread) is created by the replica bootstrap on the primary and is
-deliberately outside `etc/service-users.sql` (allow-listed, never dropped).
+allow-listed (never dropped) by the reconcile.
 
 The read replica `simo1` is built by ema's replica flow (`type=replica`,
 `--from-snapshot`). See `doc/system/replica-bootstrap.md` for the full

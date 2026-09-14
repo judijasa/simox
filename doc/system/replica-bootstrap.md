@@ -12,9 +12,9 @@ its replica `1`-suffixed (`simo1`).
 2. A `replication` transport account on the primary, granted
    `REPLICATION SLAVE` (plus `REPLICATION CLIENT` for monitoring). It is
    created beforehand by a php_daas_framework bootstrap runner on the
-   primary and is deliberately **not** part of `etc/service-users.sql` nor
-   the `bin/gen-service-users` reconcile — the reconcile must never see or
-   touch it.
+   primary and is deliberately **not** part of the shared `srv/roles-<GUID>`
+   declaration nor the `gen-service-accounts` reconcile — the reconcile must
+   never see or touch it (it is allow-listed).
 3. A snapshot of `simo0` to restore on `simo1`, plus its replication
    coordinate (see below).
 

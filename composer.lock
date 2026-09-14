@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f8ab8a0a707b66184183a2d12fed05ed",
+    "content-hash": "983ffe7de4518fec010e4c71b9eb2714",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -147,12 +147,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "8fa4dff69be05143e32633f435ccca9a7d4cb035"
+                "reference": "d16ec3a3e51018752fce73fcbec2ae7bbd785faf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/8fa4dff69be05143e32633f435ccca9a7d4cb035",
-                "reference": "8fa4dff69be05143e32633f435ccca9a7d4cb035",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/d16ec3a3e51018752fce73fcbec2ae7bbd785faf",
+                "reference": "d16ec3a3e51018752fce73fcbec2ae7bbd785faf",
                 "shasum": ""
             },
             "require": {
@@ -176,6 +176,7 @@
                 "bin/gen-env",
                 "bin/db-check",
                 "bin/gen-grants",
+                "bin/gen-service-accounts",
                 "bin/gen-cert",
                 "bin/pf-roster",
                 "bin/cron-manifest",
@@ -210,7 +211,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-09-11T20:05:24+00:00"
+            "time": "2026-09-14T22:00:21+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",
