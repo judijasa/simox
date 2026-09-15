@@ -48,7 +48,7 @@ _dev-assert-nix:
 	    exit 1; \
 	fi
 
-_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-update-hosts _dev-init-local-env
+_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-local-env _dev-update-hosts
 	@echo "Developer environment successfully initialized."
 
 _dev-init-git-hooks:
@@ -64,6 +64,8 @@ _dev-init-composer:
 	@echo "Running composer install..."
 	composer install
 
+# etc/hosts is private data, injected as a symlink by fetch-private-data
+# (run by _dev-init-local-env); this must therefore follow it in _dev-init.
 _dev-update-hosts:
 	@bin/dev/update-hosts.sh "$(TAG_BEGIN)" "$(TAG_END)"
 

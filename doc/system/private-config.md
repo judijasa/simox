@@ -21,10 +21,11 @@ This page only records what is private *here*.
 | `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — the only private file that leaves the private repo for a host** |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
+| `etc/hosts` | `etc/hosts.template` | ZeroTier hostname→IP aliases for `ema`/`ssh` | no (dev-only) |
 
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
-no secrets). `etc/hosts` is git-ignored but is a local convenience mapping,
-not injected by `fetch-private-data`.
+no secrets). `etc/hosts` is a dev-only hostname→IP convenience mapping,
+injected by `fetch-private-data` (merged into `/etc/hosts` by `make dev-init`).
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
 credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
@@ -42,15 +43,16 @@ file — the template ships `SIMOX_PASSWORD=` empty. The service-account
 `reuter.ini` is the only private file a prod host needs, so it is the only
 one that ever leaves the private repo for a host — and it ships **whole**
 (no inner filtering, no section splicing). `machines.ini` feeds the local
-deploy roster and `team.ini` feeds `gen-cert`/`gen-grants`/
-`gen-service-accounts`/`init-local-env` on the deploy/dev machine; neither
-reaches prod.
+deploy roster, `team.ini` feeds `gen-cert`/`gen-grants`/
+`gen-service-accounts`/`init-local-env` and `hosts` feeds the dev `/etc/hosts`
+merge on the deploy/dev machine; none of them reaches prod.
 
 ## Usage
 
 Copy `.private-source.example` to `.private-source` and point it at the
-private repo (tracked files: `machines.ini`, `reuter.ini`, `team.ini`) with
-`PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`). In dev, `make dev-init`
+private repo (tracked files: `machines.ini`, `reuter.ini`, `team.ini`,
+`hosts`) with `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`). In dev,
+`make dev-init`
 (via the framework `init-local-env.sh`) runs `fetch-private-data` to link the
 files into `etc/`. In prod, the deploy machine runs
 `bin/deploy-private-config` to ship `reuter.ini` (whole) to each host's

@@ -101,10 +101,10 @@ To connect to a production server via `ema`, the machine registry config is need
   `simox_member` role in `srv/roles-<GUID>`). `make dev-init` resolves your
   `DBUSER` from here (the section whose entries include your `hostname`) for
   remote DB access.
-- `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
+- `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Private data (see `.private-source` below).
 - `.private-source` — a git-ignored pointer to the private config repo that
-  holds `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` (copy
-  `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's
+  holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini` and `etc/hosts`
+  (copy `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's
   `fetch-private-data` CLI (run by `init-local-env.sh`) symlinks them into
   `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to
   prod (whole, via the framework's `deploy-private-config`) — see
