@@ -1,7 +1,7 @@
 ; Team member registry — the `member` host-pin source for the shared `simox`
 ; service account (mapped to the `simox_member` role in srv/roles-<GUID>).
-; Copy to etc/team.ini (git-ignored) and fill it in — or keep it in a private
-; config repo and inject it via .private-source (see doc/system/private-config.md).
+; This file is private data, kept in the private config repo and injected into
+; etc/ by fetch-private-data via .private-source (see doc/system/private-config.md).
 ;
 ; There is no longer one DB account per member: simox collapses the team onto
 ; a single shared writer account. The framework gen-service-accounts reads

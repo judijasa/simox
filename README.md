@@ -75,8 +75,8 @@ website is exercised against prod or a manually-provisioned replica.
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
 
-- `etc/machines.ini` — copy from `etc/machines.ini.template` (git-ignored;
-  commit it only in a private fork). The `[prod]` section lists the prod
+- `etc/machines.ini` — the `[prod]` roster (private data; see `.private-source`
+  below). The `[prod]` section lists the prod
   servers by ZeroTier IP; the value is a comma-separated list of
   `tag[:name]` tokens (`ip=db:simo0, db:simo1, web, worker`): `db` (named)
   and `worker` (bare) are the framework's built-in tags — a `db:<name>` token
@@ -93,7 +93,7 @@ To connect to a production server via `ema`, the machine registry config is need
   server may host several databases. `pf-deploy.sh` targets every `[prod]`
   host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
-- `etc/team.ini` — copy from `etc/team.ini.template` (git-ignored). One
+- `etc/team.ini` — private data (see `.private-source` below). One
   section per team member with a `subject` key (their client-certificate
   subject DN, used for cert issuance) and `hostname=ZeroTier-IP` entries.
   There is no longer one DB account per member: every member IP is a pin for
@@ -102,7 +102,13 @@ To connect to a production server via `ema`, the machine registry config is need
   `DBUSER` from here (the section whose entries include your `hostname`) for
   remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
-- `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's `fetch-private-data` CLI (run by `init-local-env.sh`) symlinks them into `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to prod (whole, via the framework's `deploy-private-config`) — see `doc/system/private-config.md`.
+- `.private-source` — a git-ignored pointer to the private config repo that
+  holds `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` (copy
+  `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's
+  `fetch-private-data` CLI (run by `init-local-env.sh`) symlinks them into
+  `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to
+  prod (whole, via the framework's `deploy-private-config`) — see
+  `doc/system/private-config.md`.
 
 ## Production Server Setup
 
