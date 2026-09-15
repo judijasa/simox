@@ -1,9 +1,9 @@
 # SIMOExpress
 
-## Esta aplicacion...
-1. Extrae las ofertas de empleo reportadas en la plataforma SIMO del gobierno de Colombia.
-2. Guarda las ofertas de empleo en una base de datos.
-3. Ofrece un portal en línea para ofertas de empleo.
+## This application...
+1. Extracts the job openings reported on the SIMO platform of the Colombian government.
+2. Stores the job openings in a database.
+3. Provides an online portal for job openings.
 
 This application is comprised of three components: _crawler_, _database_ and _website_.
 
