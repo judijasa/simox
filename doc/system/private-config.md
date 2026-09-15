@@ -24,14 +24,20 @@ This page only records what is private *here*.
 
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
 no secrets). `etc/hosts` is git-ignored but is a local convenience mapping,
-not injected by `fetch-private-data`. The `reuter.ini` connectivity sections
-(and their `SIMOX_PASSWORD` key) are private data and
-live only in the private repo, never in the public history —
-The framework `gen-service-accounts` no longer writes those keys; they are
-committed empty for now. The service-account policy itself (which accounts
-exist and on which databases, via the shared `srv/roles-<GUID>` declaration
-and the per-database `srv/<db>.roles-<GUID>` grants) is committed, not
-private.
+not injected by `fetch-private-data`.
+
+What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
+credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
+`MYSQL_UNIX_PORT` (ZeroTier IPs and socket paths, recorded from `ema create`),
+and those live only in the private repo, never in the public history. The
+`SIMOX_PASSWORD` key is **not** secret: the service account is passwordless by
+policy, so the key stays empty. The framework `gen-service-accounts`
+reconciles the account (create/drop, role-based) against the shared
+`srv/roles-<GUID>` declaration but never writes a password back into this
+file — the template ships `SIMOX_PASSWORD=` empty. The service-account
+*policy* itself — which accounts exist and on which databases (the shared
+`srv/roles-<GUID>` `$sources`/`$accounts` declaration plus the per-database
+`srv/<db>.roles-<GUID>` grants) — is committed, not private.
 
 `reuter.ini` is the only private file a prod host needs, so it is the only
 one that ever leaves the private repo for a host — and it ships **whole**

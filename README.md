@@ -8,26 +8,37 @@
 This application is comprised of three components: _crawler_, _database_ and _website_.
 
 ## Quick Test
-This application can be easily tested under the `nix develop` environment, managing all dependencies and specified in the `nix.flake` file.
-This requires the installation of Nix. Under this environment, execute from the repo root directory the following command:
+This application can be easily tested under the `nix develop` environment,
+which supplies the environment binaries (PHP with the needed extensions,
+composer, MariaDB, bash, ...). The framework and `ema` code are
+Composer-delivered, not part of `flake.nix`. This requires the installation
+of Nix. Under this environment, execute from the repo root directory the
+following command:
 ```bash
 nix develop
 ```
 
-Initialize developer environment (install mariadb locally, etc):
+Initialize the developer environment (git hooks, log dirs, `composer install`,
+`etc/hosts` sync, and the git-ignored `.env`). Must be run inside `nix develop`;
+it does **not** install or start MariaDB — the dev database lifecycle is owned
+by `ema`:
 ```bash
 make dev-init
 ```
 
-Create the `simo0` database + dev sandbox (git-ignored):
+Re-enter the shell (or `source .env`) so the generated repo paths and `DBUSER`
+are in scope.
+
+Create the `simo0` database + dev sandbox (git-ignored, under `var/sandbox/`);
+`ema sandbox` builds and starts the isolated MariaDB instance:
 ```bash
 ema sandbox srv/simo0-D03J4K6RM0K7X8E4
 ```
 
-
-Run indexer:
+Run indexer (`phprun` injects the DB connection from the `#[Agent]` attribute,
+so `main()` takes no explicit connection argument):
 ```bash
-phprun 'src/scripts/indexer/get_jobs.php:main($batch_size_limit=15, $jobs_per_page=5, $timeout=15)'
+phprun 'src/scripts/indexer/get_jobs.php:main()'
 ```
 
 Access local `simo0` database:
@@ -58,9 +69,10 @@ php -S localhost:8000
 Navigate to the website: `http://localhost:8000/public/index.php`
 
 Note: the website (`public/index.php`, `public/insight.php`) reads from the
-read-only replica `simo1`, not `simo0`. A dev sandbox for `simo1` needs
-upstream ema replica support (`type=replica`, `--from-snapshot`); until then
-the website is exercised against prod or a manually-provisioned replica.
+read-only replica `simo1`, not `simo0`. `simo1` is built with ema's replica
+flow — `ema create srv/simo1-<GUID> --from-snapshot <path>` (see
+`doc/system/replica-bootstrap.md`) — not as a dev sandbox, so locally the
+website is exercised against prod or a manually-provisioned replica.
 
 ## Remote Access
 To connect to a production server via `ema`, the machine registry config is needed:
@@ -219,8 +231,8 @@ allow-listed (never dropped) by the reconcile.
 
 The read replica `simo1` is built by ema's replica flow (`type=replica`,
 `--from-snapshot`). See `doc/system/replica-bootstrap.md` for the full
-bootstrap procedure (snapshot, GTID coordinate, and `replication` account
-preconditions).
+bootstrap procedure (snapshot, replication coordinate, and `replication`
+account preconditions).
 
 ## Dependency Pinning
 
@@ -265,7 +277,7 @@ Required during phpcasperjs/phpcasperjs installation (`...install python-is-pyth
 #### 6. libfontconfig.so.1
 Required by the `phantomjs` binary (`... install libfontconfig1`).
 #### 7. Nix (optional)
-There is a shell.nix providing a Nix dev environment for local tests.
+There is a `flake.nix` providing a Nix dev environment for local tests.
 
 ## PHP Casper Class
 Scraping use to be the original approach to fetch data from the SIMO website. It has been superseded by
