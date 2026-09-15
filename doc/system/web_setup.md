@@ -37,4 +37,3 @@ Open your browser and navigate to
 http://localhost:8000
 ```
 Ctrl + C in terminal to shut down the server.
-

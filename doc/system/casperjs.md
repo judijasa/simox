@@ -47,4 +47,3 @@ ISSUES:
 
 SIMPLE_HTML_DOM GET DYNAMIC CONTENT
     stackoverflow.com/questions/39921426/simple-html-dom-get-dynamic-content-loaded-with-js
-
