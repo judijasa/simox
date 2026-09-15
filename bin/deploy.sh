@@ -4,7 +4,8 @@
 #
 # The framework `pf-deploy.sh` is a closed operation: it swaps the repo, copies the
 # nix closure, installs composer deps, runs idempotent provisioning and — as
-# built-in steps on every host — regenerates .env (gen-env) and verifies DB
+# built-in steps on every host — links reuter.ini into etc/ (fetch-private-data,
+# from DEPLOY_PRIVATE_CONFIG_DIR), regenerates .env (gen-env) and verifies DB
 # connectivity (db-check, warn-only; reuter.ini is injected private data, not
 # regenerated); on hosts tagged `worker` it also
 # installs the cron-manifest output (cron jobs). `db` and `worker` are the

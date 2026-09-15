@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Consumer server-side post-deploy step (simox data): run on each prod host
 # by the deploy entrypoint (bin/deploy.sh) AFTER the framework `pf-deploy.sh`
-# CLI has completed its built-in server steps (regenerating .env via gen-env
-# and verifying DB connectivity via db-check — warn-only — on every host, and
-# installing the cron-manifest output on hosts tagged `worker`). It runs ON
+# CLI has completed its built-in server steps (linking reuter.ini via
+# fetch-private-data, regenerating .env via gen-env and verifying DB
+# connectivity via db-check — warn-only — on every host, and installing the
+# cron-manifest output on hosts tagged `worker`). It runs ON
 # the prod server (not locally), hence the "server-side" name.
 #
 # Only consumer-owned tag steps remain here:

@@ -70,8 +70,9 @@ To connect to a production server via `ema`, the machine registry config is need
   servers by ZeroTier IP; the value is a comma-separated list of
   `tag[:name]` tokens (`ip=db:simo0, db:simo1, web, worker`): `db` (named)
   and `worker` (bare) are the framework's built-in tags — a `db:<name>` token
-  is the advisory anchor for the framework's warn-only `db-check` (the
-  instance itself is provisioned by `ema create`, not by deploy), and `worker`
+  names a database (the instance itself is provisioned by `ema create`, not by
+  deploy, and `db-check` verifies it via the host's own `mariadb@*` units),
+  and `worker`
   installs the `cron-manifest` output on every deploy — while `web` is
   simox's own step (restore Apache www-data traversal). `worker`, `web` and
   every `db:<name>` token are the role-pin sources the framework
@@ -91,7 +92,7 @@ To connect to a production server via `ema`, the machine registry config is need
   `DBUSER` from here (the section whose entries include your `hostname`) for
   remote DB access.
 - `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Copy from `etc/hosts.template` and add your server entries.
-- `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`). The framework's `fetch-private-data` CLI (run by `pf-deploy.sh` and `init-local-env.sh`) symlinks them into `etc/` — see `doc/system/private-config.md`.
+- `.private-source` — optional: instead of copying the `etc/*.template` files directly, keep `etc/machines.ini`, `etc/team.ini` and `etc/reuter.ini` in a private config repo and inject them via a git-ignored `.private-source` pointer (copy `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's `fetch-private-data` CLI (run by `init-local-env.sh`) symlinks them into `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to prod (whole, via the framework's `deploy-private-config`) — see `doc/system/private-config.md`.
 
 ## Production Server Setup
 
@@ -132,9 +133,11 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   `EMA_TARGET=prod`. The `.env` stays `MYSQL_*`-free — the socket lives in the
   `reuter.ini` section, not the environment. `reuter.ini` itself is a
   manually-maintained private file (values recorded from `ema create` output),
-  injected into `etc/` by `fetch-private-data`; `gen-env` only projects its
-  path (`DEPLOY_REUTER_INI`), never its contents. On the same per-host pass,
-  `pf-deploy.sh` runs `db-check` (warn-only) to verify each `reuter.ini`
+  shipped (whole) to the host's stable private dir (`DEPLOY_PRIVATE_CONFIG_DIR`)
+  by `deploy-private-config` and linked into `etc/` by `fetch-private-data`;
+  `gen-env` only projects its path (`DEPLOY_REUTER_INI`), never its contents.
+  On the same per-host pass, `pf-deploy.sh` runs `db-check` (warn-only) to
+  verify the host's own `mariadb@*` instances are up and each `reuter.ini`
   section's TCP endpoint is reachable. `ema create srv/<name>-<GUID>` (run on
   the DB host) uses the section socket for root auth; the app (`Database.php`)
   reads `.env` and stays TCP. `gen-env` fails loudly if a required
@@ -166,7 +169,8 @@ the per-host post-deploy step. On every deploy, the framework's generic
 to assert the app user and create system directories (`/srv/apps`,
 `/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
-The framework CLI also runs its built-in per-host steps — regenerating `.env`,
+The framework CLI also runs its built-in per-host steps — linking `reuter.ini`
+into `etc/` (`fetch-private-data`), regenerating `.env`,
 verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
 `worker`, installing cron (`/etc/cron.d/simo-orchestrator`) from the
 `#[CronJob]`/`#[Agent]` attributes. After it returns, the deploy entrypoint
