@@ -11,7 +11,7 @@ its replica `1`-suffixed (`simo1`).
    srv/simo0-D03J4K6RM0K7X8E4`).
 2. A `replication` transport account on the primary, granted
    `REPLICATION SLAVE` (plus `REPLICATION CLIENT` for monitoring). It is
-   created beforehand by a php_daas_framework bootstrap runner on the
+   created beforehand by the framework's `bin/replica-bootstrap` CLI on the
    primary and is deliberately **not** part of the shared `srv/roles-<GUID>`
    declaration nor the `gen-service-accounts` reconcile — the reconcile must
    never see or touch it (it is allow-listed).
@@ -47,7 +47,9 @@ The `ema create` replica flow (the package `srv/simo1-<GUID>` is
 5. configure and `START SLAVE` against `simo0` using the `replication`
    account and the recorded GTID coordinate.
 
-Until upstream `judijasa/ema` / `judijasa/php-daas-framework` implement
-`type=replica` and `--from-snapshot`, the `srv/simo1-<GUID>` package is
-forward-looking: the current `ema` CLI cannot build it. Track the upstream
-work in those repos.
+The bootstrap half (transport account + snapshot) is now generic upstream —
+the framework's `bin/replica-bootstrap` (see
+`php_daas_framework/doc/system/replica-bootstrap.md`). Until upstream
+`judijasa/ema` implements `type=replica` and `--from-snapshot`, the
+`srv/simo1-<GUID>` package is forward-looking: the current `ema` CLI cannot
+build it. Track that work in `judijasa/ema`.

@@ -40,6 +40,9 @@ for the framework-side mechanism.
       `etc/` fallback; document the single `PRIVATE_DATA_GIT` (+
       `PRIVATE_DATA_REF`) mechanism and that `reuter.ini` is the only file
       shipped to prod.
+- [x] `.private-source` — the actual git-ignored pointer on this machine: set
+      `PRIVATE_DATA_GIT` to the private repo (dropping the stale
+      `PRIVATE_DATA_SOURCE`); not committed.
 - [x] `etc/deploy.conf` — add `DEPLOY_PRIVATE_CONFIG_DIR` (the stable per-app
       private dir on the host).
 - [x] `etc/machines.ini.template` — roster readers are `pf-deploy.sh` +
@@ -61,13 +64,12 @@ for the framework-side mechanism.
 - [x] `README.md` — "Ships to prod?" column; git-only consumption; Deployment
       section rewritten to the framework split. Tracked in
       `simox_cnf/doc/plans/2026-09-15-private-config-deploy.md`.
+- [x] `machines.ini` — header comment: `db:<name>` no longer the "advisory
+      anchor for `db-check`" (verified via the host's `mariadb@*` units).
+      Tracked in `simox_cnf/doc/plans/2026-09-15-private-config-deploy.md`.
 
 ## Open items
 
-- **Framework commit not yet pushed** — `0a01503` is local-only in
-  `../php_daas_framework` (origin/main is `d16ec3a`); `composer install` on a
-  fresh checkout fails until it is pushed. The lock is written in the github
-  shape (source + dist) for when it lands.
 - **Prod has no git** — the two-step delivery assumes prod holds no
   `.private-source` and resolves `DEPLOY_PRIVATE_CONFIG_DIR` (framework open
   item).
