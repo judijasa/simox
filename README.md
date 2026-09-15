@@ -19,9 +19,7 @@ nix develop
 ```
 
 Initialize the developer environment (git hooks, log dirs, `composer install`,
-`etc/hosts` sync, and the git-ignored `.env`). Must be run inside `nix develop`;
-it does **not** install or start MariaDB — the dev database lifecycle is owned
-by `ema`:
+`etc/hosts` sync, and the git-ignored `.env`):
 ```bash
 make dev-init
 ```
