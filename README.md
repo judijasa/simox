@@ -101,7 +101,11 @@ To connect to a production server via `ema`, the machine registry config is need
   `simox_member` role in `srv/roles-<GUID>`). `make dev-init` resolves your
   `DBUSER` from here (the section whose entries include your `hostname`) for
   remote DB access.
-- `etc/hosts` — optional: maps ZeroTier hostnames to IPs (merged into `/etc/hosts` by `make dev-init`) if you prefer names over raw IPs. Private data (see `.private-source` below).
+- `etc/hosts` — optional: maps production server names to IPs (prod servers
+  only — member machines are not listed, there is no member ssh). Private data
+  (see `.private-source` below). It is the single source for two dev-machine
+  conveniences: the `/etc/hosts` merge, so the names work under `ema` and raw
+  `ssh`/`scp`, and the generated ssh config described below.
 - `.private-source` — a git-ignored pointer to the private config repo that
   holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini` and `etc/hosts`
   (copy `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's
@@ -109,6 +113,24 @@ To connect to a production server via `ema`, the machine registry config is need
   `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to
   prod (whole, via the framework's `deploy-private-config`) — see
   `doc/system/private-config.md`.
+
+### Dev ssh config
+
+`make dev-init` generates `~/.ssh/config.d/simox.conf` from `etc/hosts` (the
+framework `gen-ssh-config` CLI), so dev machines reach the prod servers as
+`root` with one project key instead of hand-edited aliases:
+
+```
+ssh simox-<name>        # e.g. ssh simox-simo0
+```
+
+Each `etc/hosts` entry becomes one `Host simox-<name>` block (`HostName <ip>`,
+`User root`, `IdentityFile ~/.ssh/simox-sshkey`, `IdentitiesOnly yes`). The
+`simox-` prefix is hard isolation: several projects sharing the same
+`~/.ssh/config.d/*.conf` drop-in — possibly against the same server IP — cannot
+collide on alias names. The public half of `~/.ssh/simox-sshkey` must be
+authorized in root's `authorized_keys` on each prod host. The file is generated
+and idempotent: never hand-edit it, edit `etc/hosts` and re-run `make dev-init`.
 
 ## Production Server Setup
 

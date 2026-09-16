@@ -21,11 +21,14 @@ This page only records what is private *here*.
 | `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — the only private file that leaves the private repo for a host** |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
-| `etc/hosts` | `etc/hosts.template` | ZeroTier hostname→IP aliases for `ema`/`ssh` | no (dev-only) |
+| `etc/hosts` | `etc/hosts.template` | prod server name→IP aliases (feed the `/etc/hosts` merge and the generated ssh config) | no (dev-only) |
 
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
-no secrets). `etc/hosts` is a dev-only hostname→IP convenience mapping,
-injected by `fetch-private-data` (merged into `/etc/hosts` by `make dev-init`).
+no secrets). `etc/hosts` is a dev-only name→IP convenience mapping, injected by
+`fetch-private-data`. It feeds two dev-machine conveniences from the same
+entries: the `/etc/hosts` merge (`make dev-init`) and the generated
+`~/.ssh/config.d/simox.conf`, where each entry becomes `ssh simox-<name>` as
+`root` with the project key (see the README's dev ssh section).
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
 credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
@@ -45,7 +48,8 @@ one that ever leaves the private repo for a host — and it ships **whole**
 (no inner filtering, no section splicing). `machines.ini` feeds the local
 deploy roster, `team.ini` feeds `gen-cert`/`gen-grants`/
 `gen-service-accounts`/`init-local-env` and `hosts` feeds the dev `/etc/hosts`
-merge on the deploy/dev machine; none of them reaches prod.
+merge and the generated ssh config on the deploy/dev machine; none of them
+reaches prod.
 
 ## Usage
 

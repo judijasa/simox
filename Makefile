@@ -8,8 +8,8 @@
 # DEPLOY_INIT_CMD.
 # Generic dev-init steps delegate to the Composer-delivered scripts in
 # vendor/bin (init-local-env.sh from the `judijasa/php-daas-framework` package);
-# this Makefile keeps only the consumer-specific steps (git hooks, hosts) plus
-# the `deploy` entrypoint. The dev MariaDB daemon is owned by ema's
+# this Makefile keeps only the consumer-specific steps (git hooks, hosts, ssh
+# config) plus the `deploy` entrypoint. The dev MariaDB daemon is owned by ema's
 # per-instance sandbox lifecycle (`ema sandbox` / `ema start` / `ema stop`) —
 # this Makefile no longer initializes or starts a shared daemon.
 
@@ -28,7 +28,7 @@ _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
 
 .PHONY: help dev-init deploy _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
-    _dev-init-composer _dev-update-hosts _dev-init-local-env
+    _dev-init-composer _dev-update-hosts _dev-ssh-config _dev-init-local-env
 
 help:
 	@echo "Available targets:"
@@ -48,7 +48,7 @@ _dev-assert-nix:
 	    exit 1; \
 	fi
 
-_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-local-env _dev-update-hosts
+_dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-local-env _dev-update-hosts _dev-ssh-config
 	@echo "Developer environment successfully initialized."
 
 _dev-init-git-hooks:
@@ -68,6 +68,13 @@ _dev-init-composer:
 # (run by _dev-init-local-env); this must therefore follow it in _dev-init.
 _dev-update-hosts:
 	@bin/dev/update-hosts.sh "$(TAG_BEGIN)" "$(TAG_END)"
+
+# The generated ssh config reads that same private etc/hosts (injected as a
+# symlink by fetch-private-data via _dev-init-local-env), so it must follow
+# that step in _dev-init as well: each entry becomes `ssh simox-<name>` as
+# root with the project key.
+_dev-ssh-config:
+	@vendor/bin/gen-ssh-config simox --user root --key ~/.ssh/simox-sshkey
 
 _dev-init-local-env:
 	@vendor/bin/init-local-env.sh
