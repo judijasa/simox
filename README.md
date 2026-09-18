@@ -87,9 +87,9 @@ To connect to a production server via `ema`, the machine registry config is need
   simox's own step (restore Apache www-data traversal). `worker`, `web` and
   every `db:<name>` token are the role-pin sources the framework
   `gen-service-accounts` reconciles against the shared `srv/roles-<GUID>`
-  declaration (`worker` → `simox_worker`, `db:<name>` → `simox_db`, `web` →
-  `simox_web`); see the Service Accounts section. Each named token maps to
-  exactly one server; a
+  declaration (`worker` → `simox_worker`, `db:<name>` → `simox_db_<name>`,
+  `web` → `simox_web`); see the Service Accounts section. Each named token maps
+  to exactly one server; a
   server may host several databases. `pf-deploy.sh` targets every `[prod]`
   host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
@@ -234,20 +234,23 @@ membership plus the source-IP host pin. Each source maps to a role; a host
 carrying a tag gets the corresponding role, and a host carrying several tags
 gets the union:
 
-| Source     | Role           | `simo0`        | `simo1` |
-|------------|----------------|----------------|---------|
-| `member`   | `simox_member` | ALL PRIVILEGES | SELECT  |
-| `worker`   | `simox_worker` | ALL PRIVILEGES | SELECT  |
-| `db:simo0` | `simox_db`     | ALL PRIVILEGES | SELECT  |
-| `db:simo1` | `simox_db`     | ALL PRIVILEGES | SELECT  |
-| `web`      | `simox_web`    | —              | SELECT  |
+| Source     | Role             | `simo0`        | `simo1` |
+|------------|------------------|----------------|---------|
+| `member`   | `simox_member`   | ALL PRIVILEGES | SELECT  |
+| `worker`   | `simox_worker`   | ALL PRIVILEGES | SELECT  |
+| `db:simo0` | `simox_db_simo0` | ALL PRIVILEGES | —       |
+| `db:simo1` | `simox_db_simo1` | —              | SELECT  |
+| `web`      | `simox_web`      | —              | SELECT  |
 
 `member` resolves to the `etc/team.ini` member IPs; the other sources are
 `etc/machines.ini` `[prod]` tags matched exactly (`worker`, `web`, and each
-`db:<name>`). A role with no grant on a database means the account is not
-wanted there, so `simox_web`'s absence from `simo0` drops `simox@<web-ip>` on
-`simo0` for a dedicated (non-worker) web host. Today `web == worker`, so the
-`simo0` grant still arrives via the `worker`/`db` roles.
+`db:<name>`). Each `db:<name>` tag maps to a role of its own, granted only on
+its own database. A role with no grant on a database means the account is not
+wanted there, so `simox_web` and `simox_db_simo1` being absent from `simo0`
+drops `simox@<ip>` on `simo0` for a web/replica host (`web`, `db:simo1`, or
+both). Privileges therefore follow what a host runs (`worker`, `web`) — never
+the database it happens to store, so a host hosting the read replica cannot
+write the primary.
 
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
