@@ -17,7 +17,10 @@
 #        db-check verifies it via the host's own `mariadb@*` units, not this
 #        roster); `worker` installs the `cron-manifest` output (cron jobs) on
 #        every deploy. Every other tag is consumer-owned:
-#          `web`     restore Apache www-data traversal on the repo dir
+#          `web`     restore Apache www-data traversal on the repo dir;
+#                    also opens 80/443/tcp in the firewall (gen-firewall)
+#          `cloud`   opens 9993/udp in the firewall (gen-firewall), gated on
+#                    the runtime cloud test
 #        A host with a `db:<name>` token is a database host; a bare `worker`
 #        token adds cron install on that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
@@ -32,6 +35,15 @@
 #        Removing a tag (or a whole host) here revokes the corresponding role
 #        on the next reconcile; the `member` IPs come from etc/team.ini, not
 #        here.
+#
+#        Firewall — the framework `gen-firewall` CLI reconciles the ufw rule
+#        set from the shared srv/host-hardening-<GUID> declaration plus this
+#        roster. Tags only ADD allow rules; the baseline (default deny
+#        incoming / allow outgoing, SSH 22/tcp from the ZeroTier range) and
+#        the built-in `db:<name>` port (resolved from etc/reuter.ini) are
+#        framework-owned and never listed here. `web` opens 80/443/tcp;
+#        `cloud` opens 9993/udp only when the runtime cloud test also passes
+#        (fail-safe: no response -> no 9993).
 #
 #        Constraint: a named token may appear on exactly ONE server
 #        (`db:simo0` and `db:simo1` are independent databases; `web` is

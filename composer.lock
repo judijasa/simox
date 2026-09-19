@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "76a72f573c875d8aca758eab144a4318",
+    "content-hash": "e2389c779b2e09376a1ce187fbce8bfb",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -147,12 +147,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "755b447db77fa4174967cc89927d9c068750931d"
+                "reference": "15a046eba901cefa4b946569109e5a62664b2015"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/755b447db77fa4174967cc89927d9c068750931d",
-                "reference": "755b447db77fa4174967cc89927d9c068750931d",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/15a046eba901cefa4b946569109e5a62664b2015",
+                "reference": "15a046eba901cefa4b946569109e5a62664b2015",
                 "shasum": ""
             },
             "require": {
@@ -186,7 +186,8 @@
                 "bin/dev/init-local-env.sh",
                 "bin/pf-provision.sh",
                 "bin/replica-bootstrap",
-                "bin/gen-ssh-config"
+                "bin/gen-ssh-config",
+                "bin/gen-firewall"
             ],
             "type": "composer-plugin",
             "extra": {
@@ -213,7 +214,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-09-19T00:55:44+00:00"
+            "time": "2026-09-19T15:03:08+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",
