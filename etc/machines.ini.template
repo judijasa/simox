@@ -37,8 +37,8 @@
 #        here.
 #
 #        Firewall — the framework `gen-firewall` CLI reconciles the ufw rule
-#        set from the shared srv/host-hardening-<GUID> declaration plus this
-#        roster. Tags only ADD allow rules; the baseline (default deny
+#        set from etc/host-hardening.php plus this roster. Tags only ADD allow
+#        rules; the baseline (default deny
 #        incoming / allow outgoing, SSH 22/tcp from the ZeroTier range) and
 #        the built-in `db:<name>` port (resolved from etc/reuter.ini) are
 #        framework-owned and never listed here. `web` opens 80/443/tcp;

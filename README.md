@@ -107,12 +107,12 @@ To connect to a production server via `ema`, the machine registry config is need
   conveniences: the `/etc/hosts` merge, so the names work under `ema` and raw
   `ssh`/`scp`, and the generated ssh config described below.
 - `.private-source` — a git-ignored pointer to the private config repo that
-  holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini` and `etc/hosts`
-  (copy `.private-source.example`, set `PRIVATE_DATA_GIT`). The framework's
-  `fetch-private-data` CLI (run by `init-local-env.sh`) symlinks them into
-  `etc/` on dev/deploy machines; `reuter.ini` is the only one that ships to
-  prod (whole, via the framework's `deploy-private-config`) — see
-  `doc/system/private-config.md`.
+  holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini`, `etc/hosts` and
+  `etc/host-hardening.php` (copy `.private-source.example`, set
+  `PRIVATE_DATA_GIT`). The framework's `fetch-private-data` CLI (run by
+  `init-local-env.sh`) symlinks them into `etc/` on dev/deploy machines;
+  `reuter.ini` is the only one that ships to prod (whole, via the framework's
+  `deploy-private-config`) — see `doc/system/private-config.md`.
 
 ### Dev ssh config
 

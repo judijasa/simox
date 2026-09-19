@@ -1,10 +1,11 @@
 # Private config source pointer (git-ignored).
 #
 # The public repo ships only committed templates for the operational data
-# (etc/machines.ini, etc/reuter.ini, etc/team.ini, etc/hosts). The real
-# values live in a separate, access-controlled private repository — a small
-# git repo whose tracked files are `machines.ini`, `reuter.ini`, `team.ini`
-# and `hosts` (mirroring this repo's etc/). This file tells
+# (etc/machines.ini, etc/reuter.ini, etc/team.ini, etc/hosts,
+# etc/host-hardening.php). The real values live in a separate,
+# access-controlled private repository — a small git repo whose tracked files
+# are `machines.ini`, `reuter.ini`, `team.ini`, `hosts` and
+# `host-hardening.php` (mirroring this repo's etc/). This file tells
 # `fetch-private-data` where to find that repo.
 #
 # Copy this file to `.private-source` (untracked, machine-specific) and set

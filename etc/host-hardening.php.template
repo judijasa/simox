@@ -1,0 +1,42 @@
+<?php
+// Host-hardening declaration template (firewall reconcile data). Copy to
+// etc/host-hardening.php and fill in the real values — or, better, keep the
+// real file in the private config repo and let the framework's
+// fetch-private-data inject it into etc/host-hardening.php (see
+// doc/system/private-config.md). This template is intentionally NOT the live
+// simox config: the values below are placeholders only, chosen not to mirror
+// the real deployment.
+//
+// Consumed by the framework gen-firewall: it reads etc/host-hardening.php,
+// computes the desired ufw rule set for each [prod] host from its
+// etc/machines.ini tags, and applies it as root (fail-open: SSH first,
+// enable last). The framework owns the mechanism and the built-in tags; the
+// real file carries only consumer data. There is no SQL here — data only.
+//
+//   $zerotierRange = '10.0.x.0/24';
+//   $cloudTest     = array('endpoint' => 'http://169.254.169.254/latest/meta-data/',
+//                          'timeout' => 3);
+//   $tagRules      = array(
+//       'web' => array('80/tcp', '443/tcp'),
+//   );
+//
+// $zerotierRange scopes the baseline SSH and the built-in db:<name> allows.
+// A concrete CIDR is used verbatim; an 'x' template resolves its private third
+// octet from the consumer's private etc/hosts (the range is never hardcoded).
+// $cloudTest is the optional runtime metadata probe that gates gate=>'cloud'
+// rules. Any HTTP response (even a 404) counts as cloud; no response/timeout
+// means not-cloud (fail-safe). null disables gating.
+// $tagRules maps a consumer-owned tag to its allow rules. A rule is either
+// 'PORT/PROTO' (a public allow) or array('rule' => 'PORT/PROTO',
+// 'gate' => 'cloud') (applied only when the cloud test passes).
+
+$zerotierRange = '10.0.x.0/24';
+
+$cloudTest = array(
+    'endpoint' => 'http://169.254.169.254/latest/meta-data/',
+    'timeout' => 3,
+);
+
+$tagRules = array(
+    'web' => array('80/tcp', '443/tcp'),
+);

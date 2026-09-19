@@ -18,6 +18,7 @@
 /etc/machines.ini
 /etc/team.ini
 /etc/hosts
+/etc/host-hardening.php
 .env
 .private-source
 .phpstan-result-cache.php
