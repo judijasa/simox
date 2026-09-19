@@ -22,6 +22,7 @@ This page only records what is private *here*.
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
 | `etc/hosts` | `etc/hosts.template` | prod server name→IP aliases (feed the `/etc/hosts` merge and the generated ssh config) | no (dev-only) |
+| `etc/host-hardening.php` | `etc/host-hardening.php.template` | firewall reconcile declaration (`$zerotierRange`, `$cloudTest`, `$tagRules`) for `gen-firewall` | no (deploy/dev-time only) |
 
 `etc/deploy.conf` stays committed (project-static: paths, the app-user name —
 no secrets). `etc/hosts` is a dev-only name→IP convenience mapping, injected by
@@ -47,15 +48,16 @@ file — the template ships `SIMOX_PASSWORD=` empty. The service-account
 one that ever leaves the private repo for a host — and it ships **whole**
 (no inner filtering, no section splicing). `machines.ini` feeds the local
 deploy roster, `team.ini` feeds `gen-cert`/`gen-grants`/
-`gen-service-accounts`/`init-local-env` and `hosts` feeds the dev `/etc/hosts`
-merge and the generated ssh config on the deploy/dev machine; none of them
-reaches prod.
+`gen-service-accounts`/`init-local-env`, `hosts` feeds the dev `/etc/hosts`
+merge and the generated ssh config on the deploy/dev machine, and
+`host-hardening.php` feeds `gen-firewall`; none of them reaches prod.
 
 ## Usage
 
 Copy `.private-source.example` to `.private-source` and point it at the
 private repo (tracked files: `machines.ini`, `reuter.ini`, `team.ini`,
-`hosts`) with `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`). In dev,
+`hosts`, `host-hardening.php`) with `PRIVATE_DATA_GIT` (+ optional
+`PRIVATE_DATA_REF`). In dev,
 `make dev-init`
 (via the framework `init-local-env.sh`) runs `fetch-private-data` to link the
 files into `etc/`. In prod, the deploy machine runs

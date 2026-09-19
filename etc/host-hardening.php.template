@@ -1,11 +1,12 @@
 <?php
-// Host-hardening declaration template (firewall reconcile data). Copy to
-// etc/host-hardening.php and fill in the real values — or, better, keep the
-// real file in the private config repo and let the framework's
-// fetch-private-data inject it into etc/host-hardening.php (see
-// doc/system/private-config.md). This template is intentionally NOT the live
-// simox config: the values below are placeholders only, chosen not to mirror
-// the real deployment.
+// Host-hardening declaration template (firewall reconcile data). The real
+// values are private data: they live in the private config repo and the
+// framework's fetch-private-data injects them into etc/host-hardening.php as a
+// symlink (see doc/system/private-config.md). Never write a real file at that
+// path — a real file shadows the private data and is not overwritten, so the
+// reconcile would read a stale local copy. This template is intentionally NOT
+// the live simox config: the values below are placeholders only, chosen not to
+// mirror the real deployment.
 //
 // Consumed by the framework gen-firewall: it reads etc/host-hardening.php,
 // computes the desired ufw rule set for each [prod] host from its
