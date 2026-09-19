@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e64a20c4de0d287e9d9eac1862b41b2",
+    "content-hash": "76a72f573c875d8aca758eab144a4318",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -147,12 +147,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "f44ce519602bbe7b223454c6bed066479ac2331b"
+                "reference": "755b447db77fa4174967cc89927d9c068750931d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/f44ce519602bbe7b223454c6bed066479ac2331b",
-                "reference": "f44ce519602bbe7b223454c6bed066479ac2331b",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/755b447db77fa4174967cc89927d9c068750931d",
+                "reference": "755b447db77fa4174967cc89927d9c068750931d",
                 "shasum": ""
             },
             "require": {
@@ -213,7 +213,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-09-16T17:04:29+00:00"
+            "time": "2026-09-19T00:55:44+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",

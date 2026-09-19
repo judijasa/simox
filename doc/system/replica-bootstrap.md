@@ -12,8 +12,10 @@ its replica `1`-suffixed (`simo1`).
 2. A `replication` transport account on the primary, granted
    `REPLICATION SLAVE`. It is created beforehand by the framework's
    `bin/replica-bootstrap` CLI on the primary and is deliberately **not** part
-   of the shared `srv/roles-<GUID>` declaration nor the `gen-service-accounts`
-   reconcile — the reconcile must never see or touch it (it is allow-listed).
+   of the `$sources`/`$accounts` service-account declaration — the reconcile
+   grants it no roles and must not manage its `*.*` grant. It *is* declared in
+   the package `$allowlist` so the closed-world drop pass keeps it (the
+   framework's drop floor is only `root`/`mariadb.sys`).
 3. A snapshot of `simo0` to restore on `simo1`, plus its replication
    coordinate (see below).
 

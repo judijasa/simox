@@ -220,8 +220,9 @@ there — restoring Apache www-data traversal on the repo dir.
 
 MariaDB users/grants are not provisioned by `ema` (which creates instances
 and schema only). They are this repo's policy, declared in the shared
-`srv/roles-<GUID>` package (role definitions + the `$sources`/`$accounts`
-mapping) and the per-database `srv/<db>.roles-<GUID>` grant packages, then
+`srv/roles-<GUID>` package (role definitions, the `$sources`/`$accounts`
+mapping, and the `$allowlist` of accounts the drop pass must never remove) and
+the per-database `srv/<db>.roles-<GUID>` grant packages, then
 reconciled by the framework's `gen-service-accounts` CLI (shipped via
 Composer to `vendor/bin`). The reconcile is closed-world on **role
 memberships**: the desired state per account per host is the union of the
@@ -255,8 +256,8 @@ write the primary.
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
 `simox`. The `replication` transport account (used only by the replica's
-replication thread) is created by the replica bootstrap on the primary and is
-allow-listed (never dropped) by the reconcile.
+replication thread) is created by the replica bootstrap on the primary; it is
+declared in the roles package `$allowlist` so the reconcile never drops it.
 
 The read replica `simo1` is built by ema's replica flow (`type=replica`,
 `--from-snapshot`). See `doc/system/replica-bootstrap.md` for the full

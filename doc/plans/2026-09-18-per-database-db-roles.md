@@ -57,7 +57,10 @@ required there again, by design.
 ### simox (this repo)
 
 - [x] `srv/roles-D0YRR7WII6V1XDZR/default.php` — `$sources`: `db:simo0` →
-      `simox_db_simo0`, `db:simo1` → `simox_db_simo1`.
+      `simox_db_simo0`, `db:simo1` → `simox_db_simo1`; `$allowlist`:
+      `array('replication')` (the closed-world drop must never remove it; the
+      engine-internal `root`/`mariadb.sys` stay on the framework's implicit
+      floor).
 - [x] `srv/roles-D0YRR7WII6V1XDZR/upgrade.sql` — `CREATE ROLE` for both
       per-database roles; `simox_db` dropped.
 - [x] `srv/simo0.roles-D0TVLE3YJCFE1A8U/upgrade.sql` — grants
@@ -87,6 +90,12 @@ required there again, by design.
   `ON <target db>.*`. Check `mysql.db` on the replica after the first real
   build; a surviving stale `simo0` grant there is a framework-side
   revoke-scope gap, not a declaration bug.
+- **Framework allow-list awareness** — the always-on floor is now just
+  `root`/`mariadb.sys` (`replication` was removed from `gen-service-accounts`),
+  so a consumer must declare any account it creates itself; `replication` is
+  declared here in `$allowlist`. Remaining upstream follow-up: the reconcile
+  output never states the effective allow-list, so print it in the dry-run/SQL
+  header for observability.
 - **`simox_worker` on `simo1`** — kept: it is the union's accident, not a need
   (a cron host connects to `simo0`). Dropping it would remove a worker host
   from the replica instance entirely; no security gain today, since the
