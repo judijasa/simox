@@ -1,8 +1,10 @@
 # Deploy configuration template (committed; mirrors the current production
-# settings). The real etc/deploy.conf is private data tracked in the private
-# config repo (simox_cnf) and injected here by fetch-private-data; a real file
-# at that path shadows the injected data instead of being overwritten, so copy
-# this template into place only to run without private data.
+# settings). The real etc/deploy.conf is private data: simox owns the
+# private-config pipeline (bin/fetch-private-data copies it into etc/ in dev,
+# and on prod the host-side inject script named by DEPLOY_PRE_PROVISION_CMD
+# below restores it after the repo swap). Copy this template into place only to
+# run without private data — bin/fetch-private-data overwrites etc/deploy.conf
+# on every run, so change settings in the private repo, never in this file.
 # `deploy` requires it at the repo root and fails loudly if missing.
 #
 # .env (generated, git-ignored) holds machine settings; this file holds the
@@ -37,17 +39,26 @@ export DEPLOY_LOG_DIR=/var/log/simox
 # framework gen-service-accounts against the shared srv/roles-<GUID>
 # declaration, not provisioned here. gen-env writes it into .env
 # as REUTER_INI; pf-deploy's db-check reads it to verify reachability. The
-# file itself is private data, injected into etc/ by fetch-private-data (see
-# doc/system/private-config.md).
+# file itself is private data, restored as a real file in etc/ by simox's own
+# tooling (see doc/system/private-config.md).
 export DEPLOY_REUTER_INI=/srv/apps/simox/etc/reuter.ini
 
 # DEPLOY_PRIVATE_CONFIG_DIR: stable per-app private-config directory on the
-# host. bin/deploy-private-config ships the consumer's reuter.ini (whole) here
-# from the private config repo's committed content; fetch-private-data (a
-# pf-deploy server step) symlinks it into etc/reuter.ini, which
-# DEPLOY_REUTER_INI points at. It MUST live OUTSIDE DEPLOY_TARGET_DIR, which
-# is swapped on every deploy.
+# host. The deploy pipeline ships this file and reuter.ini (whole) here from
+# the private config repo's committed content; the host-side inject script
+# below copies them into etc/ (reuter.ini at DEPLOY_REUTER_INI).
+# It MUST live OUTSIDE DEPLOY_TARGET_DIR, which is swapped on every deploy.
 export DEPLOY_PRIVATE_CONFIG_DIR=/srv/private/simox
+
+# DEPLOY_PRE_PROVISION_CMD: the host-side half of simox's private-config
+# pipeline. pf-deploy runs it as root in the deployed repo root, right after
+# the repo swap + composer install (the swap wipes etc/, which ships only
+# templates) and before anything sources etc/deploy.conf, with this file's
+# environment replayed — so it resolves DEPLOY_PRIVATE_CONFIG_DIR without the
+# host having a deploy.conf of its own yet. simox's script copies the real
+# etc/deploy.conf and etc/reuter.ini in from that dir; pf-deploy fails loudly
+# if etc/deploy.conf is still missing afterwards. Skipped if unset.
+export DEPLOY_PRE_PROVISION_CMD="bash bin/deploy/inject-private-config.sh"
 
 # DEPLOY_NIX_RESULT_DIR: remote nix result parent.
 export DEPLOY_NIX_RESULT_DIR=/usr/local/simox

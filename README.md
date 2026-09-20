@@ -19,7 +19,7 @@ nix develop
 ```
 
 Initialize the developer environment (git hooks, log dirs, `composer install`,
-`etc/hosts` sync, and the git-ignored `.env`):
+the private `etc/` files, `etc/hosts` sync, and the git-ignored `.env`):
 ```bash
 make dev-init
 ```
@@ -109,10 +109,12 @@ To connect to a production server via `ema`, the machine registry config is need
 - `.private-source` — a git-ignored pointer to the private config repo that
   holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini`, `etc/hosts` and
   `etc/host-hardening.php` (copy `.private-source.example`, set
-  `PRIVATE_DATA_GIT`). The framework's `fetch-private-data` CLI (run by
-  `init-local-env.sh`) symlinks them into `etc/` on dev/deploy machines;
-  `reuter.ini` is the only one that ships to prod (whole, via the framework's
-  `deploy-private-config`) — see `doc/system/private-config.md`.
+  `PRIVATE_DATA_GIT`). simox owns the whole pipeline: `bin/fetch-private-data`
+  (run by `make dev-init`) copies them into `etc/` as real files, and
+  `bin/deploy-private-config` ships `deploy.conf` and `reuter.ini` — the only
+  two that reach prod — whole to each host, where the `DEPLOY_PRE_PROVISION_CMD`
+  hook (`bin/deploy/inject-private-config.sh`) restores them after the repo
+  swap. See `doc/system/private-config.md`.
 
 ### Dev ssh config
 
@@ -147,10 +149,10 @@ DocumentRoot "/srv/apps/simox/public"
 </Directory>
 SetEnv REUTER_INI /srv/apps/simox/etc/reuter.ini
 ```
-`etc/reuter.ini` is git-ignored and injected as private data by the framework's
-`fetch-private-data` (never regenerated — see `doc/system/private-config.md` and
-the contract in `etc/reuter.ini.template`). The Apache vhost and `.env` point at
-it via:
+`etc/reuter.ini` is git-ignored private data, materialized by simox's
+`bin/fetch-private-data` and never regenerated (see
+`doc/system/private-config.md` and the contract in `etc/reuter.ini.template`).
+The Apache vhost and `.env` point at it via:
 
 - **`REUTER_INI`** — path to the `reuter.ini` file (`/srv/apps/simox/etc/reuter.ini`,
   the `DEPLOY_REUTER_INI` value), consumed by the framework's `Database` class and
@@ -172,7 +174,8 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
   `reuter.ini` section, not the environment. `reuter.ini` itself is a
   manually-maintained private file (values recorded from `ema create` output),
   shipped (whole) to the host's stable private dir (`DEPLOY_PRIVATE_CONFIG_DIR`)
-  by `deploy-private-config` and linked into `etc/` by `fetch-private-data`;
+  by simox's `bin/deploy-private-config` and copied into `etc/` by the
+  `DEPLOY_PRE_PROVISION_CMD` hook (`bin/deploy/inject-private-config.sh`);
   `gen-env` only projects its path (`DEPLOY_REUTER_INI`), never its contents.
   On the same per-host pass, `pf-deploy.sh` runs `db-check` (warn-only) to
   verify the host's own `mariadb@*` instances are up and each `reuter.ini`
@@ -200,15 +203,18 @@ instances untouched.
 make deploy                        # every [prod] host in etc/machines.ini
 make deploy <host>                 # a single prod host (must be in [prod])
 ```
-`make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first
-runs the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and then
-the per-host post-deploy step. On every deploy, the framework's generic
+`make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first runs
+simox's own private-config pipeline (`bin/fetch-private-data` materializes the
+real `etc/` files, `bin/deploy-private-config` ships `deploy.conf` +
+`reuter.ini` to each target host, and the `DEPLOY_PRE_PROVISION_CMD` hook
+`bin/deploy/inject-private-config.sh` restores them after the repo swap), then
+the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and
+finally the per-host post-deploy step. On every deploy, the framework's generic
 `vendor/bin/pf-provision.sh` runs on the remote (idempotently)
 to assert the app user and create system directories (`/srv/apps`,
 `/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
-The framework CLI also runs its built-in per-host steps — linking `reuter.ini`
-into `etc/` (`fetch-private-data`), regenerating `.env`,
+The framework CLI also runs its built-in per-host steps — regenerating `.env`,
 verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
 `worker`, installing cron (`/etc/cron.d/simo-orchestrator`) from the
 `#[CronJob]`/`#[Agent]` attributes. After it returns, the deploy entrypoint

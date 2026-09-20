@@ -1,10 +1,11 @@
 # Machine registry: prod machines only.
-# This file is private data, kept in the private config repo and injected into
-# etc/ by fetch-private-data via .private-source (see
-# doc/system/private-config.md). `pf-deploy.sh` and `deploy-private-config`
-# read the [prod] roster (locally, on the deploy machine — `machines.ini` is
-# never shipped to a host); the dev-machine `DBUSER` mapping now lives in
-# etc/team.ini (see etc/team.ini.template), not here.
+# This file is private data, kept in the private config repo and copied into
+# etc/ as a real file by simox's bin/fetch-private-data via .private-source
+# (see doc/system/private-config.md). `pf-deploy.sh` and simox's
+# bin/deploy-private-config read the [prod] roster (locally, on the deploy
+# machine — `machines.ini` is never shipped to a host); the dev-machine
+# `DBUSER` mapping now lives in etc/team.ini (see etc/team.ini.template), not
+# here.
 #
 # [prod] prod deploy targets. Each key is the server's ZeroTier IP (the same
 #        address `pf-deploy.sh` uses for SSH). The value is a comma-separated

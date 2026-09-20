@@ -5,12 +5,13 @@
 # etc/host-hardening.php). The real values live in a separate,
 # access-controlled private repository — a small git repo whose tracked files
 # are `deploy.conf`, `machines.ini`, `reuter.ini`, `team.ini`, `hosts` and
-# `host-hardening.php` (mirroring this repo's etc/). This file tells
-# `fetch-private-data` where to find that repo.
+# `host-hardening.php` (mirroring this repo's etc/). This file tells simox's
+# `bin/fetch-private-data` where to find that repo.
 #
 # Copy this file to `.private-source` (untracked, machine-specific) and set
 # the one retrieval mechanism — a git URL (+ optional ref), fetched on demand
-# into var/private-data (git-ignored, like the rest of /var/):
+# into var/private-data (git-ignored, like the rest of /var/) and copied from
+# there into etc/ as real files:
 #
 # PRIVATE_DATA_GIT=git@example.com:team/simox-private-config.git
 # PRIVATE_DATA_REF=main

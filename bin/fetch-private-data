@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# fetch-private-data — materialize simox's private operational config into etc/
+# as real files.
+#
+# The private config repo's committed content is the single source of truth: no
+# machine runs on a loose, uncommitted copy. There is exactly one retrieval
+# mechanism — the git-ignored `.private-source` pointer at the repo root, whose
+# PRIVATE_DATA_GIT (+ optional PRIVATE_DATA_REF) is cloned/fetched on demand
+# into the git-ignored var/private-data.
+#
+# The private repo's root layout is then COPIED into etc/ as real files, never
+# symlinked, so a checkout carries its own operational data. `reuter.ini` and
+# `deploy.conf` are required (the app cannot resolve a database without the
+# former; the deploy flow sources the latter); `machines.ini`, `team.ini`,
+# `hosts` and `host-hardening.php` are copied only when the private source
+# provides them. Copying is idempotent: etc/<file> is overwritten on every run,
+# so a local edit to one of these files is lost — edit the private repo instead.
+#
+# An absent `.private-source` is a no-op (the repo stays fully functional on its
+# committed templates); a present pointer that sets no PRIVATE_DATA_GIT is an
+# error, not a silent skip.
+#
+# Prod hosts have neither git nor the pointer: they receive the two runtime
+# files from the deploy machine instead (bin/deploy-private-config ships them
+# to DEPLOY_PRIVATE_CONFIG_DIR and the DEPLOY_PRE_PROVISION_CMD hook
+# bin/deploy/inject-private-config.sh copies them into etc/). See
+# doc/system/private-config.md.
+#
+# Usage: bin/fetch-private-data [target-dir]   (default: $PWD)
+
+set -euo pipefail
+
+ROOT="$(cd "${1:-$PWD}" && pwd)"
+SOURCE_FILE="$ROOT/.private-source"
+
+if [[ ! -f "$SOURCE_FILE" ]]; then
+    echo "fetch-private-data: no $SOURCE_FILE — nothing to fetch (the repo stays on its committed templates)." >&2
+    exit 0
+fi
+
+set -a
+# shellcheck disable=SC1090
+. "$SOURCE_FILE"
+set +a
+
+if [[ -z "${PRIVATE_DATA_GIT:-}" ]]; then
+    echo "fetch-private-data: $SOURCE_FILE sets no PRIVATE_DATA_GIT (required)." >&2
+    exit 1
+fi
+
+# Git is the only retrieval mechanism: refresh the on-demand checkout (or create
+# it) and pin it to the configured ref.
+SOURCE_DIR="$ROOT/var/private-data"
+REF="${PRIVATE_DATA_REF:-main}"
+if [[ -d "$SOURCE_DIR/.git" ]]; then
+    git -C "$SOURCE_DIR" fetch --quiet origin "$REF"
+    git -C "$SOURCE_DIR" checkout --quiet --detach FETCH_HEAD
+else
+    mkdir -p "$ROOT/var"
+    git clone --quiet "$PRIVATE_DATA_GIT" "$SOURCE_DIR"
+    git -C "$SOURCE_DIR" checkout --quiet --detach "$REF"
+fi
+
+# The six tracked files, in the private repo's root layout. reuter.ini and
+# deploy.conf are required; the other four are copied only when provided.
+mkdir -p "$ROOT/etc"
+copied=""
+for f in deploy.conf reuter.ini machines.ini team.ini hosts host-hardening.php; do
+    src="$SOURCE_DIR/$f"
+    if [[ ! -f "$src" ]]; then
+        if [[ "$f" == "reuter.ini" || "$f" == "deploy.conf" ]]; then
+            echo "fetch-private-data: private source $SOURCE_DIR has no $f (required)." >&2
+            exit 1
+        fi
+        continue
+    fi
+    # Remove first: an injection by the older symlink mechanism left a link at
+    # this path, and the real file must not be written through it.
+    rm -f "$ROOT/etc/$f"
+    install -m 0644 "$src" "$ROOT/etc/$f"
+    copied="$copied $f"
+done
+
+echo "    Materialized into $ROOT/etc/:$copied"

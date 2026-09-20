@@ -14,8 +14,10 @@
 ; gen-service-accounts derives from etc/team.ini / etc/machines.ini.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
-; consumer (private data, injected into etc/ by fetch-private-data — see
-; doc/system/private-config.md). There is no generator anymore: `ema create
+; consumer (private data: copied into etc/ as a real file by simox's
+; bin/fetch-private-data in dev, restored after the prod repo swap by
+; bin/deploy/inject-private-config.sh — see doc/system/private-config.md).
+; There is no generator anymore: `ema create
 ; srv/<name>-<GUID>` provisions the database's own MariaDB instance and
 ; prints the [<dbname>] section (SERVER/PORT/DBMS/MYSQL_UNIX_PORT) for the
 ; operator to record here (or `ema values <db>` recovers a lost record). The
