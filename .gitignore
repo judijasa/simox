@@ -14,6 +14,7 @@
 /result-*
 
 # Ignore files
+/etc/deploy.conf
 /etc/reuter.ini
 /etc/machines.ini
 /etc/team.ini

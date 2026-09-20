@@ -1,4 +1,8 @@
-# Project-static deploy configuration (committed to the repo).
+# Deploy configuration template (committed; mirrors the current production
+# settings). The real etc/deploy.conf is private data tracked in the private
+# config repo (simox_cnf) and injected here by fetch-private-data; a real file
+# at that path shadows the injected data instead of being overwritten, so copy
+# this template into place only to run without private data.
 # `deploy` requires it at the repo root and fails loudly if missing.
 #
 # .env (generated, git-ignored) holds machine settings; this file holds the

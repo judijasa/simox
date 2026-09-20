@@ -1,10 +1,10 @@
 # Private config source pointer (git-ignored).
 #
 # The public repo ships only committed templates for the operational data
-# (etc/machines.ini, etc/reuter.ini, etc/team.ini, etc/hosts,
+# (etc/deploy.conf, etc/machines.ini, etc/reuter.ini, etc/team.ini, etc/hosts,
 # etc/host-hardening.php). The real values live in a separate,
 # access-controlled private repository — a small git repo whose tracked files
-# are `machines.ini`, `reuter.ini`, `team.ini`, `hosts` and
+# are `deploy.conf`, `machines.ini`, `reuter.ini`, `team.ini`, `hosts` and
 # `host-hardening.php` (mirroring this repo's etc/). This file tells
 # `fetch-private-data` where to find that repo.
 #
@@ -16,13 +16,14 @@
 # PRIVATE_DATA_REF=main
 #
 # The private repo's committed content is the single source of truth: no
-# machine runs on a loose, uncommitted copy. `reuter.ini` is the only file
-# that ever ships to a prod host (whole, via bin/deploy-private-config);
-# `machines.ini` and `team.ini` stay dev/deploy-time and never leave the
-# deploy machine. A `.private-source` that sets no PRIVATE_DATA_GIT is an
-# error, not a silent skip; an absent `.private-source` is a no-op (prod has
-# no git and no pointer — it resolves the stable per-app dir from
-# DEPLOY_PRIVATE_CONFIG_DIR instead).
+# machine runs on a loose, uncommitted copy. `deploy.conf` and `reuter.ini`
+# are the only files that ever ship to a prod host (whole, via
+# bin/deploy-private-config); `machines.ini`, `team.ini`, `hosts` and
+# `host-hardening.php` stay dev/deploy-time and never leave the deploy
+# machine. A `.private-source` that sets no PRIVATE_DATA_GIT is an error, not
+# a silent skip; an absent `.private-source` is a no-op (prod has no git and
+# no pointer — it resolves the stable per-app dir from DEPLOY_PRIVATE_CONFIG_DIR
+# instead).
 #
 # This file never discloses the private repo's identity in the public history
 # (it is git-ignored). Access control on the private repo is the real security

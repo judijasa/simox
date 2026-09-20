@@ -4,8 +4,8 @@
 #
 # The framework `pf-deploy.sh` is a closed operation: it swaps the repo, copies the
 # nix closure, installs composer deps, runs idempotent provisioning and — as
-# built-in steps on every host — links reuter.ini into etc/ (fetch-private-data,
-# from DEPLOY_PRIVATE_CONFIG_DIR), regenerates .env (gen-env) and verifies DB
+# built-in steps on every host — links deploy.conf and reuter.ini into etc/
+# (fetch-private-data, from DEPLOY_PRIVATE_CONFIG_DIR), regenerates .env (gen-env) and verifies DB
 # connectivity (db-check, warn-only; reuter.ini is injected private data, not
 # regenerated); on hosts tagged `worker` it also
 # installs the cron-manifest output (cron jobs). `db` and `worker` are the
@@ -28,7 +28,8 @@ cd "$REPO_ROOT"
 # 1. Framework deploy: swap, nix, composer, idempotent provisioning.
 vendor/bin/pf-deploy.sh "$@"
 
-# 2. Project-static deploy config (DEPLOY_TARGET_DIR for the remote step).
+# 2. Deploy config (private data, injected by fetch-private-data;
+#    DEPLOY_TARGET_DIR for the remote step).
 set -a
 . ./etc/deploy.conf
 set +a

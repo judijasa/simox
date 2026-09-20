@@ -165,8 +165,8 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_TARGET=sandbox`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
   framework `gen-env` CLI, run by the framework's `pf-deploy.sh` as a built-in
-  per-host step; it projects it from the committed `etc/deploy.conf` (no
-  separate `etc/env.prod`): `REPO_PATH=/srv/apps/simox`,
+  per-host step; it projects it from the injected (private) `etc/deploy.conf`
+  (no separate `etc/env.prod`): `REPO_PATH=/srv/apps/simox`,
   `REPO_LOG=/var/log/simox`, `REUTER_INI=/srv/apps/simox/etc/reuter.ini` and
   `EMA_TARGET=prod`. The `.env` stays `MYSQL_*`-free — the socket lives in the
   `reuter.ini` section, not the environment. `reuter.ini` itself is a

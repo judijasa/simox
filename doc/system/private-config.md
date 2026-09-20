@@ -8,9 +8,9 @@ The `.private-source` pointer, the `fetch-private-data` injector, and the
 `deploy-private-config` prod shipper are owned by
 `judijasa/php-daas-framework`. Their mechanism — the single git retrieval
 mode, the symlink wire invariant, and the two-step production delivery
-(`deploy-private-config` ships `reuter.ini` to the stable per-app dir;
-`fetch-private-data` links it into `etc/`) — is documented upstream in that
-repo's
+(`deploy-private-config` ships `deploy.conf` and `reuter.ini` to the stable
+per-app dir; `fetch-private-data` links them into `etc/`) — is documented
+upstream in that repo's
 [`doc/system/private-config.md`](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/private-config.md).
 This page only records what is private *here*.
 
@@ -18,14 +18,17 @@ This page only records what is private *here*.
 
 | File | Public template | Private data | Ships to prod? |
 |---|---|---|---|
-| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — the only private file that leaves the private repo for a host** |
+| `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target) | **yes — ships to prod with `reuter.ini`** |
+| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — ships to prod with `deploy.conf`** |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
 | `etc/hosts` | `etc/hosts.template` | prod server name→IP aliases (feed the `/etc/hosts` merge and the generated ssh config) | no (dev-only) |
 | `etc/host-hardening.php` | `etc/host-hardening.php.template` | firewall reconcile declaration (`$zerotierRange`, `$cloudTest`, `$tagRules`) for `gen-firewall` | no (deploy/dev-time only) |
 
-`etc/deploy.conf` stays committed (project-static: paths, the app-user name —
-no secrets). `etc/hosts` is a dev-only name→IP convenience mapping, injected by
+`etc/deploy.conf` is now private data too (the project deployment target:
+paths, the app-user name, the cron target) — it ships to prod with
+`reuter.ini`, so the public repo keeps only `etc/deploy.conf.template`.
+`etc/hosts` is a dev-only name→IP convenience mapping, injected by
 `fetch-private-data`. It feeds two dev-machine conveniences from the same
 entries: the `/etc/hosts` merge (`make dev-init`) and the generated
 `~/.ssh/config.d/simox.conf`, where each entry becomes `ssh simox-<name>` as
@@ -44,25 +47,25 @@ file — the template ships `SIMOX_PASSWORD=` empty. The service-account
 `srv/roles-<GUID>` `$sources`/`$accounts` declaration plus the per-database
 `srv/<db>.roles-<GUID>` grants) — is committed, not private.
 
-`reuter.ini` is the only private file a prod host needs, so it is the only
-one that ever leaves the private repo for a host — and it ships **whole**
-(no inner filtering, no section splicing). `machines.ini` feeds the local
-deploy roster, `team.ini` feeds `gen-cert`/`gen-grants`/
-`gen-service-accounts`/`init-local-env`, `hosts` feeds the dev `/etc/hosts`
-merge and the generated ssh config on the deploy/dev machine, and
-`host-hardening.php` feeds `gen-firewall`; none of them reaches prod.
+`deploy.conf` and `reuter.ini` are the only private files a prod host needs,
+so they are the only ones that ever leave the private repo for a host — and
+they ship **whole** (no inner filtering, no section splicing).
+`machines.ini` feeds the local deploy roster, `team.ini` feeds `gen-cert`/
+`gen-grants`/`gen-service-accounts`/`init-local-env`, `hosts` feeds the dev
+`/etc/hosts` merge and the generated ssh config on the deploy/dev machine,
+and `host-hardening.php` feeds `gen-firewall`; none of them reaches prod.
 
 ## Usage
 
 Copy `.private-source.example` to `.private-source` and point it at the
-private repo (tracked files: `machines.ini`, `reuter.ini`, `team.ini`,
-`hosts`, `host-hardening.php`) with `PRIVATE_DATA_GIT` (+ optional
+private repo (tracked files: `deploy.conf`, `machines.ini`, `reuter.ini`,
+`team.ini`, `hosts`, `host-hardening.php`) with `PRIVATE_DATA_GIT` (+ optional
 `PRIVATE_DATA_REF`). In dev,
 `make dev-init`
 (via the framework `init-local-env.sh`) runs `fetch-private-data` to link the
 files into `etc/`. In prod, the deploy machine runs
-`bin/deploy-private-config` to ship `reuter.ini` (whole) to each host's
-`DEPLOY_PRIVATE_CONFIG_DIR`, and `pf-deploy.sh` runs `fetch-private-data` on
-the host to link it into the fresh `etc/reuter.ini`. See
+`bin/deploy-private-config` to ship `deploy.conf` and `reuter.ini` (whole) to
+each host's `DEPLOY_PRIVATE_CONFIG_DIR`, and `pf-deploy.sh` runs
+`fetch-private-data` on the host to link them into the fresh `etc/`. See
 `php_daas_framework/doc/plans/2026-09-14-framework-private-config-deploy.md`
 for the mechanism.
