@@ -2,19 +2,17 @@
 # simox deploy — consumer entrypoint that wraps the framework
 # `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh).
 #
-# The deploy is two halves, both driven from here:
+# Two halves, both driven from here:
 #
-#   1. simox-owned private config. The private config repo is the source of
-#      truth and prod hosts have no git: bin/fetch-private-data materializes the
-#      real etc/ files locally, bin/deploy-private-config ships the two runtime
-#      files (deploy.conf, reuter.ini) whole to each target host's stable
-#      DEPLOY_PRIVATE_CONFIG_DIR, and the hook those files name in
-#      DEPLOY_PRE_PROVISION_CMD (bin/deploy/inject-private-config.sh) copies
-#      them into the freshly swapped etc/ on the host.
+#   1. simox-owned private config: bin/fetch-private-data materializes the real
+#      etc/ files locally from the private config repo (the single source of
+#      truth). The one runtime file (reuter.ini) is shipped to each host by the
+#      framework's DEPLOY_PRIVATE_FILES key; the deploy values themselves travel
+#      as replayed environment, never as a prod file.
 #
 #   2. Framework `pf-deploy.sh`, a closed operation: it swaps the repo, copies
-#      the nix closure, installs composer deps, sources the real etc/deploy.conf
-#      (running the hook above before anything needs it), runs idempotent
+#      the nix closure, installs composer deps, ships DEPLOY_PRIVATE_FILES,
+#      replays the deploy.conf environment to every remote step, runs idempotent
 #      provisioning and — as built-in steps on every host — regenerates .env
 #      (gen-env) and verifies DB connectivity (db-check, warn-only; reuter.ini
 #      is private data, not regenerated); on hosts tagged `worker` it also
@@ -43,22 +41,16 @@ for arg in "$@"; do
   [[ "$arg" == -* ]] || { wanted="$arg"; break; }
 done
 
-# 1. Private config (simox-owned): materialize the real etc/ files locally (both
-#    steps are idempotent), then ship the two runtime files to the stable
-#    per-app dir on each target host.
+# 1. Private config (simox-owned): materialize the real etc/ files locally
+#    (idempotent). Shipping + env replay happen inside the framework deploy.
 bin/fetch-private-data "$REPO_ROOT"
-if [ -n "$wanted" ]; then
-  bin/deploy-private-config "$wanted"
-else
-  bin/deploy-private-config
-fi
 
-# 2. Framework deploy: swap, nix, composer, idempotent provisioning (it sources
-#    etc/deploy.conf and runs the DEPLOY_PRE_PROVISION_CMD hook on each host).
+# 2. Framework deploy: swap, nix, composer, ship DEPLOY_PRIVATE_FILES, replay
+#    deploy.conf env, idempotent provisioning.
 vendor/bin/pf-deploy.sh "$@"
 
-# 3. Deploy config (private data, restored on the host by
-#    bin/deploy/inject-private-config.sh; DEPLOY_TARGET_DIR for the remote step).
+# 3. Deploy config (deploy-machine private data; DEPLOY_TARGET_DIR for the
+#    remote post-deploy step).
 set -a
 . ./etc/deploy.conf
 set +a

@@ -4,13 +4,12 @@
 # CLI has completed its built-in server steps (regenerating .env via gen-env and
 # verifying DB connectivity via db-check — warn-only — on every host, and
 # installing the cron-manifest output on hosts tagged `worker`; the private
-# etc/ files were restored earlier by the DEPLOY_PRE_PROVISION_CMD hook,
-# bin/deploy/inject-private-config.sh). It runs ON
-# the prod server (not locally), hence the "server-side" name.
+# etc/ files were shipped earlier by the framework's DEPLOY_PRIVATE_FILES). It
+# runs ON the prod server (not locally), hence the "server-side" name.
 #
 # Only consumer-owned tag steps remain here:
 #   web -> restore Apache www-data traversal on the freshly-swapped repo dir
-#          (chmod o+x $DEPLOY_TARGET_DIR)
+#          (chmod o+x $PWD)
 #
 # The wrapper passes this host's `tag[:name]` tokens from etc/machines.ini via
 # DEPLOY_TAGS (comma-separated). `db` (named) and `worker` (bare) are the
@@ -19,11 +18,9 @@
 
 set -euo pipefail
 
-# Project-static deploy config (DEPLOY_TARGET_DIR) — the deployed repo root is
-# the CWD (bin/deploy.sh cds there before running this step).
-set -a
-. ./etc/deploy.conf
-set +a
+# The deployed repo root is the CWD (bin/deploy.sh cds there before running
+# this step) and IS the deploy target dir.
+DEPLOY_TARGET_DIR="$PWD"
 
 # This host's tag list (comma-separated), passed by the wrapper. Defaults to
 # empty so the script is safe to run standalone.

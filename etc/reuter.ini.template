@@ -15,8 +15,8 @@
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data: copied into etc/ as a real file by simox's
-; bin/fetch-private-data in dev, restored after the prod repo swap by
-; bin/deploy/inject-private-config.sh — see doc/system/private-config.md).
+; bin/fetch-private-data in dev, shipped into the freshly swapped etc/ by the
+; framework's DEPLOY_PRIVATE_FILES — see doc/system/private-config.md).
 ; There is no generator anymore: `ema create
 ; srv/<name>-<GUID>` provisions the database's own MariaDB instance and
 ; prints the [<dbname>] section (SERVER/PORT/DBMS/MYSQL_UNIX_PORT) for the

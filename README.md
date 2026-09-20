@@ -109,12 +109,12 @@ To connect to a production server via `ema`, the machine registry config is need
 - `.private-source` — a git-ignored pointer to the private config repo that
   holds `etc/machines.ini`, `etc/team.ini`, `etc/reuter.ini`, `etc/hosts` and
   `etc/host-hardening.php` (copy `.private-source.example`, set
-  `PRIVATE_DATA_GIT`). simox owns the whole pipeline: `bin/fetch-private-data`
-  (run by `make dev-init`) copies them into `etc/` as real files, and
-  `bin/deploy-private-config` ships `deploy.conf` and `reuter.ini` — the only
-  two that reach prod — whole to each host, where the `DEPLOY_PRE_PROVISION_CMD`
-  hook (`bin/deploy/inject-private-config.sh`) restores them after the repo
-  swap. See `doc/system/private-config.md`.
+  `PRIVATE_DATA_GIT`). `bin/fetch-private-data` (run by `make dev-init`) copies
+  them into `etc/` as real files; on deploy, the framework ships the file
+  declared in `DEPLOY_PRIVATE_FILES` (`reuter.ini` — the only one that reaches
+  prod) into the freshly swapped `etc/` and replays `deploy.conf`'s environment
+  to the host, so `deploy.conf` itself never ships. See
+  `doc/system/private-config.md`.
 
 ### Dev ssh config
 
@@ -167,15 +167,13 @@ No `/etc/environment` entries are required: the framework's `phprun` CLI (shippe
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`, `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and `EMA_TARGET=sandbox`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the
   framework `gen-env` CLI, run by the framework's `pf-deploy.sh` as a built-in
-  per-host step; it projects it from the injected (private) `etc/deploy.conf`
+  per-host step; it projects it from the replayed `deploy.conf` environment
   (no separate `etc/env.prod`): `REPO_PATH=/srv/apps/simox`,
   `REPO_LOG=/var/log/simox`, `REUTER_INI=/srv/apps/simox/etc/reuter.ini` and
   `EMA_TARGET=prod`. The `.env` stays `MYSQL_*`-free — the socket lives in the
   `reuter.ini` section, not the environment. `reuter.ini` itself is a
   manually-maintained private file (values recorded from `ema create` output),
-  shipped (whole) to the host's stable private dir (`DEPLOY_PRIVATE_CONFIG_DIR`)
-  by simox's `bin/deploy-private-config` and copied into `etc/` by the
-  `DEPLOY_PRE_PROVISION_CMD` hook (`bin/deploy/inject-private-config.sh`);
+  shipped (whole) into `etc/` by the framework's `DEPLOY_PRIVATE_FILES` key;
   `gen-env` only projects its path (`DEPLOY_REUTER_INI`), never its contents.
   On the same per-host pass, `pf-deploy.sh` runs `db-check` (warn-only) to
   verify the host's own `mariadb@*` instances are up and each `reuter.ini`
@@ -204,12 +202,11 @@ make deploy                        # every [prod] host in etc/machines.ini
 make deploy <host>                 # a single prod host (must be in [prod])
 ```
 `make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first runs
-simox's own private-config pipeline (`bin/fetch-private-data` materializes the
-real `etc/` files, `bin/deploy-private-config` ships `deploy.conf` +
-`reuter.ini` to each target host, and the `DEPLOY_PRE_PROVISION_CMD` hook
-`bin/deploy/inject-private-config.sh` restores them after the repo swap), then
-the framework `pf-deploy.sh` CLI (shipped via Composer to `vendor/bin`) and
-finally the per-host post-deploy step. On every deploy, the framework's generic
+simox's own private-config materialization (`bin/fetch-private-data` copies the
+real `etc/` files in locally), then the framework `pf-deploy.sh` CLI (shipped
+via Composer to `vendor/bin`) — which ships `DEPLOY_PRIVATE_FILES`
+(`reuter.ini`) to each target host and replays the `deploy.conf` environment to
+every remote step — and finally the per-host post-deploy step. On every deploy, the framework's generic
 `vendor/bin/pf-provision.sh` runs on the remote (idempotently)
 to assert the app user and create system directories (`/srv/apps`,
 `/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`

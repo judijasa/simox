@@ -17,14 +17,14 @@
 # PRIVATE_DATA_REF=main
 #
 # The private repo's committed content is the single source of truth: no
-# machine runs on a loose, uncommitted copy. `deploy.conf` and `reuter.ini`
-# are the only files that ever ship to a prod host (whole, via
-# bin/deploy-private-config); `machines.ini`, `team.ini`, `hosts` and
+# machine runs on a loose, uncommitted copy. `reuter.ini` is the only file
+# that ever ships to a prod host (whole, via the framework's
+# DEPLOY_PRIVATE_FILES key); `deploy.conf` is deploy-machine-only (its values
+# travel as replayed environment), and `machines.ini`, `team.ini`, `hosts` and
 # `host-hardening.php` stay dev/deploy-time and never leave the deploy
 # machine. A `.private-source` that sets no PRIVATE_DATA_GIT is an error, not
 # a silent skip; an absent `.private-source` is a no-op (prod has no git and
-# no pointer — it resolves the stable per-app dir from DEPLOY_PRIVATE_CONFIG_DIR
-# instead).
+# no pointer — it receives reuter.ini from the deploy machine's deploy step).
 #
 # This file never discloses the private repo's identity in the public history
 # (it is git-ignored). Access control on the private repo is the real security

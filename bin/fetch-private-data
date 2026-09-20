@@ -20,10 +20,10 @@
 # committed templates); a present pointer that sets no PRIVATE_DATA_GIT is an
 # error, not a silent skip.
 #
-# Prod hosts have neither git nor the pointer: they receive the two runtime
-# files from the deploy machine instead (bin/deploy-private-config ships them
-# to DEPLOY_PRIVATE_CONFIG_DIR and the DEPLOY_PRE_PROVISION_CMD hook
-# bin/deploy/inject-private-config.sh copies them into etc/). See
+# Prod hosts have neither git nor the pointer: they receive the one runtime
+# file (reuter.ini) from the deploy machine's deploy step instead — the
+# framework's DEPLOY_PRIVATE_FILES ships it into the freshly swapped etc/,
+# while deploy.conf's values travel as replayed environment. See
 # doc/system/private-config.md.
 #
 # Usage: bin/fetch-private-data [target-dir]   (default: $PWD)

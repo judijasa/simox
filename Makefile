@@ -1,10 +1,9 @@
 # simox Makefile (dev-init + deploy entrypoints).
 # Production deploy is the consumer entrypoint bin/deploy.sh: it first runs
-# simox's own private-config pipeline (bin/fetch-private-data materializes the
-# real etc/ files, bin/deploy-private-config ships deploy.conf + reuter.ini to
-# each host, where the DEPLOY_PRE_PROVISION_CMD hook
-# bin/deploy/inject-private-config.sh restores them after the repo swap), then
-# the framework `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh) — which also runs
+# simox's own private-config materialization (bin/fetch-private-data copies the
+# real etc/ files in locally), then the framework `pf-deploy.sh` CLI
+# (vendor/bin/pf-deploy.sh) — which ships DEPLOY_PRIVATE_FILES (reuter.ini) to
+# each host, replays the deploy.conf environment to every remote step, and runs
 # its built-in per-host steps (gen-env/db-check on every host, cron install on
 # `worker` hosts) — and finally the consumer post-deploy step
 # bin/deploy/server-side-post-deploy.sh, covering only simox's own tags
@@ -42,9 +41,10 @@ help:
 
 dev-init: _dev-assert-nix _dev-init
 
-# Production deploy: run the consumer private-config pipeline, wrap the
-# framework CLI, then run the consumer post-deploy step (`web`) per host. Pass
-# deploy args via ARGS (empty = every [prod] host).
+# Production deploy: materialize private config, wrap the framework CLI (which
+# ships DEPLOY_PRIVATE_FILES and replays deploy.conf env), then run the
+# consumer post-deploy step (`web`) per host. Pass deploy args via ARGS
+# (empty = every [prod] host).
 deploy:
 	@bin/deploy.sh $(ARGS)
 
