@@ -141,22 +141,36 @@ One-time steps to provision a new production server. The app user
 see `_my_notes_/prod-user-setup.md` for the exact steps (create the user
 with `useradd --create-home`, lock the password, install the SSH key):
 
-**1. Apache vhost** — point the vhost at the deploy directory and set the config path:
+**1. Apache vhost** — point the vhost at the deploy directory and forward PHP to
+the nix-built php-fpm over FastCGI (this replaces mod_php, so the flake-pinned
+PHP 8.4 is what actually runs the site):
 ```apache
 DocumentRoot "/srv/apps/simox/public"
 <Directory "/srv/apps/simox/public">
     Require all granted
 </Directory>
-SetEnv REUTER_INI /srv/apps/simox/etc/reuter.ini
+<FilesMatch "\.php$">
+    SetHandler "proxy:unix:/run/php-fpm-simox.sock|fcgi://localhost"
+</FilesMatch>
 ```
+Enable the proxy modules, disable mod_php, and restart Apache (one-time):
+```bash
+a2enmod proxy proxy_fcgi
+a2dismod php8.4   # module name varies by distro/version
+systemctl restart apache2
+```
+`REUTER_INI` is no longer a vhost `SetEnv` — php-fpm does not inherit Apache
+`SetEnv`; the php-fpm pool sets it instead (see below).
 `etc/reuter.ini` is git-ignored private data, materialized by simox's
 `bin/fetch-private-data` and never regenerated (see
 `doc/system/private-config.md` and the contract in `etc/reuter.ini.template`).
-The Apache vhost and `.env` point at it via:
+The php-fpm pool and `.env` point at it via:
 
 - **`REUTER_INI`** — path to the `reuter.ini` file (`/srv/apps/simox/etc/reuter.ini`,
   the `DEPLOY_REUTER_INI` value), consumed by the framework's `Database` class and
-  the `ema` CLI (prod mode). If unset, `etc/reuter.ini` inside the repo is used.
+  the `ema` CLI (prod mode). The `web` deploy step writes it into the php-fpm
+  pool (`env[REUTER_INI]`), since the web process has no `.env`. If unset,
+  `etc/reuter.ini` inside the repo is used.
 - **`EMA_TARGET`** — operation-mode flag for the `ema` CLI only: `sandbox`
   (default, per-instance sandbox) or `prod` (reads
   `REUTER_INI`). The app layer ignores it; `Database.php` always resolves a
@@ -216,8 +230,10 @@ verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
 `worker`, installing cron (`/etc/cron.d/simo-orchestrator`) from the
 `#[CronJob]`/`#[Agent]` attributes. After it returns, the deploy entrypoint
 runs `bin/deploy/server-side-post-deploy.sh` on each `[prod]` host (passing
-that host's tag list via `DEPLOY_TAGS`); only simox's own `web` step remains
-there — restoring Apache www-data traversal on the repo dir.
+that host's tag list via `DEPLOY_TAGS` plus the `deploy.conf` values the
+render needs); only simox's own `web` step remains there — restoring Apache
+www-data traversal on the repo dir and installing the nix-built php-fpm (pool
+config + systemd unit, then restarting the service).
 
 ## Service Accounts & Read Replica
 
@@ -300,11 +316,18 @@ the production server) always fetch that revision.
 In addition to [composer](https://getcomposer.org/doc/01-basic-usage.md#introduction) and the programs in the `composer.json` file, we require
 
 #### 1. Web Server (Ngnix, Apache, etc.)
+Production forwards PHP to the nix-built `php-fpm` over FastCGI (see
+"Production Server Setup") — not mod_php.
 #### 2. PHP >=8.4+
+Production PHP comes from the nix closure (flake: `php84` + `mysqli`/`pdo_mysql`/
+`bz2`/`curl`), not from the OS package manager; the apt notes below apply only
+outside the nix environment.
 jakoch/phantomjs-installer further requires installation of the bz2 (`... install php-bz2`) extension for PHP.  It is also recommended to install cURL (`... install php-curl`).
 #### 3. MariaDB Server >=10.6
 #### 4. PHP/MySQL support modules for the Web Server
-For example, `libapache2-mod-php` to integrate PHP with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
+With the nix php-fpm these are already compiled into the closure (`pdo_mysql`,
+`mysqli`). The legacy manual route used `libapache2-mod-php` to integrate PHP
+with Apache2 and `php-mysql` to integrate PHP with MySQL/MariaDB.
 #### 5. Python
 Required during phpcasperjs/phpcasperjs installation (`...install python-is-python3`).
 #### 6. libfontconfig.so.1

@@ -1,0 +1,20 @@
+; simox php-fpm systemd unit — rendered by bin/deploy/server-side-post-deploy.sh
+; (`web` step) into /etc/systemd/system/php-fpm-simox.service on `web`-tagged
+; hosts. The binary token resolves to the stable nix `result` bin path
+; (/usr/local/simox/result/bin/php-fpm), so this unit does not churn when the
+; store path changes on each deploy; the deploy step restarts the service after
+; re-pointing the symlink.
+
+[Unit]
+Description=PHP FastCGI Process Manager (simox, nix-built)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=@PHP_FPM_BIN@ -F -y /etc/simox/php-fpm-simox.conf
+ExecReload=/bin/kill -USR2 $MAINPID
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

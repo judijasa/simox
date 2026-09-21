@@ -17,8 +17,9 @@
 #        db-check verifies it via the host's own `mariadb@*` units, not this
 #        roster); `worker` installs the `cron-manifest` output (cron jobs) on
 #        every deploy. Every other tag is consumer-owned:
-#          `web`     restore Apache www-data traversal on the repo dir;
-#                    also opens 80/443/tcp in the firewall (gen-firewall)
+#          `web`     restore Apache www-data traversal on the repo dir and
+#                    install the nix-built php-fpm (pool config + systemd
+#                    unit); also opens 80/443/tcp in the firewall (gen-firewall)
 #          `cloud`   opens 9993/udp in the firewall (gen-firewall), gated on
 #                    the runtime cloud test
 #        A host with a `db:<name>` token is a database host; a bare `worker`

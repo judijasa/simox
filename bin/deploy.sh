@@ -63,7 +63,14 @@ read_prod_roster() {
 post_deploy_one() {
   local host="$1"
   local tags="$2"
-  ssh "root@$host" "cd '$DEPLOY_TARGET_DIR' && DEPLOY_TAGS='$tags' bin/deploy/server-side-post-deploy.sh"
+  # Replay the deploy.conf values the `web` step needs (php-fpm render) into
+  # the remote step, mirroring how the framework replays deploy.conf env.
+  ssh "root@$host" "cd '$DEPLOY_TARGET_DIR' && \
+    DEPLOY_TAGS='$tags' \
+    DEPLOY_REUTER_INI='$DEPLOY_REUTER_INI' \
+    DEPLOY_LOG_DIR='$DEPLOY_LOG_DIR' \
+    DEPLOY_NIX_RESULT_DIR='$DEPLOY_NIX_RESULT_DIR' \
+    bin/deploy/server-side-post-deploy.sh"
 }
 
 if [ -n "$wanted" ]; then

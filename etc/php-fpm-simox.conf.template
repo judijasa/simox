@@ -1,0 +1,31 @@
+; simox php-fpm pool — rendered by bin/deploy/server-side-post-deploy.sh
+; (`web` step) into /etc/simox/php-fpm-simox.conf on `web`-tagged hosts.
+; The REUTER_INI and log-path tokens are filled from the replayed
+; etc/deploy.conf values on each deploy.
+;
+; The nix-built PHP's php.ini is immutable inside the store, so anything
+; site-specific belongs here via php_admin_value/php_admin_flag (none needed
+; today). php-fpm runs the `simox` pool as www-data — the same uid the
+; Apache/mod_php process used, so reuter.ini read access is unchanged.
+
+[global]
+error_log = @PHP_FPM_LOG@
+pid = /run/php-fpm-simox.pid
+
+[simox]
+user = www-data
+group = www-data
+listen = /run/php-fpm-simox.sock
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0660
+
+pm = dynamic
+pm.max_children = 20
+pm.start_servers = 4
+pm.min_spare_servers = 2
+pm.max_spare_servers = 6
+
+; The web process has no .env (unlike phprun/cron), so REUTER_INI is set here
+; the way the Apache vhost's SetEnv used to.
+env[REUTER_INI] = @REUTER_INI@
