@@ -373,7 +373,7 @@ function process_batch(PDO $conn, array $rows, int $batch_size): void
     insert_empleo_funciones($conn, $empleos, $batch_size);
 }
 
-#[CronJob(schedule: '0 5 * * *')]
+// #[CronJob(schedule: '0 5 * * *')]
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function main(PDO $conn): void
 {
