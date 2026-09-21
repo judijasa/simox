@@ -125,6 +125,7 @@ function persist_snapshots($conn, $jobs){
             :nivel_nombre,
             :access
         )
+        ON DUPLICATE KEY UPDATE last_seen = CURRENT_TIMESTAMP
         EOD;
     $stmt = $conn->prepare($sql);
     foreach ($jobs as $job) {
@@ -135,7 +136,10 @@ function persist_snapshots($conn, $jobs){
             // cast boolean to int, otherwise PHP convert false to empty string
             ':favorito'           => (int)$job['favorito'],
             ':inscripcion_id'     => json_encode($job['inscripcionId']),
-            ':fecha_inscripcion'  => $job['fechaInscripcion'],
+            // fecha_inscripcion is NOT NULL DEFAULT '': the explicit empty
+            // string (not SQL NULL) is what lets the (opec, fecha_inscripcion)
+            // unique key collide, so coerce missing/null to '' here.
+            ':fecha_inscripcion'  => $job['fechaInscripcion'] ?? '',
             ':nivel_nombre'       => $job['nivelNombre'],
             ':access'             => json_encode($job['access']),
         ]);
