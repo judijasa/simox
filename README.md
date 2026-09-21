@@ -119,9 +119,11 @@ To connect to a production server via `ema`, the machine registry config is need
 
 ### Dev ssh config
 
-`make dev-init` generates `~/.ssh/config.d/simox.conf` from `etc/hosts` (the
-framework `gen-ssh-config` CLI), so dev machines reach the prod servers as
-`root` with one project key instead of hand-edited aliases:
+`make dev-init` generates `~/.ssh/config.d/<repo-dir>.conf` from `etc/hosts`
+(the framework `gen-ssh-config` CLI), so dev machines reach the prod servers as
+`root` with one project key instead of hand-edited aliases. The alias prefix is
+the repo directory name, derived by `gen-ssh-config` from the directory it runs
+in — distinctive per repo, never typed. For this checkout (`simox`):
 
 ```
 ssh simox-<name>        # e.g. ssh simox-simo0

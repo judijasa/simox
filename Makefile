@@ -92,9 +92,13 @@ _dev-update-hosts:
 
 # The generated ssh config reads that same private etc/hosts (materialized by
 # _dev-init-private-config), so it must follow that step in _dev-init as well:
-# each entry becomes `ssh simox-<name>` as root with the project key.
+# each entry becomes `ssh <repo-dir>-<name>` as root with the project key. The
+# app name (alias prefix) is the repo directory name — distinctive per repo,
+# never typed — and gen-ssh-config derives it, the key
+# (~/.ssh/<repo-dir>-sshkey) and the `root` user from the current directory,
+# so no arguments are passed.
 _dev-ssh-config:
-	@vendor/bin/gen-ssh-config simox --user root --key ~/.ssh/simox-sshkey
+	@vendor/bin/gen-ssh-config
 
 _dev-init-local-env:
 	@vendor/bin/init-local-env.sh
