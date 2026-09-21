@@ -59,12 +59,13 @@ Verify content in tables e.g.
 SELECT * FROM convocatoria WHERE id = (SELECT convocatoria_id FROM empleo LIMIT 1) \G;
 ```
 
-Start PHP's built-in server (from repo root directory):
+Start PHP's built-in server (from the repo root, inside `nix develop`; this
+runs the same nix-built PHP the web server uses, serving `public/` as docroot):
 ```bash
-php -S localhost:8000
+make web
 ```
 
-Navigate to the website: `http://localhost:8000/public/index.php`
+Navigate to the website: `http://localhost:8000`
 
 Note: the website (`public/index.php`, `public/insight.php`) reads from the
 read-only replica `simo1`, not `simo0`. `simo1` is built with ema's replica

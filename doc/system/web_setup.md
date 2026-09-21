@@ -45,18 +45,22 @@ require_blank_page_or_file("../src/Database.php");
 - From prod server (prod test) use the apache/nginx endpoint (FastCGI to the
   nix php-fpm above).
 
-- From dev machine (dev test) use the PHP Built-in Server:
+- From dev machine (dev test) use the PHP built-in server. Run it inside
+  `nix develop` so `php` is the same flake `php84` closure (version +
+  `mysqli`/`pdo_mysql`/`bz2`) whose `php-fpm` serves prod — not the system
+  PHP.
 
-At repo root dir, execute (-t to target index.php relative location)
+At the repo root, run:
 
 ```bash
-php -S localhost:8000 -t public
+make web
 ```
+
+This starts the built-in server with `public/` as the docroot (`-t public`),
+matching prod's DocumentRoot. `Ctrl-C` stops it.
 
 Open your browser and navigate to
 
 ```
 http://localhost:8000
 ```
-
-Ctrl + C in terminal to shut down the server.

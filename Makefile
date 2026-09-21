@@ -31,13 +31,14 @@ _dev-init: DEV_LOG_DIR = $(REPO_LOG)
 _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
 
-.PHONY: help dev-init deploy _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
+.PHONY: help dev-init deploy web _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
     _dev-init-composer _dev-init-private-config _dev-update-hosts _dev-ssh-config _dev-init-local-env
 
 help:
 	@echo "Available targets:"
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
 	@echo "  deploy     - Deploy to [prod] (args via ARGS)"
+	@echo "  web        - Run the local PHP built-in server"
 
 dev-init: _dev-assert-nix _dev-init
 
@@ -47,6 +48,12 @@ dev-init: _dev-assert-nix _dev-init
 # (empty = every [prod] host).
 deploy:
 	@bin/deploy.sh $(ARGS)
+
+# Local website: run the same nix-built PHP the web server uses (the php84
+# closure php-fpm is built from) as a built-in server. `-t public` matches
+# prod's DocumentRoot.
+web: _dev-assert-nix
+	@php -S localhost:8000 -t public
 
 _dev-assert-nix:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
