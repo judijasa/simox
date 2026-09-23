@@ -20,8 +20,8 @@ and how the framework and `ema` packages deliver their `vendor/bin` CLIs), see
   },
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
-    "judijasa/php-daas-framework": "dev-main#fdb6ad37a73f719c946fec9f1e947ce534fc8fc0",
-    "judijasa/ema": "dev-main#171228340b3bb31b6847ad6500edeca562aea426"
+    "judijasa/php-daas-framework": "dev-main#<hash>",
+    "judijasa/ema": "dev-main#<hash>"
   },
   "repositories": [
     {
