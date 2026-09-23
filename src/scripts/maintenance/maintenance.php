@@ -11,6 +11,7 @@ use Utils\Logger;
 #[CronJob(schedule: '*/5 * * * *')]
 #[Agent(dbTarget: null)]
 function memory_cleaning(): void
+// Kills the top memory consumer, or reboots as a last resort, when RAM exceeds 90%.
 {
     $threshold = 90;
     $used_ram  = (int) shell_exec("free | awk '/Mem:/ {printf \"%.0f\", $3/$2 * 100}'");
@@ -33,6 +34,7 @@ function memory_cleaning(): void
 #[CronJob(schedule: '0 6 * * 6')]
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
+// Halves every log file over 1MB in REPO_LOG.
 {
     // The repo-root .env (loaded by the nix phprun wrapper) provides REPO_LOG.
     $log_dir = getenv('REPO_LOG');
@@ -56,6 +58,7 @@ function trim_log_files(): void
 #[CronJob(schedule: '0 8 * * 6')]
 #[Agent(dbTarget: null)]
 function nix_store_gc(): void
+// Runs nix-store GC, then --optimise unless NIX_GC_OPTIMISE=0.
 {
     // The nix store grows with every nixpkgs revision shipped by deploy.sh;
     // only the latest closure is gcroot-protected, so old ones accumulate.
