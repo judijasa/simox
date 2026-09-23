@@ -8,29 +8,6 @@ use Utils\Agent;
 use Utils\CronJob;
 use Utils\Logger;
 
-#[CronJob(schedule: '*/5 * * * *', scope: 'cloud')]
-#[Agent(dbTarget: null)]
-function memory_cleaning(): void
-// Kills the top memory consumer, or reboots as a last resort, when RAM exceeds 90%.
-{
-    $threshold = 90;
-    $used_ram  = (int) shell_exec("free | awk '/Mem:/ {printf \"%.0f\", $3/$2 * 100}'");
-
-    if ($used_ram < $threshold) return;
-
-    Logger::info("RAM usage at {$used_ram}%, exceeding threshold. Finding and killing top memory consumer...");
-
-    $top_pid = (int) shell_exec("ps -eo pid,%mem,cmd --sort=-%mem | awk 'NR==2 {print $1}'");
-
-    if ($top_pid > 0) {
-        Logger::info("Killing process $top_pid.");
-        posix_kill($top_pid, SIGKILL);
-    } else {
-        Logger::info("No process found, rebooting as last resort...");
-        shell_exec('sudo reboot');
-    }
-}
-
 #[CronJob(schedule: '0 6 * * 6', scope: 'host')]
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
