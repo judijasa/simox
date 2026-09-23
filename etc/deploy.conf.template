@@ -62,9 +62,11 @@ export DEPLOY_NIX_GCROOT=/nix/var/nix/gcroots/simox
 export DEPLOY_INIT_CMD="bash bin/deploy/provision-extra.sh"
 
 # CRON_FILE: remote crontab file the framework `cron-manifest` output is
-# installed to by pf-deploy's built-in worker step on every deploy. REQUIRED
-# on hosts tagged `worker` (pf-deploy fails loudly if unset there); unused on
-# non-worker hosts.
+# installed to by pf-deploy's built-in server step on every host (filtered by
+# that host's tags — a job runs only where its `scope` matches, and
+# `host`-scoped jobs run everywhere). REQUIRED whenever the repo declares a
+# `#[CronJob]` attribute (pf-deploy fails loudly if unset then); unused when
+# the repo declares no cron jobs.
 export CRON_FILE=/etc/cron.d/simo-orchestrator
 
 # CRON_USER: user the cron entries run as.

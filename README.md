@@ -80,20 +80,21 @@ To connect to a production server via `ema`, the machine registry config is need
   below). The `[prod]` section lists the prod
   servers by ZeroTier IP; the value is a comma-separated list of
   `tag[:name]` tokens (`ip=db:simo0, db:simo1, web, worker`): `db` (named)
-  and `worker` (bare) are the framework's built-in tags — a `db:<name>` token
-  names a database (the instance itself is provisioned by `ema create`, not by
-  deploy, and `db-check` verifies it via the host's own `mariadb@*` units),
-  and `worker`
-  installs the `cron-manifest` output on every deploy — while `web` is
-  simox's own step (restore Apache www-data traversal). `worker`, `web` and
-  every `db:<name>` token are the role-pin sources the framework
-  `gen-service-accounts` reconciles against the shared `srv/roles-<GUID>`
-  declaration (`worker` → `simox_worker`, `db:<name>` → `simox_db_<name>`,
-  `web` → `simox_web`); see the Service Accounts section. Each named token maps
-  to exactly one server; a
-  server may host several databases. `pf-deploy.sh` targets every `[prod]`
-  host by default; a server with a `db:<name>` token hosts one or more
-  databases, each with its own MariaDB instance created by `ema create`.
+  is the framework's built-in tag — a `db:<name>` token names a database (the
+  instance itself is provisioned by `ema create`, not by deploy, and
+  `db-check` verifies it via the host's own `mariadb@*` units). Every tag
+  doubles as a cron scope: a `#[CronJob]` declares `scope: <tag[:name]>` (or
+  `scope: host` to run on every host), and the cron install is scope-filtered
+  per host — `worker` is an ordinary bare tag data jobs use as their scope,
+  while `web` is simox's own step (restore Apache www-data traversal).
+  `worker`, `web` and every `db:<name>` token are the role-pin sources the
+  framework `gen-service-accounts` reconciles against the shared
+  `srv/roles-<GUID>` declaration (`worker` → `simox_worker`,
+  `db:<name>` → `simox_db_<name>`, `web` → `simox_web`); see the Service
+  Accounts section. Each named token maps to exactly one server; a server may
+  host several databases. `pf-deploy.sh` targets every `[prod]` host by
+  default; a server with a `db:<name>` token hosts one or more databases, each
+  with its own MariaDB instance created by `ema create`.
 - `etc/team.ini` — private data (see `.private-source` below). One
   section per team member with a `subject` key (their client-certificate
   subject DN, used for cert issuance) and `hostname=ZeroTier-IP` entries.
@@ -229,9 +230,10 @@ to assert the app user and create system directories (`/srv/apps`,
 `/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
 The framework CLI also runs its built-in per-host steps — regenerating `.env`,
-verifying DB connectivity via `db-check` (warn-only), and, on hosts tagged
-`worker`, installing cron (`/etc/cron.d/simo-orchestrator`) from the
-`#[CronJob]`/`#[Agent]` attributes. After it returns, the deploy entrypoint
+verifying DB connectivity via `db-check` (warn-only), and installing cron
+(`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]` attributes
+on every host, scope-filtered by that host's tag list. After it returns, the
+deploy entrypoint
 runs `bin/deploy/server-side-post-deploy.sh` on each `[prod]` host (passing
 that host's tag list via `DEPLOY_TAGS` plus the `deploy.conf` values the
 render needs); only simox's own `web` step remains there — restoring Apache

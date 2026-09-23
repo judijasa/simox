@@ -15,12 +15,13 @@
 #      replays the deploy.conf environment to every remote step, runs idempotent
 #      provisioning and — as built-in steps on every host — regenerates .env
 #      (gen-env) and verifies DB connectivity (db-check, warn-only; reuter.ini
-#      is private data, not regenerated); on hosts tagged `worker` it also
-#      installs the cron-manifest output (cron jobs). `db` and `worker` are the
-#      framework's built-in tags, so this wrapper forwards its args verbatim to
-#      it, then re-derives the [prod] roster (host → tags) from etc/machines.ini
-#      via the shared pf-roster CLI and runs the consumer server-side post-deploy
-#      step (bin/deploy/server-side-post-deploy.sh) on each host, passing that
+#      is private data, not regenerated), then installs the cron-manifest
+#      output (cron jobs) on every host, scope-filtered by that host's tags.
+#      `db` is the framework's built-in tag (every tag doubles as a cron
+#      scope), so this wrapper forwards its args verbatim to it, then
+#      re-derives the [prod] roster (host → tags) from etc/machines.ini via the
+#      shared pf-roster CLI and runs the consumer server-side post-deploy step
+#      (bin/deploy/server-side-post-deploy.sh) on each host, passing that
 #      host's tag list via DEPLOY_TAGS — it covers only the consumer-owned tags
 #      (`web`).
 #

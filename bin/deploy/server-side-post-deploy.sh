@@ -3,7 +3,7 @@
 # by the deploy entrypoint (bin/deploy.sh) AFTER the framework `pf-deploy.sh`
 # CLI has completed its built-in server steps (regenerating .env via gen-env and
 # verifying DB connectivity via db-check — warn-only — on every host, and
-# installing the cron-manifest output on hosts tagged `worker`; the private
+# installing the scope-filtered cron-manifest output on every host; the private
 # etc/ files were shipped earlier by the framework's DEPLOY_PRIVATE_FILES). It
 # runs ON the prod server (not locally), hence the "server-side" name.
 #
@@ -16,8 +16,8 @@
 # The wrapper passes this host's `tag[:name]` tokens from etc/machines.ini via
 # DEPLOY_TAGS (comma-separated), plus the deploy.conf values the php-fpm render
 # needs (DEPLOY_REUTER_INI, DEPLOY_LOG_DIR, DEPLOY_NIX_RESULT_DIR). `db` (named)
-# and `worker` (bare) are the framework's built-in tags and are handled by
-# pf-deploy itself — this script must not re-run them.
+# is the framework's built-in tag; every tag doubles as a cron scope and is
+# handled by pf-deploy itself — this script must not re-run them.
 
 set -euo pipefail
 

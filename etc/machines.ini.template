@@ -10,20 +10,25 @@
 #        address `pf-deploy.sh` uses for SSH). The value is a comma-separated
 #        list of `tag[:name]` tokens:
 #          named tag   `db:simo0` -> a `db` resource named `simo0`
-#          bare tag    `worker`   -> boolean flag (install cron on this host)
-#        `db` (named) and `worker` (bare) are the framework's built-in tags:
-#        a `db:<name>` token names a database and enforces the one-to-one
-#        server mapping (the instance itself is provisioned by `ema create`;
-#        db-check verifies it via the host's own `mariadb@*` units, not this
-#        roster); `worker` installs the `cron-manifest` output (cron jobs) on
-#        every deploy. Every other tag is consumer-owned:
+#          bare tag    `worker`   -> a bare tag data jobs use as their cron
+#                                    scope
+#        `db` is the framework's built-in tag: a `db:<name>` token names a
+#        database and enforces the one-to-one server mapping (the instance
+#        itself is provisioned by `ema create`; db-check verifies it via the
+#        host's own `mariadb@*` units, not this roster). Every tag doubles as
+#        a cron scope: a `#[CronJob]` declares `scope: <tag[:name]>` (or
+#        `scope: host` to run on every host), and `cron-manifest --host-tags
+#        <tokens>` installs only jobs whose scope matches this host's tokens —
+#        a `host`-scoped job runs on every host. `worker` is an ordinary bare
+#        tag in that matcher, nothing special-cases it. Every other tag is
+#        consumer-owned:
 #          `web`     restore Apache www-data traversal on the repo dir and
 #                    install the nix-built php-fpm (pool config + systemd
 #                    unit); also opens 80/443/tcp in the firewall (gen-firewall)
 #          `cloud`   opens 9993/udp in the firewall (gen-firewall), gated on
 #                    the runtime cloud test
 #        A host with a `db:<name>` token is a database host; a bare `worker`
-#        token adds cron install on that host; an empty value is a code-only
+#        token scopes data jobs to that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
 #
 #        Service-account pins — the framework `gen-service-accounts` CLI

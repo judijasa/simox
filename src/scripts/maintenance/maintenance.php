@@ -8,7 +8,7 @@ use Utils\Agent;
 use Utils\CronJob;
 use Utils\Logger;
 
-#[CronJob(schedule: '*/5 * * * *')]
+#[CronJob(schedule: '*/5 * * * *', scope: 'cloud')]
 #[Agent(dbTarget: null)]
 function memory_cleaning(): void
 // Kills the top memory consumer, or reboots as a last resort, when RAM exceeds 90%.
@@ -31,7 +31,7 @@ function memory_cleaning(): void
     }
 }
 
-#[CronJob(schedule: '0 6 * * 6')]
+#[CronJob(schedule: '0 6 * * 6', scope: 'host')]
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
 // Halves every log file over 1MB in REPO_LOG.
@@ -55,7 +55,7 @@ function trim_log_files(): void
     }
 }
 
-#[CronJob(schedule: '0 8 * * 6')]
+#[CronJob(schedule: '0 8 * * 6', scope: 'host')]
 #[Agent(dbTarget: null)]
 function nix_store_gc(): void
 // Runs nix-store GC, then --optimise unless NIX_GC_OPTIMISE=0.
@@ -106,4 +106,3 @@ function run_nix_store_command(string $nix_store, string $action): void
     $message = trim(implode(PHP_EOL, $output));
     Logger::info($message !== '' ? $message : "nix-store $action exited with code $exit_code.");
 }
-
