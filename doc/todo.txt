@@ -1,13 +1,36 @@
-[x] the pattern `ema init tables mypkg-HASH mydb` should not be necessary; look
-    at schematic/ to see how they do it.
 
-[.] You still need to fill in (machine data, git-ignored):
-    the actual ZeroTier IPs in each repo's etc/machines.ini and
-    DEPLOY_DB_PORT/DEPLOY_DB_BIND in simox's etc/deploy.conf; DB host firewall must allow the ZeroTier interface on the DB port.
+[.] NOT-URGENT / NOT_IMPORTANT
+    Rate limit:
+    Should I have it in `gen-firewall` and/or simox_cnf/host-hardening.php
 
-[.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
-    [.] Add a way to drop a database with ema (see schematic for inspiration).
-        Add other easy to implement commands for schematic.
+[.] IMPORTANT / NOT-URGENT
+    Avoid duplicate ingestion:
+    Data (cron) jobs upserting a db must run on exactly one host to avoid duplicate ingestion.
+    You may want to do something about it.
+
+[.] NOT-IMPORTANT / NOT-URGENT
+    New table:
+    Make a new table. only with id, opec, hash, created_at, last_seen.
+    It should be near the persist_snapshot function.
+    the hash is created using a hash function whose input is
+    the concatenation of all col vals of snap tbl as string type.
+    It will help us detect changes in a job offer.
+
+[.] IMPORTANT / NOT-URGENT
+    DB host firewall must allow the ZeroTier interface on the DB port.
+
+[.] NOT-IMPORTANT / NOT-URGENT
+    Check if you can have a mariadb instance active in each repo.
+
+[.] NOT-IMPORTANT / NOT-URGENT
+    Reduce README.md files so that they are lighter and oriented to quick setup. Longer explainations
+    should be left to doc/system module dedicated files.
+
+[.] Continuous tests: shell enter, git commit hooks, git push hooks, unit tests, else?
+    Research the paradigms for testing.
+
+[.] How much of the new paradigm "verification, validation, testing and observability"
+    is being applied to this project?
 
 [.] Not sure if we really need this. It also feels
     more natural to add municipio.departamento_id
@@ -15,11 +38,7 @@
     [.] Modify pipeline.php:insert_vacantes
     [.] Simplify query in public/index.php
 
-[.] Check that
-      ema init tables pkg/simo-C196A24801D24B16
-    returns a message explaining why id doesnt work.
-
-[.] zerotier?
+[x] zerotier
 
 [.] Find out why convocatoria always returns
       es_tipo_fase: NULL
@@ -27,9 +46,6 @@
       no_cobro_nivel: NULL
       no_cobro_opec: NULL
       tipo_proc_sele_id: NULL
-
-[.] Briefly explain what `make dev-init` does (why is necessary to run
-    in the quick test).
 
 [.] There already an env var that allows to change db target from
     local to prod. The prod should be default if you we want many
@@ -42,42 +58,13 @@
     removes old builds and brings the new, not just constructive
     changes. Ask if this is good policy.
 
-[c] 
-    [.] Make etc/host_template and git ignore etc/host.
-    [x] Make etc/reuter_template.ini and ignore etc/reuter.ini
-
-[c] [.] Setup zerotier for dev env
-    [x] Create "reuter" file, redirectioning db connection requests
-        to the corresponding db server. Use schematic repo as inspiration.
-
 [.] Run and fix linter errors
-
 
 [.] [.] Create table alternativa and equivalencia tables.
     [.] Create requisito_alternativa and requisito_equivalencia tables.
     [.] Remove alternativas and equivalencias columns from `requisito` table.
     [.] Monitor afterwards to see if alternativas and equivalencias can by in one table.
-
-[.] Install mariadb in prod-init.
-
-[c] Testing (wait for server):
-    
-    bash src/deploy.sh prod-server-1
-
-[.] Currently, in src/deploy.sh and Makefile,
-    you are assuming REMOTE_HOST to be the same for website and database
-    deployments. Assume they are not, but if using the same prod server for both,
-    config ssh to point to the same prod server but with different alias.
-
-[.] Makefile and src/deploy.sh: Make test for composer install (CasperTrio test)
-    and Mariadb connectivity. For both, dev-init and prod-init.
-
-[.] Add Apache configuration to Makefile.
       
-[.] Add zerotier to flake.nix for secure deployment ops (do we need to assign static ip to each network memeber?).
-
-[.] Rename src/scripts/indexer/update_job_offer.php -> .../estudio_update.php and modify accordingly
-
 [.] Create tables: vacante, estudio
 
 [.] job_snapshot --trigger--> job, job_snapshot --cron-agent--> vacante
@@ -183,6 +170,81 @@
 
 [.] Replace column name: job_offer.departamento_id -> job_offer.dpto_colombia_id or
     replace `dpto_colombia` tbl with `departamento` tbl, the latter with an additional column for country.
+
+[x] [x] Make ema ask for confirmation to replace a db when creating an existing one.
+    [x] Add a way to drop a database with ema (see schematic for inspiration).
+    [x]  Add other easy-to implement commands from schematic.
+
+[x] Mariadb config should be adjusted to perform in low spec servers like my simox web.
+    Consult LLM to know what params must be adjusted (eg buffer size, etc).
+
+    1 vCPU
+    RAM 1GB
+    Storage 10GB
+
+[x] simox/composer.json seems to have files that are not necessary. Delete them if possible.
+
+[x] [x] Deploy private config via framework's deploy mechanism. Such deploy should be
+        be conditioned by tag eg web host should only get reute to replica db (skip
+        if hosted in same server).
+    [x] Inject config via URL, instead of URI to comply with Infraestructure as Code.
+        Note: this has the drawback that you rely on Github/Gitlab being available
+        in order to make deployment. Not so nice in case of an emergency.
+
+[x] Rethink how server-side-post-deployment.sh will read machines.ini and deploy.conf
+    given the latter are not shipped to the prod server during deployment.
+
+    doc/plans/2026-08-31-deploy-step-tags.md
+
+    SOLUTION: deployment creates etc/machines.ini as a symlink pointing to the place
+    where the actual machines.ini is, which should be deployed separately from the
+    simox_cnf repo.
+
+[x] Make sure local test of website also uses nix build PHP version and kit.
+
+[x] Nix build dependencies availability
+    [x] Currently, PHP deps from nix build are not available in web server; it is only
+        available for cron jobs in worker servers. Solve this issue.
+    [x] Currently, we don't have nix build deps available as default option while
+        remotely accessing prod servers; only available for cron jobs. We can use
+        tmux-remote to access remote servers with nix build deps as default option
+        and keep ssh as it is.
+
+[d] I suggest (zerotier install + join zt network) during shell enter/exit.
+    The network target can be injected from private config.
+    Note: Not a good idea: keep it system level.
+
+[x] Skip deployment of cron jobs during `deploy --init` because
+    there is no database yet. Discussion...
+
+    SOLUTION:
+      - Remove `--init` from `deploy --init` and make sure `deploy` is idempotent.
+      - Don't deploy cron jobs before there is a tested database. Comment
+      cron decorator for existing cron jobs.
+
+[d] Why are we pinning php_daas_framework and ema in composer.json if they can point
+    to HEAD? ANSWER: To have predicatbility.
+
+[x] flake.nix currently runs vendor/bin/shell-enter.sh, which comes from php_daas_framework.
+    I don't like this because it doesn't specify that is coming from php_daas_framework,
+    I could have other composer dependencies with scripts to run/source at shell enter
+    and would like to distinguish each.
+
+    SOLUTION: Rename: shell-enter.sh -> pf-shell-enter.sh
+
+[x] Consumption of php_daas_framework has a two point contact: flake.nix and composer.json
+    which can lead to async versioning problem when flake.nix uses one version of
+    php_daas_framework and composer.json consumes another version.
+
+[x] Deployment and reuter.ini
+
+    deepseek --resume 4b54a0a0-dab6-4f8b-a957-fbcdbe70611d
+
+    Conclusion: it is of best practice not to deploy passwords. This should
+    be a manual operation.
+
+[x] the pattern `ema init tables mypkg-HASH mydb` should not be necessary; look
+    at schematic/ to see how they do it.
 
 [x] Do we really need to generate reuter.init? If it can be generated why not simply reading the generating config files?
 
@@ -480,3 +542,24 @@
 
     Test these approach by trying to insert duplicates in job_offer_snapshot where
     the unique key contains columns with null values.
+
+---
+
+## 2026-09-07 — team.ini redesign follow-up (open)
+
+etc/team-ca.crt (public team CA cert) and the consumer-owned srv/roles-<guid>
+role packages are also part of the team-DB-user redesign, but they are
+team/role-policy decisions — optional unless you want gen-grants
+(cert-pinned team-member DB access) live now.
+
+- etc/team-ca.crt: the public team CA certificate, installed as the MariaDB
+  server ssl-ca and used by members for cert auth. Needed only once
+  gen-grants/cert-based accounts go live (server TLS is still a framework
+  open item).
+- srv/roles-<guid>/ + srv/<db>.roles-<guid>/: consumer-owned role policy
+  (e.g. a shared developer role + per-db grants). Required for
+  gen-grants <db> to emit anything. Skip if team-member DB access stays
+  password-based / not needed.
+
+Decision: adopt these now (enable cert-based team DB access) or defer — the
+[dev] -> team.ini DBUSER move works without them.
