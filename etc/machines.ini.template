@@ -37,7 +37,7 @@
 #        source) and this roster. Each token is a role-pin source: `worker`
 #        -> `simox_worker`, every `db:<name>` -> `simox_db_<name>` (granted
 #        only on its own database, so a `db:simo1` host holds nothing on
-#        `simo0`), `web` -> `simox_web` (see README "Service Accounts").
+#        `simo0`), `web` -> `simox_web` (see doc/system/service-accounts.md).
 #        Removing a tag (or a whole host) here revokes the corresponding role
 #        on the next reconcile; the `member` IPs come from etc/team.ini, not
 #        here.

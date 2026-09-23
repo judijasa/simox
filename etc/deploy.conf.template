@@ -23,7 +23,7 @@
 # output). The app layer stays TCP-only.
 #
 # PROD_USER: unprivileged app user on the remote host. Must exist with SSH
-# access before the first deploy (see README "Before the first deploy").
+# access before the first deploy (see doc/system/deploy.md).
 export PROD_USER=simox
 
 # DEPLOY_TARGET_DIR: remote repo location.

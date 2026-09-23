@@ -30,7 +30,7 @@ public repo keeps only `etc/deploy.conf.template`. `etc/hosts` is a dev-only
 name→IP convenience mapping. It feeds two dev-machine conveniences from the same
 entries: the `/etc/hosts` merge (`make dev-init`) and the generated
 `~/.ssh/config.d/simox.conf`, where each entry becomes `ssh simox-<name>` as
-`root` with the project key (see the README's dev ssh section).
+`root` with the project key (see [deploy.md](deploy.md#dev-ssh-config)).
 
 ## Delivery
 
@@ -38,7 +38,7 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
 
 1. **Materialize (dev/deploy machine).** `bin/fetch-private-data` clones or
    fetches `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`, default `main`)
-   into the git-ignored `var/private-data`, then copies the six tracked files
+   into `var/private-data`, then copies the six tracked files
    from there into `etc/` as **real files**, overwriting them on every run.
    `make dev-init` runs it, so a dev checkout carries its own
    `etc/reuter.ini`, `etc/machines.ini`, `etc/team.ini` and `etc/hosts` (plus
@@ -57,8 +57,7 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
 
 Real files, not symlinks: the private repo's committed content is the single
 source of truth, and every machine materializes its own copy of it. A symlinked
-`etc/` would leave the operational data dangling whenever the git-ignored
-`var/private-data` is rebuilt, and would let a local edit silently change the
+`etc/` would leave the operational data dangling whenever `var/private-data` is rebuilt, and would let a local edit silently change the
 source repo; copying overwrites, so a local edit to one of these files is lost —
 the private repo is the place to change settings.
 
