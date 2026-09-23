@@ -142,8 +142,7 @@ and idempotent: never hand-edit it, edit `etc/hosts` and re-run `make dev-init`.
 
 One-time steps to provision a new production server. The app user
 (`PROD_USER` in `etc/deploy.conf`) must exist with SSH access first —
-see `_my_notes_/prod-user-setup.md` for the exact steps (create the user
-with `useradd --create-home`, lock the password, install the SSH key):
+(create the user with `useradd --create-home`, lock the password, install the SSH key):
 
 **1. Apache vhost** — point the vhost at the deploy directory and forward PHP to
 the nix-built php-fpm over FastCGI (this replaces mod_php, so the flake-pinned
