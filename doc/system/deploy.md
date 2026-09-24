@@ -73,7 +73,9 @@ password, install the SSH key).
 
 **1. Apache vhost + php-fpm** — see [web_setup.md](web_setup.md).
 
-**2. Deploy** — run from the dev machine inside `nix develop`:
+**2. Cron daemon** — install a cron daemon on the host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie`).
+
+**3. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
 make deploy                        # every [prod] host in etc/machines.ini

@@ -73,7 +73,9 @@ The file is generated and idempotent — never hand-edit it; edit `etc/hosts` an
 
 **1. Apache vhost + php-fpm** — one-time manual steps (vhost + FastCGI to the nix-built php-fpm). See [doc/system/web_setup.md](doc/system/web_setup.md).
 
-**2. Deploy** — run from the dev machine inside `nix develop`:
+**2. Cron daemon** — install a cron daemon on each prod host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie` depending on the OS).
+
+**3. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
 make deploy                        # every [prod] host in etc/machines.ini
