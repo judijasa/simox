@@ -1,3 +1,5 @@
+[.] Likely a framework issue. It would be nice to have `make deploy` generate a log, perhaps
+    in var/. we can flush it with every shell exit.
 
 [.] NOT-URGENT / NOT_IMPORTANT
     Rate limit:
