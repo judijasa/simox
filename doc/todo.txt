@@ -1,3 +1,6 @@
+[.] Skip deployment of servers with access errors (eg wrong key). At the end, report servers
+    with missed deployment, so that we can make a targeted deployment for those.
+
 [.] Likely a framework issue. It would be nice to have `make deploy` generate a log, perhaps
     in var/. we can flush it with every shell exit.
 
