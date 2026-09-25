@@ -14,15 +14,14 @@ a host, so the tag must be in place before the deploy in step 3.
 
 `ema database <name>` scaffolds `srv/<name>-<GUID>/`, `ema schema <name>`
 scaffolds `pkg/<pkg>-<GUID>/` (both shapes are in the framework's
-`doc/system/ema.md`). Then, for the new database's own role — mirroring
-`srv/roles-<GUID>/` and `srv/simo0.roles-<GUID>/`:
-
-1. `srv/roles-<GUID>/upgrade.sql` — `CREATE ROLE IF NOT EXISTS simox_db_<name>;`
-2. `srv/roles-<GUID>/default.php` — `'db:<name>' => 'simox_db_<name>'` in
-   `$sources`, and `'db:<name>'` added to the account's `$accounts` entry;
-3. `srv/<name>.roles-<GUID>/upgrade.sql` — the grants, scoped with the
-   `{{dbname}}` placeholder, e.g. `GRANT ALL PRIVILEGES ON {{dbname}}.* TO
-   simox_db_<name>;`.
+`doc/system/ema.md`). The shared `srv/roles-<GUID>/` package is untouched — its
+roles are global (`member`/`worker`/`web`), not per-database. For the new
+database's own grants, add a `srv/<name>.roles-<GUID>/` package (mirroring
+`srv/simo0.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
+scoped with the `{{dbname}}` placeholder — e.g. `GRANT ALL PRIVILEGES ON
+{{dbname}}.* TO simox_worker;`. A `db:<name>` tag pins no role of its own:
+access follows what a host runs (`worker`/`web`) or its members, never what
+database it stores.
 
 Which roles a database grants, and to which sources, is
 [service-accounts.md](service-accounts.md).

@@ -19,11 +19,11 @@ Connecting to a production server via `ema` needs the machine registry config:
   a `#[CronJob]` declares `scope: <tag[:name]>` (or `scope: host` to run on
   every host), and the cron install is scope-filtered per host. `worker` is an
   ordinary bare tag data jobs use as their scope; `web` is simox's own step
-  (restore Apache www-data traversal). `worker`, `web` and every `db:<name>`
-  token are the role-pin sources `gen-service-accounts` reconciles against the
-  shared `srv/roles-<GUID>` declaration (`worker` → `simox_worker`,
-  `db:<name>` → `simox_db_<name>`, `web` → `simox_web`); see
-  [service-accounts.md](service-accounts.md). Each named token maps to exactly
+  (restore Apache www-data traversal). `worker` and `web` are the role-pin
+  sources `gen-service-accounts` reconciles against the shared
+  `srv/roles-<GUID>` declaration (`worker` → `simox_worker`,
+  `web` → `simox_web`); a `db:<name>` token pins no role (provisioning only);
+  see [service-accounts.md](service-accounts.md). Each named token maps to exactly
   one server; a server may host several databases. `pf-deploy.sh` targets every
   `[prod]` host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.

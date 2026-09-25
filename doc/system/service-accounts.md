@@ -16,23 +16,19 @@ A single account, passwordless — the security boundary is ZeroTier membership
 plus the source-IP host pin. Each source maps to a role; a host carrying a tag
 gets the corresponding role, and a host carrying several tags gets the union:
 
-| Source     | Role             | `simo0`        | `simo1` |
-|------------|------------------|----------------|---------|
-| `member`   | `simox_member`   | ALL PRIVILEGES | SELECT  |
-| `worker`   | `simox_worker`   | ALL PRIVILEGES | SELECT  |
-| `db:simo0` | `simox_db_simo0` | ALL PRIVILEGES | —       |
-| `db:simo1` | `simox_db_simo1` | —              | SELECT  |
-| `web`      | `simox_web`      | —              | SELECT  |
+| Source   | Role           | `simo0`        | `simo1` |
+|----------|----------------|----------------|---------|
+| `member` | `simox_member` | ALL PRIVILEGES | SELECT  |
+| `worker` | `simox_worker` | ALL PRIVILEGES | SELECT  |
+| `web`    | `simox_web`    | —              | SELECT  |
 
-`member` resolves to the `etc/team.ini` member IPs; the other sources are
-`etc/machines.ini` `[prod]` tags matched exactly (`worker`, `web`, and each
-`db:<name>`). Each `db:<name>` tag maps to a role of its own, granted only on
-its own database. A role with no grant on a database means the account is not
-wanted there, so `simox_web` and `simox_db_simo1` being absent from `simo0`
-drops `simox@<ip>` on `simo0` for a web/replica host (`web`, `db:simo1`, or
-both). Privileges therefore follow what a host runs (`worker`, `web`) — never
-the database it happens to store, so a host hosting the read replica cannot
-write the primary.
+`member` resolves to the `etc/team.ini` member IPs; `worker` and `web` are
+`etc/machines.ini` `[prod]` bare tags matched exactly. A `db:<name>` tag is a
+provisioning marker only — it pins no role. A role with no grant on a database
+means the account is not wanted there, so `simox_web` being absent from `simo0`
+drops `simox@<ip>` on `simo0` for a web host. Privileges therefore follow what
+a host runs (`worker`, `web`) — never the database it happens to store, so a
+host hosting the read replica cannot write the primary.
 
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simo1` via `simox`; the indexer and pipeline agents write to `simo0` via

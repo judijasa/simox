@@ -34,13 +34,14 @@
 #        Service-account pins — the framework `gen-service-accounts` CLI
 #        reconciles passwordless host-pinned accounts and roles from the
 #        shared srv/roles-<GUID> declaration plus etc/team.ini (the `member`
-#        source) and this roster. Each token is a role-pin source: `worker`
-#        -> `simox_worker`, every `db:<name>` -> `simox_db_<name>` (granted
-#        only on its own database, so a `db:simo1` host holds nothing on
-#        `simo0`), `web` -> `simox_web` (see doc/system/service-accounts.md).
-#        Removing a tag (or a whole host) here revokes the corresponding role
-#        on the next reconcile; the `member` IPs come from etc/team.ini, not
-#        here.
+#        source) and this roster. Only `worker` and `web` are role-pin
+#        sources: `worker` -> `simox_worker`, `web` -> `simox_web`. A
+#        `db:<name>` tag is a provisioning marker only (which instance a host
+#        stores) — it pins no role, since access follows what a host runs
+#        (`worker`/`web`) or its members, never what it stores (see
+#        doc/system/service-accounts.md). Removing a tag (or a whole host)
+#        here revokes the corresponding role on the next reconcile; the
+#        `member` IPs come from etc/team.ini, not here.
 #
 #        Firewall — the framework `gen-firewall` CLI reconciles the ufw rule
 #        set from etc/host-hardening.php plus this roster. Tags only ADD allow

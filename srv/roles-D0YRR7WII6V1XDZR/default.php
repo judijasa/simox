@@ -12,12 +12,12 @@
 //   $allowlist = array('replication');
 //
 // $sources maps a source to the role it grants: `member` resolves to the
-// etc/team.ini IPs; any other key is an etc/machines.ini [prod] tag (bare, or
-// db:<name>), matched exactly. Each `db:<name>` tag maps to a role of its own,
-// granted only on that database (see the per-database grant packages), so a
-// replica host never carries write access to the primary. $accounts maps an
-// account name to the sources whose hosts it is pinned to; its per-host roles
-// are the union of those sources' roles.
+// etc/team.ini IPs; any other key is an etc/machines.ini [prod] bare tag
+// (`worker`, `web`), matched exactly. A `db:<name>` tag is a provisioning
+// marker only — it pins no role, because access follows what a host runs
+// (`worker`, `web`) or who its members are, never what database it stores.
+// $accounts maps an account name to the sources whose hosts it is pinned to;
+// its per-host roles are the union of those sources' roles.
 //
 // $allowlist names accounts the closed-world drop must never remove. The
 // framework keeps an always-on floor of the engine-internal `root` and
@@ -28,15 +28,13 @@
 $dependencies = array();
 
 $sources = array(
-    'member'   => 'simox_member',
-    'worker'   => 'simox_worker',
-    'db:simo0' => 'simox_db_simo0',
-    'db:simo1' => 'simox_db_simo1',
-    'web'      => 'simox_web',
+    'member' => 'simox_member',
+    'worker' => 'simox_worker',
+    'web'    => 'simox_web',
 );
 
 $accounts = array(
-    'simox' => array('member', 'worker', 'db:simo0', 'db:simo1', 'web'),
+    'simox' => array('member', 'worker', 'web'),
 );
 
 $allowlist = array('replication');

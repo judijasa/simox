@@ -4,11 +4,9 @@
 -- done by gen-service-accounts (GRANT <role> TO 'simox'@'<host>'), never
 -- hardcoded here.
 --
--- One `db` role per database: each is granted only on its own database (see
--- the per-database grant packages), so a host tagged `db:simo1` holds no
--- privilege at all on `simo0`.
+-- Roles follow what a host runs (`worker`, `web`) or who its members are —
+-- never what database it stores. A `db:<name>` tag is a provisioning marker
+-- only, so it carries no role here.
 CREATE ROLE IF NOT EXISTS simox_member;
 CREATE ROLE IF NOT EXISTS simox_worker;
-CREATE ROLE IF NOT EXISTS simox_db_simo0;
-CREATE ROLE IF NOT EXISTS simox_db_simo1;
 CREATE ROLE IF NOT EXISTS simox_web;
