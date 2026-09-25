@@ -1,12 +1,15 @@
-[.] Skip deployment of servers with access errors (eg wrong key). At the end, report servers
+
+[.] URGENT / IMPORTANT
+    Add a rate limit at least in web server
+    Should I have it in `gen-firewall` and/or simox_cnf/host-hardening.php
+
+[.] NOT-URGENT / IMPORTANT
+    Skip deployment of servers with access errors (eg wrong key). At the end, report servers
     with missed deployment, so that we can make a targeted deployment for those.
 
-[.] Likely a framework issue. It would be nice to have `make deploy` generate a log, perhaps
-    in var/. we can flush it with every shell exit.
-
-[.] NOT-URGENT / NOT_IMPORTANT
-    Rate limit:
-    Should I have it in `gen-firewall` and/or simox_cnf/host-hardening.php
+[.] NOT-URGENT / NOT-IMPORTANT
+    Likely a framework issue. Nice to have `make deploy` generate a log in var/
+    and we flush it on shell exit.
 
 [.] IMPORTANT / NOT-URGENT
     Avoid duplicate ingestion:
@@ -36,6 +39,71 @@
 
 [.] How much of the new paradigm "verification, validation, testing and observability"
     is being applied to this project?
+
+[.] Forbid execution of bin/deploy.sh from production.
+
+[x] When connecting to a db via ema, there is an env var (EMA_TARGET) that allows to determine
+    if db is remote/prod or local/dev. How do you specify it when executing a script from cron or phprun?
+    ANSWER: It is determined by src/utils/Connectivity/Database.php:Database.loadConfig method, which
+    fallbacks to local if EMA_TARGET is not set.
+
+[.] Remove use of etc/environment taking into account that we know beforehand the value of those
+    env vars (eg location of deployed repo within prod server). It is only being used for production.
+    Those paths can be in a central file within the repo, and sourced within phprun (only if unset)
+    and during deployment.
+
+[.] Make phprun to have a default db arg and a specific cron as in daas repo.
+
+[.] Make sure phprun looks for nix packages so that they can also be found in prod server in case one
+    decides to run phprun in prod server. Remember the trick you have to use in the cron scheduling (modify PATH).
+
+[.] Make an inverse deployment script.
+
+[.] Standardize the prefix of env vars as in daas/flake.nix
+
+[x] Do we really need `etc/cron-jobs.json` if deploy.sh is already building it right up into the server during deployment?
+
+[x] I see /home/simox/.../simox/... target directories. Since the good practice is to have
+    one user per project, remove the redundancy of a project named folder within target
+    user home folders.
+
+[x] I see shebangs that will not use the nix packaged bash eg bin/phprun.
+    Fix this for all repo bash files.
+
+[x] I still see SIMO_REPO_PATH (eg bin/phprun) whereas it should be SIMOX_REPO_PATH.
+    Make sure this is change for the whole repo.
+
+[d] Remove deploy.sh from this repo. Relocate to daas.
+
+[d] Make daas_tools and keep phprun. Including deploy modules in daas_tools is not a good idea.
+
+
+[.] Docker-like: We need roles for servers. In case there is more than one server we want servers for running scripts (aka workers)
+    and other to host specific databases... eventually develop simple "load balancer" for woker servers (inspired by the containers managers: docker or podman)
+
+[.] What are the advantages of having Nix being install (see doc/prod-user-setup.md keyword: Nix and bin/deploy.sh)
+    in PROD_USER home? It seems to be the only reason why we created PROD_USER with the --create-home option.
+    ANSWER: some files can still have unprivileged user ownerships, limiting the scope of web-server side attackes.
+
+[.] Global envs: Do we really need the manual step of defining etc/environment? Can we reduce the need for this at least for as many
+    env vars as possible, starting by making sure to use relative paths whenver possible and apt.
+
+[x] Prod user: We should specify the optimal level of privileges for this dedicated user in server one-time steps section in README.md
+
+[x] Standardize env vars prefix: SIMOX_* instead of SIMO_*
+
+[.] Make sure /var is partitioned in the server. Otherwise make such partition.
+    One thing worth flagging for when you implement: the disk-isolation win is partial (DB lives on /var/lib, not /srv).
+    If /var pressure is a real concern, relocating the DB to the /srv partition would be a
+    separate follow-up — I left it explicitly out of scope in the doc.
+
+[.] Maintenance: If the extractor process triggers a kernel panic, saturates the disk I/O, or exhausts system memory to the point
+    of invoking the kernel’s OOM (Out-Of-Memory) killer, the web server container will feel the impact.
+    Unless you rigorously configure kernel namespaces, cgroups resource limits, and I/O scheduling classes.
+
+[.] [.] Make ema ask for confirmation to replace a db when creating an existing one.
+    [.] Add a way to drop a database with ema (see schematic for inspiration).
+        Add other easy to implement commands for schematic.
 
 [.] Not sure if we really need this. It also feels
     more natural to add municipio.departamento_id
@@ -442,7 +510,7 @@
 
 [x] Makefile (targeted to prod-init) will sometimes be executed via ssh.
     In those cases, a Makefile cannot get any bash env var. Currently,
-    you are not requiring SIMO_REPO_PATH, instead using relative paths
+    you are not requiring SIMOX_REPO_PATH, instead using relative paths
     and relying on execution from repo root dir. Make sure no other
     variable in prod targets are being fetched from bash env var.
     

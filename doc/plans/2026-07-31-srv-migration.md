@@ -71,8 +71,11 @@ Deploy-time path assumptions live in `bin/deploy.sh`:
   `deploy_version.log`; today this diverges from `SIMOX_LOG_PATH`. The migration
   reconciles it onto `/var/log/simox`.
 
-Nix is unaffected: it stays under `~/.nix-profile` / `~/.nix-gcroots`, bridged
-to `/usr/local/simox/result`. Only the **app repo** moves.
+Nix package shipping is otherwise unaffected: binaries still land under
+`~/.nix-profile` (dev) and `/usr/local/simox/result` (prod bridge). Only the
+store gcroot moves — from `~/.nix-gcroots/simox` to the root-owned system
+path `/nix/var/nix/gcroots/simox` (with one user per project, a
+project-named folder under `/home` is redundant).
 
 ## Implementation steps
 
@@ -136,8 +139,9 @@ to `/usr/local/simox/result`. Only the **app repo** moves.
 
 ## Notes
 
-- **Nix is untouched** — `~/.nix-profile`, `~/.nix-gcroots`,
-  `/usr/local/simox/result`. Only the app repo relocates.
+- **Nix** — `~/.nix-profile` untouched; the gcroot moved from
+  `~/.nix-gcroots/simox` to root-owned `/nix/var/nix/gcroots/simox`;
+  `/usr/local/simox/result` unchanged.
 - **Ownership unchanged** — `/srv/apps/simox` is owned by the unprivileged
   `PROD_USER`; Apache runs as its own worker uid. Same confinement as before.
 - **Dev is unaffected** — `flake.nix` derives paths from `$PWD`; the dev shell
