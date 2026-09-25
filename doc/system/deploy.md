@@ -157,7 +157,7 @@ The production MariaDB instance is created by `ema create srv/<name>-<GUID>`
 deploy. `ema create` provisions the datadir/socket/pid/log under
 `/var/lib/mariadb/<db>/`, the per-instance defaults file `/etc/<db>/my.cnf`,
 and a `mariadb@<db>` systemd unit (enabled once, durable across reboots), then
-prints the `[<dbname>]` connectivity values (`SERVER`/`PORT`/`DBMS`/
+prints the `[<dbname>]` connectivity values (`SERVER`/`PORT`/
 `MYSQL_UNIX_PORT`) to record in the manual `reuter.ini`. The instance listens
 on TCP over ZeroTier so both the DB host and the app-only servers can serve the
 website against the same database. `ema values <db>` recovers a lost record.
