@@ -87,11 +87,13 @@ to is [service-accounts.md](service-accounts.md).
 
 ```bash
 vendor/bin/gen-firewall <host> --dry-run     # review
-vendor/bin/gen-firewall <host>               # apply (`all` for every host)
+vendor/bin/gen-firewall <host> --apply       # apply (`all` for every host)
 ```
 
-From the simox checkout; the `db:<name>` rule takes the port from the section
-recorded in step 5.
+`gen-firewall` runs from the repo root on the deploy/dev machine, not on the
+host: it reads the local `etc/machines.ini` and `etc/host-hardening.php` and
+applies over `ssh root@<host>`. The `db:<name>` rule takes the port from the
+section recorded in step 5.
 
 ## 8. Verify
 
