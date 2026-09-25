@@ -48,7 +48,6 @@
           bashPkg
           phpPkg
           phpComposer
-          mariadbPkg
           jqPkg
           tmuxPkg
         ];
@@ -66,6 +65,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = commonPackages ++ [
             gitPkg
+            mariadbPkg
             phpLinter
             pre-commit
           ];
