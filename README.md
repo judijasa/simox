@@ -84,6 +84,10 @@ make deploy <host>                 # a single prod host
 
 `make deploy` materializes the private config, runs the framework `pf-deploy.sh` (ships `reuter.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
 
+## Adding a Database
+
+Adding a database — its own MariaDB instance on its own host (`ema create`), its packages, its `reuter.ini` record, its users/grants — is in [doc/system/add-database.md](doc/system/add-database.md).
+
 ## Service Accounts & Read Replica
 
 MariaDB users/grants are declared in the shared `srv/roles-<GUID>` package and the per-database `srv/<db>.roles-<GUID>` grant packages, reconciled by the framework's `gen-service-accounts` CLI. A single passwordless account; the security boundary is ZeroTier membership plus the source-IP host pin. See [doc/system/service-accounts.md](doc/system/service-accounts.md) for the role/source table and routing, and [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md) for the `simo1` read-replica build.

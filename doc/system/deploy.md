@@ -163,3 +163,6 @@ on TCP over ZeroTier so both the DB host and the app-only servers can serve the
 website against the same database. `ema values <db>` recovers a lost record.
 Never start `mysqld` manually in production; re-deploys leave running instances
 untouched.
+
+Adding a database is the full sequence around this step — see
+[add-database.md](add-database.md).
