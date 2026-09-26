@@ -117,17 +117,22 @@ Apache www-data traversal on the repo dir and installing the nix-built php-fpm
 `etc/reuter.ini` is private data, materialized by simox's
 `bin/fetch-private-data` and never regenerated (see
 [private-config.md](private-config.md) and the contract in
-`etc/reuter.ini.template`). The php-fpm pool and `.env` point at it via:
+`etc/reuter.ini.template`). The php-fpm pool and the prod `.env` point at it via:
 
 - **`REUTER_INI`** — path to the `reuter.ini` file
   (`/srv/apps/simox/etc/reuter.ini`, the `DEPLOY_REUTER_INI` value), consumed by
   the framework's `Database` class and the `ema` CLI (prod mode). The `web`
   deploy step writes it into the php-fpm pool (`env[REUTER_INI]`), since the web
   process has no `.env`. If unset, `etc/reuter.ini` inside the repo is used.
-- **`EMA_TARGET`** — operation-mode flag for the `ema` CLI only: `sandbox`
-  (default, per-instance sandbox) or `prod` (reads `REUTER_INI`). The app layer
-  ignores it; `Database.php` always resolves a database to its `[<dbname>]`
-  section.
+- **`EMA_TARGET`** — the binary sandbox/prod mode flag. The app layer
+  (`Database::connectTo`) dispatches on it for every connection it opens:
+  `sandbox` resolves a database to its
+  `var/sandbox/<dbname>-<GUID>/reuter.ini` instance (root over the instance
+  socket, the `$account` arg ignored); `prod` — the default, also for
+  unset/empty — goes through `REUTER_INI` / `etc/reuter.ini` on the
+  service-account path (`connectAs`, TCP). The `ema` CLI consults it only for
+  its one dbname-addressed verb (`ema mariadb <db>`); its other verbs resolve
+  their own side. Any other value is an error.
 
 No `/etc/environment` entries are required: the framework's `phprun` CLI
 (shipped via Composer to `vendor/bin`) loads the `.env` file from the current
@@ -136,8 +141,9 @@ environment:
 
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via
   Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`,
-  `REPO_LOG=$PWD/var/log`, `REUTER_INI=$PWD/var/reuter.local.ini` and
-  `EMA_TARGET=sandbox`.
+  `REPO_LOG=$PWD/var/log`, `EMA_TARGET=sandbox` and `DBUSER` — no `REUTER_INI`:
+  under `EMA_TARGET=sandbox` the app layer resolves its config itself from
+  `var/sandbox/<name>-<GUID>/reuter.ini`.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the framework
   `gen-env` CLI, run by `pf-deploy.sh` as a built-in per-host step; it projects
   it from the replayed `deploy.conf` environment (no separate `etc/env.prod`):
@@ -153,9 +159,10 @@ environment:
   reachable. `ema create srv/<name>-<GUID>` (run on the DB host) uses the
   section socket for root auth; the app (`Database.php`) reads `.env` and stays
   TCP. `gen-env` fails loudly if a required `deploy.conf` key is missing or a
-  projected key is lost — a missing `EMA_TARGET=prod` would silently put the
-  `ema` CLI in sandbox mode (the app layer ignores the variable and resolves
-  `[<dbname>]` from `REUTER_INI`).
+  projected key is lost. `EMA_TARGET` is written `prod` explicitly, and
+  unset/empty defaults to `prod` too (the app layer and the `ema` CLI agree), so
+  prod never silently falls into sandbox mode — sandbox is only ever reached by
+  an explicit `EMA_TARGET=sandbox` (the dev `.env`).
 
 ## MariaDB instance provisioning
 

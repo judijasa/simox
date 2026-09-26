@@ -55,7 +55,7 @@ make web
 
 Navigate to `http://localhost:8000`.
 
-> The website (`public/index.php`, `public/insight.php`) reads from the read-only replica `simo1`, not `simo0`. `simo1` is built with ema's replica flow, not as a dev sandbox — see [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md).
+> The website (`public/index.php`, `public/insight.php`) reads from `simo1`, not `simo0`. In prod `simo1` is the read-only replica, built with ema's replica flow (see [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md)); under `EMA_TARGET=sandbox` the app layer instead resolves a `simo1` sandbox via `Database::connectTo('simo1', 'simox')`.
 
 ## Remote Access
 

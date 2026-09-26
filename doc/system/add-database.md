@@ -50,8 +50,10 @@ ema create srv/<name>-<GUID>         # inside the session
 `tmux-remote` opens the shell `ema` needs on a prod host (the framework's
 `doc/system/tmux-remote.md`). `ema create` provisions the database's own
 instance and creates the database; it reads nothing from `reuter.ini`, because
-the section does not exist yet. It is create-only (`ema drop <name> --force`
-first) and prints the `[<name>]` section on success.
+the section does not exist yet. It is create-only (`ema drop` is retired: to
+delete a created database, run a deliberate `DROP DATABASE` over
+`ema mariadb <name>` — the instance's datadir/unit are removed by hand) and
+prints the `[<name>]` section on success.
 
 A replica package instead takes `--from-snapshot <path>`: it restores the
 primary's snapshot and attaches replication, reading the primary's

@@ -9,8 +9,8 @@
   },
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
-    "judijasa/php-daas-framework": "dev-main#29b3fc0af569546599c81320ef8bf66be327486c",
-    "judijasa/ema": "dev-main#fd340e2863bcd247bd2eb8118b602bcab57b68e4"
+    "judijasa/php-daas-framework": "dev-main#5029ade639bb774c3519ef89f54fab5ae9dbba3e",
+    "judijasa/ema": "dev-main#0d45c95c4f3b86f8f4fd05a73a8a275d0248c0c4"
   },
   "repositories": [
     {

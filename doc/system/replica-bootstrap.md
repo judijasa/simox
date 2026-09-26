@@ -104,5 +104,5 @@ framework's `vendor/bin/replica-bootstrap` (see the framework's
 `doc/system/replica-bootstrap.md`). This repo owns only the replica policy: the
 `srv/simo1-<GUID>` package and the build command itself,
 `ema create srv/simo1-<GUID> --from-snapshot /root/replica-snapshot-simo0`, run
-on the replica host (`EMA_TARGET=prod`, inside a `tmux-remote` session — see
+on the replica host (inside a `tmux-remote` session — see
 [add-database.md](add-database.md)).
