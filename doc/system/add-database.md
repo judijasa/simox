@@ -32,6 +32,11 @@ Which roles a database grants, and to which sources, is
 bin/deploy.sh <host>        # or `make deploy` for every [prod] host
 ```
 
+`<host>` is a `[prod]` host by its short name or its ZeroTier IP — the same
+either-spelling argument as `tmux-remote` (step 4) and `gen-firewall` (step 7),
+resolved by the framework's shared host lookup (`vendor/bin/pf-host`; the
+framework's `doc/system/host-resolution.md`).
+
 `ema create` asserts the `mariadb@.service` unit that deploy installs, so a
 host that has never been deployed must be deployed first.
 

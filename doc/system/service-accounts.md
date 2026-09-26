@@ -33,5 +33,6 @@ host hosting the read replica cannot write the primary.
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
 `simox`. The `replication` transport account (used only by the replica's
-replication thread) is created by the replica bootstrap on the primary; it is
-declared in the roles package `$allowlist` so the reconcile never drops it.
+replication thread) is created by `vendor/bin/replica-bootstrap`, which the
+operator runs from the dev machine against the primary; it is declared in the
+roles package `$allowlist` so the reconcile never drops it.

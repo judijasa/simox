@@ -79,8 +79,15 @@ password, install the SSH key).
 
 ```bash
 make deploy                        # every [prod] host in etc/machines.ini
-make deploy <host>                 # a single prod host (must be in [prod])
+make deploy <host>                 # a single prod host (must be in [prod]);
+                                   # its short name or its ZeroTier IP
 ```
+
+`<host>` takes either spelling: `bin/deploy.sh` resolves it through the
+framework's shared host lookup (`vendor/bin/pf-host`; the framework's
+`doc/system/host-resolution.md`) to the ZeroTier IP the `[prod]` roster is keyed
+by, so the per-host post-deploy step below always matches the host the framework
+deployed to.
 
 `make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first runs
 simox's own private-config materialization (`bin/fetch-private-data` copies the

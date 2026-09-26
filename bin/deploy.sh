@@ -18,16 +18,19 @@
 #      is private data, not regenerated), then installs the cron-manifest
 #      output (cron jobs) on every host, scope-filtered by that host's tags.
 #      `db` is the framework's built-in tag (every tag doubles as a cron
-#      scope), so this wrapper forwards its args verbatim to it, then
-#      re-derives the [prod] roster (host → tags) from etc/machines.ini via the
-#      shared pf-roster CLI and runs the consumer server-side post-deploy step
+#      scope), so this wrapper forwards its args verbatim to it — resolving a
+#      typed host name to that host's ZeroTier IP first, via the shared host
+#      lookup, so the roster re-derivation below matches — then re-derives the
+#      [prod] roster (ZeroTier IP → tags) from etc/machines.ini via the shared
+#      pf-roster CLI and runs the consumer server-side post-deploy step
 #      (bin/deploy/server-side-post-deploy.sh) on each host, passing that
 #      host's tag list via DEPLOY_TAGS — it covers only the consumer-owned tags
 #      (`web`).
 #
 # Usage (from the repo root, inside `nix develop`):
 #   bin/deploy.sh                 # every [prod] host
-#   bin/deploy.sh <host>          # a single prod host (in [prod])
+#   bin/deploy.sh <host>          # a single prod host (in [prod]), as its
+#                                 # short name or its ZeroTier IP
 set -euo pipefail
 
 # Run from the repo root (vendor/bin/pf-deploy.sh and etc/* are relative to it).
@@ -35,7 +38,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Which host(s) this run targets: the first non-flag positional arg (if any),
-# else every [prod] host. The framework CLI has already validated any host and
+# else every [prod] host. The framework CLI resolves and validates any host and
 # deploys to exactly this set.
 wanted=""
 for arg in "$@"; do
@@ -46,17 +49,30 @@ done
 #    (idempotent). Shipping + env replay happen inside the framework deploy.
 bin/fetch-private-data "$REPO_ROOT"
 
-# 2. Framework deploy: swap, nix, composer, ship DEPLOY_PRIVATE_FILES, replay
+# 2. Target host in the form the [prod] roster is keyed by (its ZeroTier IP).
+#    The shared host lookup takes either spelling, so a name typed above is
+#    resolved here — after step 1 (it reads the materialized etc/machines.ini
+#    and etc/hosts) and before anything is deployed, so an unknown name or a
+#    host outside [prod] aborts the whole run rather than skipping a step
+#    later. pf-host prints the reason itself.
+if [ -n "$wanted" ]; then
+  if ! wanted="$(vendor/bin/pf-host "$wanted")"; then
+    exit 1
+  fi
+fi
+
+# 3. Framework deploy: swap, nix, composer, ship DEPLOY_PRIVATE_FILES, replay
 #    deploy.conf env, idempotent provisioning.
 vendor/bin/pf-deploy.sh "$@"
 
-# 3. Deploy config (deploy-machine private data; DEPLOY_TARGET_DIR for the
+# 4. Deploy config (deploy-machine private data; DEPLOY_TARGET_DIR for the
 #    remote post-deploy step).
 set -a
 . ./etc/deploy.conf
 set +a
 
-# 4. Shared roster parse (framework pf-roster CLI): "host=tags" per line.
+# 5. Shared roster parse (framework pf-roster CLI): "zerotier-ip=tags" per
+#    line, keyed the same way as the resolved `wanted` above.
 read_prod_roster() {
   vendor/bin/pf-roster --list
 }
@@ -75,13 +91,22 @@ post_deploy_one() {
 }
 
 if [ -n "$wanted" ]; then
+  matched=""
   while IFS='=' read -r host tags; do
     [ -n "$host" ] || continue
     if [ "$host" = "$wanted" ]; then
       post_deploy_one "$host" "$tags"
+      matched=1
       break
     fi
   done < <(read_prod_roster)
+  # `wanted` is already a [prod] key (step 2), so this cannot happen; fail
+  # loudly rather than let the post-deploy step go missing.
+  if [ -z "$matched" ]; then
+    echo "deploy: '$wanted' is missing from the [prod] roster output;" \
+      "aborting instead of skipping its post-deploy step" >&2
+    exit 1
+  fi
 else
   while IFS='=' read -r host tags; do
     [ -n "$host" ] || continue
