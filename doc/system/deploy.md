@@ -153,9 +153,10 @@ working directory itself — no wrapper needed. The `.env` is generated per
 environment:
 
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via
-  Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`,
-  `REPO_LOG=$PWD/var/log` and `EMA_TARGET=sandbox` — no `REUTER_INI`: under
-  `EMA_TARGET=sandbox` the app layer resolves its config itself from
+  Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD` and
+  `REPO_LOG=$PWD/var/log` — no `REUTER_INI` and no `EMA_TARGET` (unset means
+  `prod`, the app layer's default): under `EMA_TARGET=sandbox` (explicit
+  opt-in) the app layer resolves its config itself from
   `var/sandbox/<name>-<GUID>/reuter.ini`. `DBUSER=simox` is appended by the
   Makefile's `dev-init` target (consumer policy; `init-local-env.sh` writes no
   `DBUSER`).
@@ -177,7 +178,7 @@ environment:
   projected key is lost. `EMA_TARGET` is written `prod` explicitly, and
   unset/empty defaults to `prod` too (the app layer and the `ema` CLI agree), so
   prod never silently falls into sandbox mode — sandbox is only ever reached by
-  an explicit `EMA_TARGET=sandbox` (the dev `.env`).
+  an explicit `EMA_TARGET=sandbox`.
 
 ## MariaDB instance provisioning
 

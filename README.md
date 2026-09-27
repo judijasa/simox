@@ -28,34 +28,34 @@ Create the `simo0` database + dev sandbox (under `var/sandbox/`); `ema sandbox` 
 ema sandbox srv/simo0-D03J4K6RM0K7X8E4
 ```
 
-Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribute, so `main()` takes no explicit connection argument):
+Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribute, so `main()` takes no explicit connection argument). The dev `.env` no longer pins `EMA_TARGET`, so scripts default to `prod` — prefix local runs with `EMA_TARGET=sandbox` to hit the sandbox instance:
 
 ```bash
-phprun 'src/scripts/indexer/get_jobs.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/indexer/get_jobs.php:main()'
 ```
 
 Access the local `simo0` database and verify content:
 
 ```bash
-ema mariadb simo0
+EMA_TARGET=sandbox ema mariadb simo0
 SELECT count(*) FROM empleo_snapshot;
 ```
 
 Run the pipeline and verify content:
 
 ```bash
-phprun 'src/scripts/pipeline/pipeline.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/pipeline/pipeline.php:main()'
 ```
 
-Start PHP's built-in server (from the repo root, inside `nix develop`; serves `public/` as docroot):
+Start PHP's built-in server (from the repo root, inside `nix develop`; serves `public/` as docroot). The website defaults to `simo1` (prod's read-only replica), so for the local sandbox swap it to `simo0` — in `public/index.php` and `public/insight.php` change `$dbname = 'simo1'` to `$dbname = 'simo0'` — then serve with `EMA_TARGET=sandbox`:
 
 ```bash
-make web
+EMA_TARGET=sandbox make web
 ```
 
 Navigate to `http://localhost:8000`.
 
-> The website (`public/index.php`, `public/insight.php`) reads from `simo1`, not `simo0`. In prod `simo1` is the read-only replica, built with ema's replica flow (see [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md)); under `EMA_TARGET=sandbox` the app layer instead resolves a `simo1` sandbox via `Database::connectTo('simo1', 'simox')`.
+> In prod the website reads `simo1`, the read-only replica built with ema's replica flow (see [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md)). The `simo1` → `simo0` swap above is a quick-setup convenience for the local sandbox only.
 
 ## Remote Access
 
