@@ -20,6 +20,8 @@ upstream — this document carries only the simox-side policy:
 ## Quick setup
 
 ```bash
+# primary (simo0): enable binary logging (log_bin) in its instance my.cnf and
+#                  restart it
 # both hosts: install the MariaDB backup package (mariabackup)
 
 # from this repo's root
@@ -45,9 +47,12 @@ ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-sim
    no roles and must not manage its `*.*` grant. It *is* declared in the package
    `$allowlist` so the closed-world drop pass keeps it (the framework's drop
    floor is only `root`/`mariadb.sys`).
-4. **`simo0`'s host prerequisites.** The bootstrap checks them before changing
-   anything and aborts with an `ERROR:` line if one is missing — install
-   the MariaDB backup package (`mariabackup`) on `simo0` first. A
+4. **`simo0`'s host prerequisites.** Two prerequisites must hold before the
+   run: the MariaDB backup package (`mariabackup`) installed on `simo0`, and
+   binary logging (`log_bin`) enabled on `simo0`. The bootstrap checks only
+   the first — it aborts with an `ERROR:` line if `mariabackup` is missing. It
+   does **not** check binlog: verify it manually, or the snapshot ships with
+   no binlog coordinate and `ema create` fails on the replica host instead. A
    miss leaves no partial state, so the run is safe to repeat.
 
 ## Run it
