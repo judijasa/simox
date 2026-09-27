@@ -10,5 +10,6 @@ $db = array(
     'replica_of' => 'simo0',
     'charset' => 'utf8',
     'collation' => 'utf8_spanish_ci',
+    'replica_ssl_verify_server_cert' => false, // replica only: verify the primary's server certificate (off: self-signed cert, no CA yet)
 );
 ?>

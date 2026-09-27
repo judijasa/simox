@@ -40,7 +40,11 @@ ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-sim
    srv/simo0-D03J4K6RM0K7X8E4`).
 2. **The `srv/simo1-D0L4SEWTLXQQSVJC` package** — `type=replica`,
    `replica_of=simo0`, and no `$dependencies`/`upgrade.sql`: `simo1`'s schema
-   arrives from the primary via replication, never from a schema builder.
+   arrives from the primary via replication, never from a schema builder. It
+   sets `$db['replica_ssl_verify_server_cert'] = false` explicitly, so ema
+   emits `MASTER_SSL_VERIFY_SERVER_CERT=0` — verification stays off while
+   the primary's certificate is the self-signed one; flip it to `true` once
+   a CA is provisioned.
 3. **The `replication` account's allowlist entry.** The account is created by
    the bootstrap CLI, but it is deliberately **not** part of the
    `$sources`/`$accounts` service-account declaration: the reconcile grants it
