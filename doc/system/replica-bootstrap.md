@@ -42,6 +42,13 @@ vendor/bin/replica-bootstrap --primary simo0 --replica-host <simo1-ip>
 vendor/bin/replica-bootstrap --primary simo0 --replica-host <simo1-ip> --dry-run
 ```
 
+Before it changes anything the bootstrap checks its host prerequisites and
+aborts with an `ERROR:` line if one is missing: `simo0` needs a MariaDB client
+and a version-matched `mariabackup` (the distro's `mariadb-backup` package;
+neither is installed by the framework's host provisioning), and the dev machine
+needs root SSH to both hosts. A miss leaves no partial state, so the run is safe
+to repeat after installing the missing tool.
+
 - `--primary simo0` is a **name**: the `[simo0]` section of the private
   `etc/reuter.ini` (`etc/reuter.ini.template` documents the keys) supplies the
   primary's `SERVER` — the host, and also the SSH target — and
