@@ -19,7 +19,7 @@ ema create srv/<name>-<GUID>
 
 # private reuter.ini: record the printed [<name>] section
 
-DBUSER=root gen-service-accounts <name>      # on the DB host
+gen-service-accounts <name>      # on the DB host
 vendor/bin/gen-firewall <host> --apply
 bin/deploy.sh <host>                         # read db-check
 ```
@@ -104,12 +104,12 @@ The section must be recorded first: the reconcile connects through `ema mariadb
 <name>`, which resolves it. On the DB host:
 
 ```bash
-DBUSER=root gen-service-accounts <name> -n     # review the SQL
-DBUSER=root gen-service-accounts <name>        # apply
+gen-service-accounts <name> -n     # review the SQL
+gen-service-accounts <name>        # apply
 ```
 
-`DBUSER=root` applies the SQL as root over the socket. The policy it converges
-to is [service-accounts.md](service-accounts.md).
+`gen-service-accounts` applies the SQL as root over the socket. The policy it
+converges to is [service-accounts.md](service-accounts.md).
 
 ## 7. Open the port
 

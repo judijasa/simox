@@ -16,8 +16,8 @@ dropped. See the framework's
 
 ```bash
 # on the DB host, with the database's [<name>] section recorded
-DBUSER=root gen-service-accounts <name> -n   # review the SQL
-DBUSER=root gen-service-accounts <name>      # apply
+gen-service-accounts <name> -n   # review the SQL
+gen-service-accounts <name>      # apply
 ```
 
 A single account, passwordless — the security boundary is ZeroTier membership
