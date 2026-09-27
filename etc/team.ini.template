@@ -17,8 +17,6 @@
 ; new cert with a new guid.
 ;
 ;   `gen-cert new <member>` reads the `subject` below for the CSR.
-;   `init-local-env.sh` finds the section whose entries include the local
-;   `hostname` and exports its name as DBUSER.
 
 [john]
 subject          = /CN=john-a1b2c3d4/O=team

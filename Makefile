@@ -102,3 +102,4 @@ _dev-ssh-config:
 
 _dev-init-local-env:
 	@vendor/bin/init-local-env.sh
+	@printf 'export DBUSER=simox\n' >> .env

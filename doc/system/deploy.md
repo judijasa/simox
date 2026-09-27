@@ -45,8 +45,8 @@ Connecting to a production server via `ema` needs the machine registry config:
   `hostname=ZeroTier-IP` entries. There is no longer one DB account per member:
   every member IP is a pin for the single shared `simox` writer account (the
   `member` source, mapped to the `simox_member` role in `srv/roles-<GUID>`).
-  `make dev-init` resolves your `DBUSER` from here (the section whose entries
-  include your `hostname`) for remote DB access.
+  Remote DB access uses the single `simox` account; `DBUSER=simox` is set by
+  `make dev-init` (consumer policy), not derived from this file.
 - `etc/hosts` — optional: maps production server names to IPs (prod servers
   only — member machines are not listed, there is no member ssh). Private data.
   It is the single source for two dev-machine conveniences: the `/etc/hosts`
@@ -154,9 +154,11 @@ environment:
 
 - **dev** — `make dev-init` runs `vendor/bin/init-local-env.sh` (shipped via
   Composer), which writes `.env` in the repo root with `REPO_PATH=$PWD`,
-  `REPO_LOG=$PWD/var/log`, `EMA_TARGET=sandbox` and `DBUSER` — no `REUTER_INI`:
-  under `EMA_TARGET=sandbox` the app layer resolves its config itself from
-  `var/sandbox/<name>-<GUID>/reuter.ini`.
+  `REPO_LOG=$PWD/var/log` and `EMA_TARGET=sandbox` — no `REUTER_INI`: under
+  `EMA_TARGET=sandbox` the app layer resolves its config itself from
+  `var/sandbox/<name>-<GUID>/reuter.ini`. `DBUSER=simox` is appended by the
+  Makefile's `dev-init` target (consumer policy; `init-local-env.sh` writes no
+  `DBUSER`).
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the framework
   `gen-env` CLI, run by `pf-deploy.sh` as a built-in per-host step; it projects
   it from the replayed `deploy.conf` environment (no separate `etc/env.prod`):

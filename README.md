@@ -20,7 +20,7 @@ Initialize the developer environment (git hooks, log dirs, `composer install`, t
 make dev-init
 ```
 
-Re-enter the shell (or `source .env`) so the generated repo paths and `DBUSER` are in scope.
+Re-enter the shell (or `source .env`) so the repo paths and `DBUSER` written to `.env` are in scope.
 
 Create the `simo0` database + dev sandbox (under `var/sandbox/`); `ema sandbox` builds and starts the isolated MariaDB instance:
 
