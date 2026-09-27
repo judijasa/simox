@@ -4,7 +4,8 @@ How this repo consumes its PHP dependencies through Composer. This document
 covers the **consumer side** — what `composer.json` declares and why. For the
 framework side (what the `judijasa/php-daas-framework` Composer plugin installs,
 and how the framework and `ema` packages deliver their `vendor/bin` CLIs), see
-`../php_daas_framework/doc/system/composer.md` in the framework repo.
+the framework's
+[doc/system/composer.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/composer.md).
 
 ## composer.json
 
@@ -73,6 +74,11 @@ composer require "judijasa/php-daas-framework:dev-main#<hash>" \
 The `#<hash>` suffix tells Composer to resolve `dev-main` to that exact commit,
 recorded in `composer.lock`. Subsequent `composer install` runs (including on
 the production server) always fetch that revision.
+
+Upstream documentation cited from these docs (the framework's and `ema`'s
+`doc/system/*.md`) is linked at upstream `main`, while the runtime follows the
+pinned commit. When the two disagree, the pin wins — if a documented behaviour
+seems to be missing, read the same document at the pinned revision.
 
 ### When to bump
 

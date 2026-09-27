@@ -3,6 +3,27 @@
 The sequence for adding a database to simox. `simo0` is the reference case;
 `simo1` is the same sequence plus the replica build.
 
+## Quick setup
+
+```bash
+# private etc/machines.ini: add db:<name> to the target host's [prod] tokens
+
+ema database <name>                          # scaffold srv/<name>-<GUID>/
+ema schema <name>                            # scaffold pkg/<pkg>-<GUID>/
+# add srv/<name>.roles-<GUID>/, granting the roles on {{dbname}}
+
+bin/deploy.sh <host>
+
+tmux-remote <host> <session>                 # then inside the session:
+ema create srv/<name>-<GUID>
+
+# private reuter.ini: record the printed [<name>] section
+
+DBUSER=root gen-service-accounts <name>      # on the DB host
+vendor/bin/gen-firewall <host> --apply
+bin/deploy.sh <host>                         # read db-check
+```
+
 ## 1. Tag the host
 
 Add `db:<name>` to the target host's token list in the private
@@ -14,7 +35,7 @@ a host, so the tag must be in place before the deploy in step 3.
 
 `ema database <name>` scaffolds `srv/<name>-<GUID>/`, `ema schema <name>`
 scaffolds `pkg/<pkg>-<GUID>/` (both shapes are in the framework's
-`doc/system/ema.md`). The shared `srv/roles-<GUID>/` package is untouched — its
+[doc/system/ema.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/ema.md)). The shared `srv/roles-<GUID>/` package is untouched — its
 roles are global (`member`/`worker`/`web`), not per-database. For the new
 database's own grants, add a `srv/<name>.roles-<GUID>/` package (mirroring
 `srv/simo0.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
@@ -32,10 +53,9 @@ Which roles a database grants, and to which sources, is
 bin/deploy.sh <host>        # or `make deploy` for every [prod] host
 ```
 
-`<host>` is a `[prod]` host by its short name or its ZeroTier IP — the same
-either-spelling argument as `tmux-remote` (step 4) and `gen-firewall` (step 7),
-resolved by the framework's shared host lookup (`vendor/bin/pf-host`; the
-framework's `doc/system/host-resolution.md`).
+`<host>` is a `[prod]` host by its short name or its ZeroTier IP, resolved by
+the framework's shared host lookup (`vendor/bin/pf-host`; the framework's
+[doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)).
 
 `ema create` asserts the `mariadb@.service` unit that deploy installs, so a
 host that has never been deployed must be deployed first.
@@ -47,8 +67,9 @@ tmux-remote <host> <session>         # from the repo root
 ema create srv/<name>-<GUID>         # inside the session
 ```
 
-`tmux-remote` opens the shell `ema` needs on a prod host (the framework's
-`doc/system/tmux-remote.md`). `ema create` provisions the database's own
+`tmux-remote` opens the shell `ema` needs on a prod host — the framework's
+[doc/system/tmux-remote.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/tmux-remote.md).
+`ema create` provisions the database's own
 instance and creates the database; it reads nothing from `reuter.ini`, because
 the section does not exist yet. It is create-only (`ema drop` is retired: to
 delete a created database, run a deliberate `DROP DATABASE` over

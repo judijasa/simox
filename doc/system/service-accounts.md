@@ -9,8 +9,16 @@ framework's `gen-service-accounts` CLI (shipped via Composer to `vendor/bin`).
 The reconcile is closed-world on **role memberships**: the desired state per
 account per host is the union of the roles for that host's sources; excess roles
 and any direct (non-role) grants are revoked, and undeclared accounts/roles are
-dropped. See the framework's `doc/system/service-accounts.md` for the full
-contract.
+dropped. See the framework's
+[doc/system/service-accounts.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/service-accounts.md) for the full contract.
+
+## Quick setup
+
+```bash
+# on the DB host, with the database's [<name>] section recorded
+DBUSER=root gen-service-accounts <name> -n   # review the SQL
+DBUSER=root gen-service-accounts <name>      # apply
+```
 
 A single account, passwordless — the security boundary is ZeroTier membership
 plus the source-IP host pin. Each source maps to a role; a host carrying a tag

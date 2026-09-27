@@ -5,6 +5,19 @@ Complements [private-config.md](private-config.md) (what the private files are
 and how they materialize/ship) and [web_setup.md](web_setup.md) (the web
 server/php-fpm configuration).
 
+## Quick setup
+
+```bash
+# on the new host, as root (one-time)
+useradd --create-home <PROD_USER>            # lock the password, authorize the project key
+# Apache vhost + php-fpm: see web_setup.md
+apt-get install -y cron                      # a cron daemon (cron, crond, or cronie)
+
+# from the dev machine, inside nix develop
+cp .private-source.example .private-source   # set PRIVATE_DATA_GIT
+make deploy <host>                           # or make deploy for every [prod] host
+```
+
 ## Machine roster
 
 Connecting to a production server via `ema` needs the machine registry config:
@@ -85,7 +98,7 @@ make deploy <host>                 # a single prod host (must be in [prod]);
 
 `<host>` takes either spelling: `bin/deploy.sh` resolves it through the
 framework's shared host lookup (`vendor/bin/pf-host`; the framework's
-`doc/system/host-resolution.md`) to the ZeroTier IP the `[prod]` roster is keyed
+[doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)) to the ZeroTier IP the `[prod]` roster is keyed
 by, so the per-host post-deploy step below always matches the host the framework
 deployed to.
 

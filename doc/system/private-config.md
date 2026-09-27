@@ -10,7 +10,15 @@ half is the framework's: it ships the files named in `DEPLOY_PRIVATE_FILES`
 into the freshly swapped `etc/` on each host and replays the deploy machine's
 `deploy.conf` environment to every remote step, so `deploy.conf` itself never
 reaches prod. The generic contract is documented in the framework's
-`doc/system/consumer-config.md`.
+[doc/system/consumer-config.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/consumer-config.md).
+
+## Quick setup
+
+```bash
+cp .private-source.example .private-source   # set PRIVATE_DATA_GIT (+ PRIVATE_DATA_REF)
+make dev-init                                # materialize the private files into etc/
+make deploy [<host>]                         # ship reuter.ini, then deploy
+```
 
 ## Private data in simox
 

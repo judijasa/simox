@@ -8,6 +8,20 @@ the php-fpm pool config (`/etc/simox/php-fpm-simox.conf`) and systemd unit
 `mod_php` → php-fpm switch, the vhost and the site enable below are one-time
 manual steps that deploy does not manage; run them as root.
 
+## Quick setup
+
+```bash
+# on the host, as root (one-time)
+apt-get update && apt-get install -y apache2
+a2enmod proxy proxy_fcgi
+apache2ctl -M 2>/dev/null | grep -i php      # if mod_php appears: a2dismod php8.4
+# write /etc/apache2/sites-available/simox.conf (the vhost block below)
+a2dissite simox                              # keep the site disabled until the first deploy
+
+# after the first deploy
+a2ensite simox && systemctl restart apache2
+```
+
 ## Install Apache
 
 ```bash
