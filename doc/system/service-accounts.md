@@ -15,10 +15,18 @@ dropped. See the framework's
 ## Quick setup
 
 ```bash
-# on the DB host, with the database's [<name>] section recorded
+# from the dev machine, with the database's [<name>] section recorded
 gen-service-accounts <name> -n   # review the SQL
 gen-service-accounts <name>      # apply
 ```
+
+The reconcile runs from the dev machine — the machine that holds the roster
+(`etc/team.ini` for `member`, `etc/machines.ini` for the tag sources) — and
+reaches the host carrying the database's `db:<name>` tag as `root` over ssh,
+where the deployed repo's own `ema` applies the SQL over the instance's socket.
+No account of its own is needed: the connection is the host's `root`. The
+roster stays here, which is why neither `etc/team.ini` nor `etc/machines.ini`
+is ever shipped to a host.
 
 A single account, passwordless — the security boundary is ZeroTier membership
 plus the source-IP host pin. Each source maps to a role; a host carrying a tag

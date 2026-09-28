@@ -19,7 +19,7 @@ ema create srv/<name>-<GUID>
 
 # private reuter.ini: record the printed [<name>] section
 
-gen-service-accounts <name>      # on the DB host
+gen-service-accounts <name>      # from the dev machine
 vendor/bin/gen-firewall <host> --apply
 bin/deploy.sh <host>                         # read db-check
 ```
@@ -100,16 +100,18 @@ recoverable with `ema values <name>`.
 
 ## 6. Reconcile the accounts and grants
 
-The section must be recorded first: the reconcile connects through `ema mariadb
-<name>`, which resolves it. On the DB host:
+The section must be recorded first: the reconcile runs `ema mariadb <name>` on
+the host, which resolves it. From the dev machine:
 
 ```bash
 gen-service-accounts <name> -n     # review the SQL
 gen-service-accounts <name>        # apply
 ```
 
-`gen-service-accounts` applies the SQL as root over the socket. The policy it
-converges to is [service-accounts.md](service-accounts.md).
+`gen-service-accounts` plans from the roster here and applies the SQL as `root`
+over ssh on the host carrying the `db:<name>` tag, over the instance's own
+socket — the `MYSQL_UNIX_PORT` recorded in step 5. The policy it converges to is
+[service-accounts.md](service-accounts.md).
 
 ## 7. Open the port
 
