@@ -88,7 +88,7 @@ grants) — is committed, not private.
 `reuter.ini` is the only private file a prod host needs, so it is the only one
 that ever leaves the private repo for a host — and it ships **whole** (no inner
 filtering, no section splicing). `machines.ini` feeds the local deploy roster,
-`team.ini` feeds `gen-cert`/`gen-grants`/`gen-service-accounts`,
+`team.ini` feeds `gen-cert`/`gen-team-accounts`/`gen-service-accounts`,
 `hosts` feeds the dev `/etc/hosts` merge and the generated ssh config on the
 deploy/dev machine, and `host-hardening.php` feeds `gen-firewall`; none of them
 reaches prod.
