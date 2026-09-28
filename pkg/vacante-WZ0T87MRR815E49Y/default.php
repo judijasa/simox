@@ -1,6 +1,7 @@
 <?php
-$dependencies = array(
-    'municipio-WK095781S7NA146R',
-    'dependencia-J31Y7UXN1J2K9W4L'
+return new \Ema\Config\PackageConfig(
+    dependencies: [
+        'municipio-WK095781S7NA146R',
+        'dependencia-J31Y7UXN1J2K9W4L',
+    ],
 );
-?>

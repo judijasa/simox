@@ -1,5 +1,6 @@
 <?php
-$dependencies = array(
-    'tipo_entidad-ZKL6SSAAC65UIKYI'
+return new \Ema\Config\PackageConfig(
+    dependencies: [
+        'tipo_entidad-ZKL6SSAAC65UIKYI',
+    ],
 );
-?>

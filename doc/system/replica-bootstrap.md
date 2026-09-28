@@ -39,17 +39,17 @@ ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-sim
 1. **A live `simo0`** with its schema applied (`ema create
    srv/simo0-D03J4K6RM0K7X8E4`).
 2. **The `srv/simo1-D0L4SEWTLXQQSVJC` package** — `type=replica`,
-   `replica_of=simo0`, and no `$dependencies`/`upgrade.sql`: `simo1`'s schema
+   `replica_of=simo0`, and no `dependencies`/`upgrade.sql`: `simo1`'s schema
    arrives from the primary via replication, never from a schema builder. It
-   sets `$db['replica_ssl_verify_server_cert'] = false` explicitly, so ema
+   sets `replica_ssl_verify_server_cert: false` explicitly, so ema
    emits `MASTER_SSL_VERIFY_SERVER_CERT=0` — verification stays off while
    the primary's certificate is the self-signed one; flip it to `true` once
    a CA is provisioned.
 3. **The `replication` account's allowlist entry.** The account is created by
    the bootstrap CLI, but it is deliberately **not** part of the
-   `$sources`/`$accounts` service-account declaration: the reconcile grants it
+   `sources`/`accounts` service-account declaration: the reconcile grants it
    no roles and must not manage its `*.*` grant. It *is* declared in the package
-   `$allowlist` so the closed-world drop pass keeps it (the framework's drop
+   `allowlist` so the closed-world drop pass keeps it (the framework's drop
    floor is only `root`/`mariadb.sys`).
 4. **`simo0`'s host prerequisites.** Two prerequisites must hold before the
    run: the MariaDB backup package (`mariabackup`) installed on `simo0`, and

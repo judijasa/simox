@@ -1,5 +1,6 @@
 <?php
-$dependencies = array(
-    'nivel-F39B6ACCF1574A6E'
+return new \Ema\Config\PackageConfig(
+    dependencies: [
+        'nivel-F39B6ACCF1574A6E',
+    ],
 );
-?>

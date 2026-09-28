@@ -1,24 +1,25 @@
 <?php
-$dependencies = array(
-    'vw_empleo-DAF75B74DD6A469D',
-    'vacante-WZ0T87MRR815E49Y',
-    'tipo_entidad-ZKL6SSAAC65UIKYI',
-    'requisito-7SACLUK8T6IU4BP3',
-    'nivel-F39B6ACCF1574A6E',
-    'municipio-WK095781S7NA146R',
-    'funcion-12ZLRQNT99GB3W8Z',
-    'entidad-67REHGMCNAEUY2R1',
-    'empleo_vacante-AGC76TYMHR1LD9PT',
-    'empleo_snapshot-00B5FEB6B8B84570',
-    'empleo_requisito-9KS537SIXRO89TUK',
-    'empleo_funcion-S9N4FY21N92CQDTS',
-    'empleo-9A645583F8F24B28',
-    'documento-B4389BGTHWELGSQP',
-    'departamento-BD672733D7AA455F',
-    'denominacion-5R9BK7DS01O7A23G',
-    'dependencia-J31Y7UXN1J2K9W4L',
-    'cursorseq-A8FEE4C088E5419C',
-    'convocatoria-CP5LH0NIV4WY9J5B',
-    // 'activity_monitor-A170276C72D14319'
+return new \Ema\Config\PackageConfig(
+    dependencies: [
+        'vw_empleo-DAF75B74DD6A469D',
+        'vacante-WZ0T87MRR815E49Y',
+        'tipo_entidad-ZKL6SSAAC65UIKYI',
+        'requisito-7SACLUK8T6IU4BP3',
+        'nivel-F39B6ACCF1574A6E',
+        'municipio-WK095781S7NA146R',
+        'funcion-12ZLRQNT99GB3W8Z',
+        'entidad-67REHGMCNAEUY2R1',
+        'empleo_vacante-AGC76TYMHR1LD9PT',
+        'empleo_snapshot-00B5FEB6B8B84570',
+        'empleo_requisito-9KS537SIXRO89TUK',
+        'empleo_funcion-S9N4FY21N92CQDTS',
+        'empleo-9A645583F8F24B28',
+        'documento-B4389BGTHWELGSQP',
+        'departamento-BD672733D7AA455F',
+        'denominacion-5R9BK7DS01O7A23G',
+        'dependencia-J31Y7UXN1J2K9W4L',
+        'cursorseq-A8FEE4C088E5419C',
+        'convocatoria-CP5LH0NIV4WY9J5B',
+        // 'activity_monitor-A170276C72D14319'
+    ],
 );
-?>

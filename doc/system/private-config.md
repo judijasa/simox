@@ -78,11 +78,11 @@ credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
 and those live only in the private repo, never in the public history. The
 `SIMOX_PASSWORD` key is **not** secret: the service account is passwordless by
 policy, so the key stays empty. The framework `gen-service-accounts` reconciles
-the account (create/drop, role-based) against the shared `srv/roles-<GUID>`
+the account (create/drop, role-based) against the shared `pkg/roles-<GUID>`
 declaration but never writes a password back into this file — the template ships
 `SIMOX_PASSWORD=` empty. The service-account *policy* itself — which accounts
-exist and on which databases (the shared `srv/roles-<GUID>`
-`$sources`/`$accounts` declaration plus the per-database `srv/<db>.roles-<GUID>`
+exist and on which databases (the shared `pkg/roles-<GUID>`
+`sources`/`accounts` declaration plus the per-database `pkg/<db>.roles-<GUID>`
 grants) — is committed, not private.
 
 `reuter.ini` is the only private file a prod host needs, so it is the only one

@@ -1,5 +1,5 @@
 ; Team member registry — the `member` host-pin source for the shared `simox`
-; service account (mapped to the `simox_member` role in srv/roles-<GUID>).
+; service account (mapped to the `simox_member` role in pkg/roles-<GUID>).
 ; This file is private data, kept in the private config repo and copied into
 ; etc/ as a real file by simox's bin/fetch-private-data via .private-source
 ; (see doc/system/private-config.md).

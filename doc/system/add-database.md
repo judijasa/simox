@@ -10,7 +10,7 @@ The sequence for adding a database to simox. `simo0` is the reference case;
 
 ema database <name>                          # scaffold srv/<name>-<GUID>/
 ema schema <name>                            # scaffold pkg/<pkg>-<GUID>/
-# add srv/<name>.roles-<GUID>/, granting the roles on {{dbname}}
+# add pkg/<name>.roles-<GUID>/, granting the roles on {{dbname}}
 
 bin/deploy.sh <host>
 
@@ -35,10 +35,10 @@ a host, so the tag must be in place before the deploy in step 3.
 
 `ema database <name>` scaffolds `srv/<name>-<GUID>/`, `ema schema <name>`
 scaffolds `pkg/<pkg>-<GUID>/` (both shapes are in the framework's
-[doc/system/ema.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/ema.md)). The shared `srv/roles-<GUID>/` package is untouched — its
+[doc/system/ema.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/ema.md)). The shared `pkg/roles-<GUID>/` package is untouched — its
 roles are global (`member`/`worker`/`web`), not per-database. For the new
-database's own grants, add a `srv/<name>.roles-<GUID>/` package (mirroring
-`srv/simo0.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
+database's own grants, add a `pkg/<name>.roles-<GUID>/` package (mirroring
+`pkg/simo0.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
 scoped with the `{{dbname}}` placeholder — e.g. `GRANT ALL PRIVILEGES ON
 {{dbname}}.* TO simox_worker;`. A `db:<name>` tag pins no role of its own:
 access follows what a host runs (`worker`/`web`) or its members, never what

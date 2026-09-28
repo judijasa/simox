@@ -34,7 +34,7 @@ Connecting to a production server via `ema` needs the machine registry config:
   ordinary bare tag data jobs use as their scope; `web` is simox's own step
   (restore Apache www-data traversal). `worker` and `web` are the role-pin
   sources `gen-service-accounts` reconciles against the shared
-  `srv/roles-<GUID>` declaration (`worker` → `simox_worker`,
+  `pkg/roles-<GUID>` declaration (`worker` → `simox_worker`,
   `web` → `simox_web`); a `db:<name>` token pins no role (provisioning only);
   see [service-accounts.md](service-accounts.md). Each named token maps to exactly
   one server; a server may host several databases. `pf-deploy.sh` targets every
@@ -44,7 +44,7 @@ Connecting to a production server via `ema` needs the machine registry config:
   key (their client-certificate subject DN, used for cert issuance) and
   `hostname=ZeroTier-IP` entries. There is no longer one DB account per member:
   every member IP is a pin for the single shared `simox` writer account (the
-  `member` source, mapped to the `simox_member` role in `srv/roles-<GUID>`).
+  `member` source, mapped to the `simox_member` role in `pkg/roles-<GUID>`).
   Remote DB access uses the single `simox` account; `DBUSER=simox` is set by
   `make dev-init` (consumer policy), not derived from this file.
 - `etc/hosts` — optional: maps production server names to IPs (prod servers

@@ -2,9 +2,9 @@
 
 MariaDB users/grants are not provisioned by `ema` (which creates instances and
 schema only). They are this repo's policy, declared in the shared
-`srv/roles-<GUID>` package (role definitions, the `$sources`/`$accounts`
-mapping, and the `$allowlist` of accounts the drop pass must never remove) and
-the per-database `srv/<db>.roles-<GUID>` grant packages, then reconciled by the
+`pkg/roles-<GUID>` package (role definitions, the `sources`/`accounts`
+mapping, and the `allowlist` of accounts the drop pass must never remove) and
+the per-database `pkg/<db>.roles-<GUID>` grant packages, then reconciled by the
 framework's `gen-service-accounts` CLI (shipped via Composer to `vendor/bin`).
 The reconcile is closed-world on **role memberships**: the desired state per
 account per host is the union of the roles for that host's sources; excess roles
@@ -51,4 +51,4 @@ Routing: the website (`public/index.php`, `public/insight.php`) reads from
 `simox`. The `replication` transport account (used only by the replica's
 replication thread) is created by `vendor/bin/replica-bootstrap`, which the
 operator runs from the dev machine against the primary; it is declared in the
-roles package `$allowlist` so the reconcile never drops it.
+roles package `allowlist` so the reconcile never drops it.

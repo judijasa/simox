@@ -6,7 +6,7 @@
 ;   $conn = Database::connectTo($dbname, $account)
 ;
 ; $account is this repo's single service account (declared in the shared
-; srv/roles-<GUID> package): `simox` (read-write on the primary, read on the
+; pkg/roles-<GUID> package): `simox` (read-write on the primary, read on the
 ; replica). The connector reads the password from the <ACCOUNT>_PASSWORD key
 ; (uppercased account name + _PASSWORD); an empty value means a passwordless
 ; account. This repo is passwordless by policy — the security boundary is
@@ -29,7 +29,7 @@
 ; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
 ; here by hand; empty = passwordless). The framework gen-service-accounts
 ; reconciles the account (create + drop stale, role-based) against the shared
-; srv/roles-<GUID> declaration but does NOT write these keys back — this file
+; pkg/roles-<GUID> declaration but does NOT write these keys back — this file
 ; is the manual source of truth.
 ;
 ; Two databases: `simo0` is the writable primary and `simo1` is its read-only

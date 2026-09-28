@@ -31,7 +31,7 @@
 #
 #        Service-account pins — the framework `gen-service-accounts` CLI
 #        reconciles passwordless host-pinned accounts and roles from the
-#        shared srv/roles-<GUID> declaration plus etc/team.ini (the `member`
+#        shared pkg/roles-<GUID> declaration plus etc/team.ini (the `member`
 #        source) and this roster. Only `worker` and `web` are role-pin
 #        sources: `worker` -> `simox_worker`, `web` -> `simox_web`. A
 #        `db:<name>` tag is a provisioning marker only (which instance a host
