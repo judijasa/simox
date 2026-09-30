@@ -1,0 +1,23 @@
+# Dev machine configuration template (committed; mirrors the current dev
+# values). The real etc/dev.conf is private data on the dev machine:
+# bin/fetch-private-data copies it into etc/, and the framework sources it —
+# bin/dev/init-local-env.sh relays its values into .env, bin/gen-cert reads
+# SSL_DIR. bin/fetch-private-data overwrites etc/dev.conf on every run, so
+# change the values in the private repo, never here.
+#
+# It holds only non-derived, consumer-chosen dev values; derived values
+# (REPO_PATH/REPO_LOG) stay derived by init-local-env.sh and never appear here.
+
+# DBUSER: the DB username the app layer and `ema mariadb <db>` connect as —
+# simox's single service account (see doc/system/service-accounts.md).
+export DBUSER=simox
+
+# SSL_DIR: directory holding this machine's TLS client certificate
+# (client.crt + client.key) for the `require: 'X509'` service account. The
+# framework's machine-cert CLI (vendor/bin/gen-cert) mints and installs into it;
+# the prod app layer derives its client.crt/client.key paths from the same
+# SSL_DIR name (via DEPLOY_SSL_DIR in etc/deploy.conf). Use an absolute path —
+# or an unquoted `~`/`$HOME`, which the sourcing shell expands; a quoted `~` is
+# not expanded and breaks gen-cert and the ~/.my.cnf.d drop-in. See
+# doc/system/machine-certs.md for the mint/sign/install steps.
+export SSL_DIR=~/.simox/ssl

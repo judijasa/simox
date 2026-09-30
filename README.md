@@ -20,7 +20,7 @@ Initialize the developer environment (git hooks, log dirs, `composer install`, t
 make dev-init
 ```
 
-Re-enter the shell (or `source .env`) so the repo paths and `DBUSER` written to `.env` are in scope.
+Re-enter the shell (or `source .env`) so the repo paths, `DBUSER` and `SSL_DIR` written to `.env` are in scope.
 
 Create the `simo0` database + dev sandbox (under `var/sandbox/`); `ema sandbox` builds and starts the isolated MariaDB instance:
 
@@ -69,20 +69,24 @@ ssh simox-<name>        # e.g. ssh simox-simo0
 
 The file is generated and idempotent — never hand-edit it; edit `etc/hosts` and re-run `make dev-init`. Details in [doc/system/deploy.md](doc/system/deploy.md).
 
+A machine that must connect to a production database also needs its own TLS client certificate, since the service accounts require X509. That is a separate, occasionally-run step (the certificate is signed by the project CA, which only the operator holds) — see [doc/system/machine-certs.md](doc/system/machine-certs.md).
+
 ## Production Server Setup
 
 **1. Apache vhost + php-fpm** — one-time manual steps (vhost + FastCGI to the nix-built php-fpm). See [doc/system/web_setup.md](doc/system/web_setup.md).
 
-**2. Cron daemon** — install a cron daemon on each prod host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie` depending on the OS).
+**2. TLS cert material** — install the project CA and the host's client certificate under `/etc/simox/ssl` (out of band, before the accounts are reconciled with `REQUIRE X509`). See [doc/system/machine-certs.md](doc/system/machine-certs.md).
 
-**3. Deploy** — run from the dev machine inside `nix develop`:
+**3. Cron daemon** — install a cron daemon on each prod host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie` depending on the OS).
+
+**4. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
 make deploy                        # every [prod] host in etc/machines.ini
 make deploy <host>                 # a single prod host (short name or ZeroTier IP)
 ```
 
-`make deploy` materializes the private config, runs the framework `pf-deploy.sh` (ships `reuter.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
+`make deploy` materializes the private config, runs the framework `pf-deploy.sh` (ships `reuter.ini` + `ema.conf`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
 
 ## Adding a Database
 
@@ -90,7 +94,7 @@ Adding a database — its own MariaDB instance on its own host (`ema create`), i
 
 ## Service Accounts & Read Replica
 
-MariaDB users/grants are declared in the shared `pkg/roles-<GUID>` package and the per-database `pkg/<db>.roles-<GUID>` grant packages, reconciled by the framework's `gen-service-accounts` CLI, run from the dev machine: it plans from the private roster here and applies on the database's host as `root` over ssh. A single passwordless account; the security boundary is ZeroTier membership plus the source-IP host pin. See [doc/system/service-accounts.md](doc/system/service-accounts.md) for the role/source table and routing, and [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md) for the `simo1` read-replica build.
+MariaDB users/grants are declared in the shared `pkg/roles-<GUID>` package and the per-database `pkg/<db>.roles-<GUID>` grant packages, reconciled by the framework's `gen-service-accounts` CLI, run from the dev machine: it plans from the private roster here and applies on the database's host as `root` over ssh. A single passwordless account, gated by a TLS client certificate: the security boundary is ZeroTier membership, the source-IP host pin, and `REQUIRE X509` with a certificate signed by the project CA. See [doc/system/service-accounts.md](doc/system/service-accounts.md) for the role/source table, the authentication layers and routing, [doc/system/machine-certs.md](doc/system/machine-certs.md) for the certificates, and [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md) for the `simo1` read-replica build.
 
 ## Dependencies
 

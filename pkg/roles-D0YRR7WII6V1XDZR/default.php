@@ -12,6 +12,7 @@
 //           sources:   ['member' => 'simox_member', 'worker' => 'simox_worker'],
 //           accounts:  ['simox' => ['member', 'worker']],
 //           allowlist: ['replication'],
+//           require:   'X509',
 //       ),
 //   );
 //
@@ -29,6 +30,16 @@
 // own replica-bootstrap creates it on the primary (not the framework), so its
 // protection is visible in the declaration rather than only implicit. The
 // declared list extends, never replaces, the floor.
+//
+// `require` is the TLS/certificate clause emitted as `REQUIRE <value>` on every
+// account this reconcile creates or alters — here `X509`, so the passwordless
+// account additionally demands a client certificate signed by the CA the
+// instance verifies against (the host-level `ssl-ca` in etc/ema.conf). The
+// source-IP pin alone is forgeable by any peer on the trusted network; a
+// private key is not. Identity stays the pin (`'simox'@'<ip>'`) plus the cert
+// subject recorded in the audit log — `REQUIRE X509` is a membership gate, not
+// a subject match, so the same cert serves every account on the machine (see
+// doc/system/machine-certs.md).
 return new \Ema\Config\PackageConfig(
     roles: new \Ema\Config\RolesConfig(
         sources: [
@@ -40,5 +51,6 @@ return new \Ema\Config\PackageConfig(
             'simox' => ['member', 'worker', 'web'],
         ],
         allowlist: ['replication'],
+        require: 'X509',
     ),
 );

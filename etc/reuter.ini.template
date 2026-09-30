@@ -9,9 +9,14 @@
 ; pkg/roles-<GUID> package): `simox` (read-write on the primary, read on the
 ; replica). The connector reads the password from the <ACCOUNT>_PASSWORD key
 ; (uppercased account name + _PASSWORD); an empty value means a passwordless
-; account. This repo is passwordless by policy — the security boundary is
+; account. This repo is passwordless by policy: the security boundary is
 ; ZeroTier membership plus the source-IP host pin that the framework
-; gen-service-accounts derives from etc/team.ini / etc/machines.ini.
+; gen-service-accounts derives from etc/team.ini / etc/machines.ini, plus the
+; client certificate the accounts demand (`require: 'X509'` in the roles
+; package — every connecting machine presents a certificate signed by the
+; project CA, so the same passwordless account cannot be used from a machine
+; that holds no key). See doc/system/service-accounts.md and
+; doc/system/machine-certs.md.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data: copied into etc/ as a real file by simox's
@@ -28,9 +33,9 @@
 ;
 ; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
 ; here by hand; empty = passwordless). The framework gen-service-accounts
-; reconciles the account (create + drop stale, role-based) against the shared
-; pkg/roles-<GUID> declaration but does NOT write these keys back — this file
-; is the manual source of truth.
+; reconciles the account (create + drop stale, role-based, REQUIRE X509)
+; against the shared pkg/roles-<GUID> declaration but does NOT write these keys
+; back — this file is the manual source of truth.
 ;
 ; Two databases: `simo0` is the writable primary and `simo1` is its read-only
 ; replica (replication is established by ema's replica build — see
@@ -42,11 +47,13 @@
 ; MYSQL_UNIX_PORT is set, ema connects via that socket (root/unix_socket
 ; auth); otherwise it uses SERVER/PORT over TCP. In prod the app layer
 ; (Utils\Connectivity\Database) stays TCP-only: it reads SERVER/PORT (and
-; MYSQL_UNIX_PORT from .env, not from this file — .env is MYSQL_*-free). Its
+; MYSQL_UNIX_PORT from .env, not from this file — .env is MYSQL_*-free) and
+; presents the machine's client certificate from SSL_DIR (also .env, projected
+; from deploy.conf's DEPLOY_SSL_DIR — see doc/system/machine-certs.md). Its
 ; socket transport is the sandbox path instead: under EMA_TARGET=sandbox it
 ; reads MYSQL_UNIX_PORT from the sandbox instance's own
 ; var/sandbox/<name>-<guid>/reuter.ini section (written by 'ema sandbox') and
-; connects as root over that socket.
+; connects as root over that socket, where no certificate is applied.
 
 [simo0]
 SERVER=10.147.x.10

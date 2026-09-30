@@ -100,6 +100,8 @@ _dev-update-hosts:
 _dev-ssh-config:
 	@vendor/bin/gen-ssh-config
 
+# The framework's init-local-env.sh derives REPO_PATH/REPO_LOG and relays the
+# consumer-chosen dev values from the materialized etc/dev.conf into .env
+# (DBUSER, SSL_DIR) — this Makefile owns no dev values of its own.
 _dev-init-local-env:
 	@vendor/bin/init-local-env.sh
-	@printf 'export DBUSER=simox\n' >> .env

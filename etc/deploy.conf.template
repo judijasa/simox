@@ -16,11 +16,15 @@
 #   REPO_PATH      := DEPLOY_TARGET_DIR
 #   REPO_LOG       := DEPLOY_LOG_DIR
 #   REUTER_INI     := DEPLOY_REUTER_INI
+#   SSL_DIR        := DEPLOY_SSL_DIR (optional — the client-cert directory)
 #   EMA_TARGET     := prod (constant)
 #
 # .env stays MYSQL_*-free: the socket lives in
 # the prod reuter.ini section (MYSQL_UNIX_PORT, recorded from `ema create`
-# output). The app layer stays TCP-only.
+# output). The app layer stays TCP-only. SSL_DIR (optional) is the one
+# non-MYSQL transport key: the directory holding the host's TLS client
+# certificate for the `require: 'X509'` service account (see
+# doc/system/machine-certs.md).
 #
 # PROD_USER: unprivileged app user on the remote host. Must exist with SSH
 # access before the first deploy (see doc/system/deploy.md).
@@ -43,12 +47,28 @@ export DEPLOY_LOG_DIR=/var/log/simox
 # DEPLOY_PRIVATE_FILES (see below).
 export DEPLOY_REUTER_INI=/srv/apps/simox/etc/reuter.ini
 
+# DEPLOY_SSL_DIR: directory on the host holding the app layer's TLS client
+# certificate (client.crt + client.key) for the `require: 'X509'` service
+# account. gen-env writes it into .env as SSL_DIR and the app layer derives its
+# client.crt/client.key paths from it; the php-fpm pool carries the same value
+# as env[SSL_DIR] (the web process has no .env). The cert material itself is
+# provisioned out of band on the host — it is a private key, never shipped by
+# the deploy, and only the public cert travels back from the CA. See
+# doc/system/machine-certs.md.
+export DEPLOY_SSL_DIR=/etc/simox/ssl
+
 # DEPLOY_PRIVATE_FILES: space-separated etc/-relative private file names the
 # framework ships from the deploy machine's etc/ into the freshly swapped
-# etc/ on the host (whole, verbatim) — the only private files a host needs.
-# reuter.ini is the only one; deploy.conf itself is NOT shipped (its values
-# travel as replayed environment).
-export DEPLOY_PRIVATE_FILES="reuter.ini"
+# etc/ on the host (whole, verbatim). `reuter.ini` is the required baseline —
+# every prod host needs it; deploy.conf itself is NOT shipped (its values
+# travel as replayed environment). Every host in this consumer's roster carries
+# a `db:` tag, so every host provisions an instance and needs `ema.conf` as
+# well (the host-level ssl-ca ema writes into each instance's [mysqld], the
+# server-side trust anchor of the X509 requirement; see
+# doc/system/private-config.md). The ship step tars exactly these names, so
+# each must exist in etc/ (materialized from the private repo by
+# bin/fetch-private-data) or the deploy fails.
+export DEPLOY_PRIVATE_FILES="reuter.ini ema.conf"
 
 # DEPLOY_NIX_RESULT_DIR: remote nix result parent.
 export DEPLOY_NIX_RESULT_DIR=/usr/local/simox

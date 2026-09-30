@@ -11,6 +11,7 @@ server/php-fpm configuration).
 # on the new host, as root (one-time)
 useradd --create-home <PROD_USER>            # lock the password, authorize the project key
 # Apache vhost + php-fpm: see web_setup.md
+# TLS cert material under /etc/simox/ssl (CA + this host's client cert): see machine-certs.md
 apt-get install -y cron                      # a cron daemon (cron, crond, or cronie)
 
 # from the dev machine, inside nix develop
@@ -40,13 +41,15 @@ Connecting to a production server via `ema` needs the machine registry config:
   one server; a server may host several databases. `pf-deploy.sh` targets every
   `[prod]` host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
-- `etc/team.ini` — private data. One section per team member with a `subject`
-  key (their client-certificate subject DN, used for cert issuance) and
-  `hostname=ZeroTier-IP` entries. There is no longer one DB account per member:
-  every member IP is a pin for the single shared `simox` writer account (the
-  `member` source, mapped to the `simox_member` role in `pkg/roles-<GUID>`).
-  Remote DB access uses the single `simox` account; `DBUSER=simox` is set by
-  `make dev-init` (consumer policy), not derived from this file.
+- `etc/team.ini` — private data. One section per team member, carrying
+  `hostname = ZeroTier-IP` entries and no credential: there is no longer one DB
+  account per member. Every member IP is a pin for the single shared `simox`
+  writer account (the `member` source, mapped to the `simox_member` role in
+  `pkg/roles-<GUID>`), and the same entries are what `gen-cert` matches a
+  machine's local IP against to derive its client certificate's CN (see
+  [machine-certs.md](machine-certs.md)). Remote DB access uses the single
+  `simox` account, and `DBUSER=simox` is consumer policy — declared in the
+  private `etc/dev.conf`, not derived from this file.
 - `etc/hosts` — optional: maps production server names to IPs (prod servers
   only — member machines are not listed, there is no member ssh). Private data.
   It is the single source for two dev-machine conveniences: the `/etc/hosts`
@@ -54,8 +57,9 @@ Connecting to a production server via `ema` needs the machine registry config:
   ssh config described below.
 - `.private-source` — a pointer to the private config repo (copy
   `.private-source.example`, set `PRIVATE_DATA_GIT`). `bin/fetch-private-data`
-  (run by `make dev-init`) copies `etc/machines.ini`, `etc/team.ini`,
-  `etc/reuter.ini`, `etc/hosts` and `etc/host-hardening.php` into `etc/` as real
+  (run by `make dev-init`) copies the required `etc/deploy.conf`,
+  `etc/reuter.ini`, `etc/dev.conf` and `etc/ema.conf`, plus `etc/machines.ini`,
+  `etc/team.ini`, `etc/hosts` and `etc/host-hardening.php`, into `etc/` as real
   files. See [private-config.md](private-config.md).
 
 ## Dev ssh config
@@ -86,9 +90,13 @@ password, install the SSH key).
 
 **1. Apache vhost + php-fpm** — see [web_setup.md](web_setup.md).
 
-**2. Cron daemon** — install a cron daemon on the host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie`).
+**2. TLS cert material** — install the project CA and this host's client
+certificate under `/etc/simox/ssl` before the accounts are reconciled with
+`REQUIRE X509`. See [machine-certs.md](machine-certs.md).
 
-**3. Deploy** — run from the dev machine inside `nix develop`:
+**3. Cron daemon** — install a cron daemon on the host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie`).
+
+**4. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
 make deploy                        # every [prod] host in etc/machines.ini
@@ -106,10 +114,10 @@ deployed to.
 simox's own private-config materialization (`bin/fetch-private-data` copies the
 real `etc/` files in locally), then the framework `pf-deploy.sh` CLI (shipped
 via Composer to `vendor/bin`) — which ships `DEPLOY_PRIVATE_FILES`
-(`reuter.ini`) to each target host and replays the `deploy.conf` environment to
-every remote step — and finally the per-host post-deploy step. On every deploy,
-the framework's generic `vendor/bin/pf-provision.sh` runs on the remote
-(idempotently) to assert the app user and create system directories
+(`reuter.ini`, `ema.conf`) to each target host and replays the `deploy.conf`
+environment to every remote step — and finally the per-host post-deploy step.
+On every deploy, the framework's generic `vendor/bin/pf-provision.sh` runs on
+the remote (idempotently) to assert the app user and create system directories
 (`/srv/apps`, `/var/log/simox`), then the consumer-specific `DEPLOY_INIT_CMD`
 (`bin/deploy/provision-extra.sh`: Apache www-data traversal).
 
@@ -123,7 +131,7 @@ values the render needs); only simox's own `web` step remains there — restorin
 Apache www-data traversal on the repo dir and installing the nix-built php-fpm
 (pool config + systemd unit, then restarting the service).
 
-## Environment contract (`REUTER_INI` / `EMA_TARGET` / `.env`)
+## Environment contract (`REUTER_INI` / `SSL_DIR` / `EMA_TARGET` / `.env`)
 
 `REUTER_INI` is no longer a vhost `SetEnv` — php-fpm does not inherit Apache
 `SetEnv`; the php-fpm pool sets it instead (see [web_setup.md](web_setup.md)).
@@ -137,6 +145,13 @@ Apache www-data traversal on the repo dir and installing the nix-built php-fpm
   the framework's `Database` class and the `ema` CLI (prod mode). The `web`
   deploy step writes it into the php-fpm pool (`env[REUTER_INI]`), since the web
   process has no `.env`. If unset, `etc/reuter.ini` inside the repo is used.
+- **`SSL_DIR`** — directory holding the machine's TLS client certificate
+  (`client.crt` + `client.key`), which the app layer presents when it connects
+  over TCP (`/etc/simox/ssl` in prod, the `DEPLOY_SSL_DIR` value). Consumed by
+  the framework's `Database` class and by the framework's `gen-cert` CLI on the
+  dev machine (where it comes from the private `etc/dev.conf` instead). Unset
+  means the app layer connects without a certificate — fine until an account
+  requires X509. See [machine-certs.md](machine-certs.md).
 - **`EMA_TARGET`** — the binary sandbox/prod mode flag. The app layer
   (`Database::connectTo`) dispatches on it for every connection it opens:
   `sandbox` resolves a database to its
@@ -157,14 +172,17 @@ environment:
   `REPO_LOG=$PWD/var/log` — no `REUTER_INI` and no `EMA_TARGET` (unset means
   `prod`, the app layer's default): under `EMA_TARGET=sandbox` (explicit
   opt-in) the app layer resolves its config itself from
-  `var/sandbox/<name>-<GUID>/reuter.ini`. `DBUSER=simox` is appended by the
-  Makefile's `dev-init` target (consumer policy; `init-local-env.sh` writes no
-  `DBUSER`).
+  `var/sandbox/<name>-<GUID>/reuter.ini`. The consumer-chosen dev values come
+  from the private `etc/dev.conf`, which the script sources and relays into
+  `.env` (`DBUSER=simox`, `SSL_DIR=~/.simox/ssl`); the Makefile appends nothing
+  of its own.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the framework
   `gen-env` CLI, run by `pf-deploy.sh` as a built-in per-host step; it projects
   it from the replayed `deploy.conf` environment (no separate `etc/env.prod`):
   `REPO_PATH=/srv/apps/simox`, `REPO_LOG=/var/log/simox`,
-  `REUTER_INI=/srv/apps/simox/etc/reuter.ini` and `EMA_TARGET=prod`. The `.env`
+  `REUTER_INI=/srv/apps/simox/etc/reuter.ini`, `SSL_DIR=/etc/simox/ssl` (the
+  `DEPLOY_SSL_DIR` value; omitted when that key is unset) and
+  `EMA_TARGET=prod`. The `.env`
   stays `MYSQL_*`-free — the socket lives in the `reuter.ini` section, not the
   environment. `reuter.ini` itself is a manually-maintained private file
   (values recorded from `ema create` output), shipped (whole) into `etc/` by the
@@ -190,7 +208,10 @@ and a `mariadb@<db>` systemd unit (enabled once, durable across reboots), then
 prints the `[<dbname>]` connectivity values (`SERVER`/`PORT`/
 `MYSQL_UNIX_PORT`) to record in the manual `reuter.ini`. The instance listens
 on TCP over ZeroTier so both the DB host and the app-only servers can serve the
-website against the same database. `ema values <db>` recovers a lost record.
+website against the same database. The host-level `ssl-ca` the instance
+verifies client certificates against is written into that `my.cnf` at first
+provision only, from `etc/ema.conf` — see [machine-certs.md](machine-certs.md).
+`ema values <db>` recovers a lost record.
 Never start `mysqld` manually in production; re-deploys leave running instances
 untouched.
 

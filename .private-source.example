@@ -1,12 +1,12 @@
 # Private config source pointer (git-ignored).
 #
 # The public repo ships only committed templates for the operational data
-# (etc/deploy.conf, etc/machines.ini, etc/reuter.ini, etc/team.ini, etc/hosts,
-# etc/host-hardening.php). The real values live in a separate,
-# access-controlled private repository — a small git repo whose tracked files
-# are `deploy.conf`, `machines.ini`, `reuter.ini`, `team.ini`, `hosts` and
-# `host-hardening.php` (mirroring this repo's etc/). This file tells simox's
-# `bin/fetch-private-data` where to find that repo.
+# (etc/deploy.conf, etc/machines.ini, etc/reuter.ini, etc/ema.conf,
+# etc/team.ini, etc/hosts, etc/host-hardening.php). The real values live in a
+# separate, access-controlled private repository — a small git repo whose
+# tracked files are `deploy.conf`, `machines.ini`, `reuter.ini`, `ema.conf`,
+# `team.ini`, `hosts` and `host-hardening.php` (mirroring this repo's etc/).
+# This file tells simox's `bin/fetch-private-data` where to find that repo.
 #
 # Copy this file to `.private-source` (untracked, machine-specific) and set
 # the one retrieval mechanism — a git URL (+ optional ref), fetched on demand
@@ -18,8 +18,9 @@
 #
 # The private repo's committed content is the single source of truth: no
 # machine runs on a loose, uncommitted copy. `reuter.ini` is the only file
-# that ever ships to a prod host (whole, via the framework's
-# DEPLOY_PRIVATE_FILES key); `deploy.conf` is deploy-machine-only (its values
+# every prod host receives (whole, via the framework's DEPLOY_PRIVATE_FILES
+# key; a host that provisions instances also gets `ema.conf` when the consumer
+# uses client-cert auth); `deploy.conf` is deploy-machine-only (its values
 # travel as replayed environment), and `machines.ini`, `team.ini`, `hosts` and
 # `host-hardening.php` stay dev/deploy-time and never leave the deploy
 # machine. A `.private-source` that sets no PRIVATE_DATA_GIT is an error, not

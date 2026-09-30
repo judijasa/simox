@@ -59,13 +59,15 @@ if has_tag web; then
     done
 
     mkdir -p /etc/simox
+    # etc/*.in are machine-rendered inputs; the .template suffix is reserved
+    # for private-config shapes (doc/system/private-config.md).
     sed \
         -e "s|@REUTER_INI@|$DEPLOY_REUTER_INI|g" \
         -e "s|@PHP_FPM_LOG@|$DEPLOY_LOG_DIR/php-fpm.log|g" \
-        etc/php-fpm-simox.conf.template > /etc/simox/php-fpm-simox.conf
+        etc/php-fpm-simox.conf.in > /etc/simox/php-fpm-simox.conf
     sed \
         -e "s|@PHP_FPM_BIN@|$DEPLOY_NIX_RESULT_DIR/result/bin/php-fpm|g" \
-        etc/php-fpm-simox.service.template > /etc/systemd/system/php-fpm-simox.service
+        etc/php-fpm-simox.service.in > /etc/systemd/system/php-fpm-simox.service
 
     systemctl daemon-reload
     systemctl enable php-fpm-simox.service

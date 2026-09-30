@@ -4,25 +4,25 @@
 ; etc/ as a real file by simox's bin/fetch-private-data via .private-source
 ; (see doc/system/private-config.md).
 ;
-; There is no longer one DB account per member: simox collapses the team onto
-; a single shared writer account. The framework gen-service-accounts reads
-; every IP value below (all keys except `subject`) as the `member` source and
-; pins 'simox'@<ip> to the `simox_member` role. Removing (or changing) an
-; entry here revokes the stale pin on the next reconcile.
+; One section per member, and no credential: simox collapses the team onto a
+; single shared writer account, so there is no per-member DB account and no
+; `password` key. The framework gen-service-accounts reads every
+; `hostname = ZeroTier IP` entry below as the `member` source and pins
+; 'simox'@<ip> to the `simox_member` role (ALL on simo0, SELECT on simo1).
+; Removing (or changing) an entry here revokes the stale pin on the next
+; reconcile.
 ;
-; `subject` is the member's client-certificate subject DN, used only for
-; client-cert issuance (`gen-cert new <member>`) — it no longer pins a DB
-; account. The CN is `<username>-<guid>` (a short random token) so
-; same-named members stay distinct and a leaked cert is rotated by issuing a
-; new cert with a new guid.
+; The same entries are what `gen-cert` matches this machine's own local IPv4
+; against to derive its client certificate's CN (see
+; doc/system/machine-certs.md) — the CN is the machine's pinned name here.
+; There is no `subject` key: REQUIRE X509 is a membership gate, not a subject
+; match, so a member's certificate is issued per machine, not per member.
 ;
-;   `gen-cert new <member>` reads the `subject` below for the CSR.
+;   `gen-cert` reads the entry matching this machine's IP for the CSR's CN.
 
 [john]
-subject          = /CN=john-a1b2c3d4/O=team
 john-workstation = 10.147.x.20
 john-laptop      = 10.147.x.21
 
 [jane]
-subject          = /CN=jane-9f8e7d6c/O=team
 jane-workstation = 10.147.x.30
