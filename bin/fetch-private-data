@@ -9,12 +9,12 @@
 # into the git-ignored var/private-data.
 #
 # The private repo's root layout is then COPIED into etc/ as real files, never
-# symlinked, so a checkout carries its own operational data. `deploy.conf`,
-# `reuter.ini`, `dev.conf` and `ema.conf` are required: the deploy flow sources
-# the first, the app cannot resolve a database without the second, the third
-# carries the dev values the framework sources (DBUSER, SSL_DIR) and gen-cert
-# reads, and the fourth is the host-level `ssl-ca` that gives the
-# `require: 'X509'` service account its server-side trust anchor.
+# symlinked, so a checkout carries its own operational data. `deploy.conf` and
+# `reuter.ini` are required: the deploy flow sources the first, and the app
+# cannot resolve a database without the second. `dev.conf` and `ema.conf` are
+# optional overrides now — their defaults are committed in etc/dev.default.conf
+# and etc/ema.default.conf, so a checkout works without the private copies and
+# only a host that diverges from a default needs one.
 # `machines.ini`, `team.ini`, `hosts` and `host-hardening.php` are copied only
 # when the private source provides them. Copying is idempotent: etc/<file> is
 # overwritten on every run, so a local edit to one of these files is lost — edit
@@ -68,8 +68,8 @@ fi
 
 # The tracked files, in the private repo's root layout: the required ones first
 # (a missing one is a hard error), then the optional ones.
-REQUIRED_FILES=(deploy.conf reuter.ini dev.conf ema.conf)
-OPTIONAL_FILES=(machines.ini team.ini hosts host-hardening.php)
+REQUIRED_FILES=(deploy.conf reuter.ini)
+OPTIONAL_FILES=(dev.conf ema.conf machines.ini team.ini hosts host-hardening.php)
 
 # copy_file <name> — install one private file into etc/. Returns 1 when the
 # private source does not provide it (the caller decides whether that is fatal).

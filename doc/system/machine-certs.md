@@ -15,8 +15,9 @@ this doc carries simox's data and the order to apply it in.
 
 ```bash
 # 1. dev machine, once: record this machine's hostname -> its ZeroTier IP in the
-#    private etc/team.ini (materialized by make dev-init), and set SSL_DIR in the
-#    private etc/dev.conf (template: etc/dev.conf.template):
+#    private etc/team.ini (materialized by make dev-init). SSL_DIR defaults to
+#    ~/.simox/ssl via the committed etc/dev.default.conf; set it in the optional
+#    etc/dev.conf override only to diverge:
 #      export SSL_DIR=~/.simox/ssl
 
 # 2. dev machine, repo root (nix develop): mint the key + CSR. The CN is derived,
@@ -69,9 +70,9 @@ subject: certificates signed by another project's CA do not chain to simox's.
 | Value | Where it lives | Consumed by |
 |---|---|---|
 | `require: 'X509'` | `pkg/roles-D0YRR7WII6V1XDZR/default.php` (committed) | framework `gen-service-accounts` → `REQUIRE X509` on every account |
-| dev machine `SSL_DIR` (`~/.simox/ssl`) | private `etc/dev.conf` (template: `etc/dev.conf.template`) | `gen-cert` (mint + install) |
+| dev machine `SSL_DIR` (`~/.simox/ssl`) | committed `etc/dev.default.conf` (override: `etc/dev.conf`) | `gen-cert` (mint + install) |
 | host `SSL_DIR` (`/etc/simox/ssl`) | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
-| host CA path (`/etc/simox/ssl/ca.crt`) | private `etc/ema.conf` `[default] ssl-ca` (template: `etc/ema.conf.template`) | `ema`, into each instance's `[mysqld]` |
+| host CA path (`/etc/simox/ssl/ca.crt`) | committed `etc/ema.default.conf` `[default] ssl-ca` (override: `etc/ema.conf`) | `ema`, into each instance's `[mysqld]` |
 
 The name is the same on both sides — `SSL_DIR` — because it is the same
 mechanism: one directory holding `client.crt` + `client.key`. `DEPLOY_SSL_DIR` is
@@ -79,7 +80,8 @@ the only path from the deploy machine's `deploy.conf` to that value; the
 certificate bytes themselves never travel through a deploy or a repo (only the
 public cert returns from the CA to the operator, who installs it on the host).
 
-`etc/ema.conf`'s `ssl-ca` is read at **first provision only**: `ema` writes it
+`etc/ema.default.conf`'s `ssl-ca` (overridden by `etc/ema.conf`) is read at
+**first provision only**: `ema` writes it
 into the instance's `<db>/my.cnf` `[mysqld]` when it creates that instance and
 never rewrites an existing one. On an instance already provisioned without it,
 the path has to be added to that `my.cnf` by hand (and the instance restarted) —
@@ -91,9 +93,10 @@ see `doc/system/add-database.md` for the instance layout.
 holding the CA key, so it stays a deliberate, occasionally-run step (it matters
 only once a machine must reach a database whose accounts require X509 — one
 machine in the network needs no certificate at all). What `dev-init` does is
-materialize the values the step reads: `etc/dev.conf` (`SSL_DIR`, relayed into
-`.env` by the framework's `init-local-env.sh`) and `etc/team.ini` (the
-hostname → IP registry `gen-cert` matches this machine against).
+materialize the values the step reads: `etc/team.ini` (the hostname → IP
+registry `gen-cert` matches this machine against) and, when a machine diverges
+from the committed `etc/dev.default.conf`, the optional `etc/dev.conf` override
+(`SSL_DIR`, relayed into `.env` by the framework's `init-local-env.sh`).
 
 `gen-cert` (from the repo root, inside `nix develop`) mints `client.key` +
 `client.csr` in the current directory; the CSR's CN is the `etc/team.ini`
@@ -116,9 +119,10 @@ require X509 — including a host connecting to a database it does not itself
 serve. The material is installed out of band under `/etc/simox/ssl` (the CA, the
 host's `client.crt` and `client.key`), never through the repo or the deploy: the
 private key must not travel, and the deploy swaps the repo directory anyway.
-`DEPLOY_SSL_DIR` is what tells the deployed app layer where that directory is;
-`etc/ema.conf`'s `ssl-ca` tells each instance on the host where the CA is. Both
-are deploy-machine values, so both arrive through `etc/deploy.conf` (see
+`DEPLOY_SSL_DIR` is what tells the deployed app layer where that directory is
+(a `deploy.conf` value, replayed to the host); the CA path each instance
+verifies against is the committed `etc/ema.default.conf` `ssl-ca` (overridden
+by the optional `etc/ema.conf`), which rides with the swapped repo (see
 [private-config.md](private-config.md)).
 
 Order matters: install the CA before the instances are provisioned (the

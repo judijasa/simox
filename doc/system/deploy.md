@@ -57,10 +57,11 @@ Connecting to a production server via `ema` needs the machine registry config:
   ssh config described below.
 - `.private-source` — a pointer to the private config repo (copy
   `.private-source.example`, set `PRIVATE_DATA_GIT`). `bin/fetch-private-data`
-  (run by `make dev-init`) copies the required `etc/deploy.conf`,
-  `etc/reuter.ini`, `etc/dev.conf` and `etc/ema.conf`, plus `etc/machines.ini`,
-  `etc/team.ini`, `etc/hosts` and `etc/host-hardening.php`, into `etc/` as real
-  files. See [private-config.md](private-config.md).
+  (run by `make dev-init`) copies the required `etc/deploy.conf` and
+  `etc/reuter.ini`, plus the optional `etc/dev.conf` and `etc/ema.conf`
+  overrides and `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
+  `etc/host-hardening.php`, into `etc/` as real files. See
+  [private-config.md](private-config.md).
 
 ## Dev ssh config
 
@@ -114,7 +115,7 @@ deployed to.
 simox's own private-config materialization (`bin/fetch-private-data` copies the
 real `etc/` files in locally), then the framework `pf-deploy.sh` CLI (shipped
 via Composer to `vendor/bin`) — which ships `DEPLOY_PRIVATE_FILES`
-(`reuter.ini`, `ema.conf`) to each target host and replays the `deploy.conf`
+(`reuter.ini`) to each target host and replays the `deploy.conf`
 environment to every remote step — and finally the per-host post-deploy step.
 On every deploy, the framework's generic `vendor/bin/pf-provision.sh` runs on
 the remote (idempotently) to assert the app user and create system directories
@@ -149,7 +150,8 @@ Apache www-data traversal on the repo dir and installing the nix-built php-fpm
   (`client.crt` + `client.key`), which the app layer presents when it connects
   over TCP (`/etc/simox/ssl` in prod, the `DEPLOY_SSL_DIR` value). Consumed by
   the framework's `Database` class and by the framework's `gen-cert` CLI on the
-  dev machine (where it comes from the private `etc/dev.conf` instead). Unset
+  dev machine (where it comes from the committed `etc/dev.default.conf`,
+  overridden by the optional `etc/dev.conf`). Unset
   means the app layer connects without a certificate — fine until an account
   requires X509. See [machine-certs.md](machine-certs.md).
 - **`EMA_TARGET`** — the binary sandbox/prod mode flag. The app layer
@@ -173,9 +175,9 @@ environment:
   `prod`, the app layer's default): under `EMA_TARGET=sandbox` (explicit
   opt-in) the app layer resolves its config itself from
   `var/sandbox/<name>-<GUID>/reuter.ini`. The consumer-chosen dev values come
-  from the private `etc/dev.conf`, which the script sources and relays into
-  `.env` (`DBUSER=simox`, `SSL_DIR=~/.simox/ssl`); the Makefile appends nothing
-  of its own.
+  from the committed `etc/dev.default.conf` (`DBUSER=simox`,
+  `SSL_DIR=~/.simox/ssl`), overridden by the optional `etc/dev.conf`; the
+  Makefile appends nothing of its own.
 - **prod** — every deploy regenerates `/srv/apps/simox/.env` via the framework
   `gen-env` CLI, run by `pf-deploy.sh` as a built-in per-host step; it projects
   it from the replayed `deploy.conf` environment (no separate `etc/env.prod`):
@@ -210,7 +212,8 @@ prints the `[<dbname>]` connectivity values (`SERVER`/`PORT`/
 on TCP over ZeroTier so both the DB host and the app-only servers can serve the
 website against the same database. The host-level `ssl-ca` the instance
 verifies client certificates against is written into that `my.cnf` at first
-provision only, from `etc/ema.conf` — see [machine-certs.md](machine-certs.md).
+provision only, from `etc/ema.default.conf` (overridden by the optional
+`etc/ema.conf`) — see [machine-certs.md](machine-certs.md).
 `ema values <db>` recovers a lost record.
 Never start `mysqld` manually in production; re-deploys leave running instances
 untouched.

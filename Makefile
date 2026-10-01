@@ -101,7 +101,8 @@ _dev-ssh-config:
 	@vendor/bin/gen-ssh-config
 
 # The framework's init-local-env.sh derives REPO_PATH/REPO_LOG and relays the
-# consumer-chosen dev values from the materialized etc/dev.conf into .env
-# (DBUSER, SSL_DIR) — this Makefile owns no dev values of its own.
+# consumer-chosen dev values (DBUSER, SSL_DIR) into .env — from the committed
+# etc/dev.default.conf, overridden by the materialized etc/dev.conf when present
+# — this Makefile owns no dev values of its own.
 _dev-init-local-env:
 	@vendor/bin/init-local-env.sh

@@ -61,14 +61,14 @@ export DEPLOY_SSL_DIR=/etc/simox/ssl
 # framework ships from the deploy machine's etc/ into the freshly swapped
 # etc/ on the host (whole, verbatim). `reuter.ini` is the required baseline —
 # every prod host needs it; deploy.conf itself is NOT shipped (its values
-# travel as replayed environment). Every host in this consumer's roster carries
-# a `db:` tag, so every host provisions an instance and needs `ema.conf` as
-# well (the host-level ssl-ca ema writes into each instance's [mysqld], the
-# server-side trust anchor of the X509 requirement; see
-# doc/system/private-config.md). The ship step tars exactly these names, so
-# each must exist in etc/ (materialized from the private repo by
-# bin/fetch-private-data) or the deploy fails.
-export DEPLOY_PRIVATE_FILES="reuter.ini ema.conf"
+# travel as replayed environment). `ema.conf` is no longer shipped: its value
+# (the host-level ssl-ca, the server-side trust anchor of the X509 requirement)
+# is now the committed default in etc/ema.default.conf, which rides with the
+# swapped repo — the override etc/ema.conf exists only when a host diverges
+# from it. The ship step tars exactly these names, so each must exist in etc/
+# (materialized from the private repo by bin/fetch-private-data) or the deploy
+# fails.
+export DEPLOY_PRIVATE_FILES="reuter.ini"
 
 # DEPLOY_NIX_RESULT_DIR: remote nix result parent.
 export DEPLOY_NIX_RESULT_DIR=/usr/local/simox

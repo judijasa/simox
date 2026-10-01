@@ -86,7 +86,7 @@ make deploy                        # every [prod] host in etc/machines.ini
 make deploy <host>                 # a single prod host (short name or ZeroTier IP)
 ```
 
-`make deploy` materializes the private config, runs the framework `pf-deploy.sh` (ships `reuter.ini` + `ema.conf`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
+`make deploy` materializes the private config, runs the framework `pf-deploy.sh` (ships `reuter.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
 
 ## Adding a Database
 

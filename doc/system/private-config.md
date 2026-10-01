@@ -1,6 +1,6 @@
 # Private configuration
 
-Date: 2026-09-08 (shipping moved to the framework 2026-09-20)
+Date: 2026-09-08 (shipping moved to the framework 2026-09-20; committed defaults 2026-10-01)
 Scope: the simox-specific private data and the delivery that puts it on dev and
 prod machines.
 
@@ -26,12 +26,12 @@ own client certificate — a separate, occasionally-run step, not part of
 
 ## Private data in simox
 
-| File | Public template | Private data | Ships to prod? |
+| File | Committed in public repo | Private data | Ships to prod? |
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
 | `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — via `DEPLOY_PRIVATE_FILES`** |
-| `etc/ema.conf` | `etc/ema.conf.template` | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **yes — via `DEPLOY_PRIVATE_FILES`** |
-| `etc/dev.conf` | `etc/dev.conf.template` | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
+| `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **no — the committed default rides with the repo; an override ships only if it diverges** |
+| `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
 | `etc/hosts` | `etc/hosts.template` | prod server name→IP aliases (feed the `/etc/hosts` merge and the generated ssh config) | no (dev-only) |
@@ -46,6 +46,13 @@ entries: the `/etc/hosts` merge (`make dev-init`) and the generated
 `~/.ssh/config.d/simox.conf`, where each entry becomes `ssh simox-<name>` as
 `root` with the project key (see [deploy.md](deploy.md#dev-ssh-config)).
 
+`etc/dev.default.conf` and `etc/ema.default.conf` are different from the rest:
+they are **consumed defaults** (real values the repo ships, so a checkout works
+without private data), not copy-me shapes. `.template` stays reserved for the
+copy-me files (`deploy.conf`, `reuter.ini`, `machines.ini`, `team.ini`, `hosts`,
+`host-hardening.php`); the two default files are read directly, with the
+git-ignored `*.conf` override layered on top only when a machine diverges.
+
 ## Delivery
 
 One retrieval mechanism — git, through `.private-source` — and two steps:
@@ -54,19 +61,22 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    fetches `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`, default `main`)
    into `var/private-data`, then copies the eight tracked files
    from there into `etc/` as **real files**, overwriting them on every run.
-   `etc/deploy.conf`, `etc/reuter.ini`, `etc/dev.conf` and `etc/ema.conf` are
-   required — a private source without them fails the step, because a checkout
-   that cannot deploy, connect or mint a certificate is worse than a loud stop —
-   while `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
+   `etc/deploy.conf` and `etc/reuter.ini` are required — a private source
+   without them fails the step, because a checkout that cannot deploy or
+   connect is worse than a loud stop. `etc/dev.conf` and `etc/ema.conf` are
+   optional overrides now: their defaults are committed in
+   `etc/dev.default.conf` and `etc/ema.default.conf`, so a checkout works
+   without the private copies and only a machine that diverges from a default
+   needs one. `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
    `etc/host-hardening.php` are copied only when the private source provides
    them. `make dev-init` runs it, so a dev checkout carries its own
-   `etc/reuter.ini`, `etc/dev.conf` and `etc/team.ini` (plus whatever else the
-   private repo carries). An absent `.private-source` makes the step a no-op,
-   and the repo then runs on its committed templates.
+   `etc/reuter.ini` and `etc/team.ini` (plus whatever else the private repo
+   carries). An absent `.private-source` makes the step a no-op, and the repo
+   then runs on its committed defaults.
 2. **Ship (framework, during deploy).** `pf-deploy.sh` ships the files named in
-   `DEPLOY_PRIVATE_FILES` (here `reuter.ini` and `ema.conf`) — and nothing else —
-   **whole** from the deploy machine's `etc/` into the freshly swapped `etc/`
-   on each `[prod]` host (the roster read locally from `etc/machines.ini` via
+   `DEPLOY_PRIVATE_FILES` (here `reuter.ini`) — and nothing else — **whole**
+   from the deploy machine's `etc/` into the freshly swapped `etc/` on each
+   `[prod]` host (the roster read locally from `etc/machines.ini` via
    `vendor/bin/pf-roster`). At the same time it replays the deploy machine's
    `deploy.conf` environment to every remote step, so the host's `gen-env`,
    `provision-extra.sh` and `server-side-post-deploy.sh` resolve `DEPLOY_*`
@@ -80,7 +90,9 @@ source repo; copying overwrites, so a local edit to one of these files is lost �
 the private repo is the place to change settings.
 
 Prod hosts have neither git nor the `.private-source` pointer, so they only ever
-receive `reuter.ini` and `ema.conf`, through the framework's ship step above.
+receive `reuter.ini` through the framework's ship step above; `ema.conf`'s
+host-level `ssl-ca` reaches them as the committed `etc/ema.default.conf` that
+rides with the swapped repo.
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
 credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
@@ -88,7 +100,7 @@ credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
 and those live only in the private repo, never in the public history. The
 `SIMOX_PASSWORD` key is **not** secret: the service account is passwordless, and
 what gates it is the `require: 'X509'` declaration in the roles package plus the
-host-level `ssl-ca` in `etc/ema.conf` (see [machine-certs.md](machine-certs.md)),
+host-level `ssl-ca` in `etc/ema.default.conf` (see [machine-certs.md](machine-certs.md)),
 so the key stays empty. The framework `gen-service-accounts` reconciles
 the account (create/drop, role-based) against the shared `pkg/roles-<GUID>`
 declaration but never writes a password back into this file — the template ships
@@ -99,12 +111,12 @@ grants) — is committed, not private.
 
 `reuter.ini` is the one private file **every** prod host needs whatever its
 role, so it always leaves the private repo for a host — and it ships **whole**
-(no inner filtering, no section splicing). `ema.conf` is the second: every host
-in this consumer's roster carries a `db:` tag, so every host provisions an
-instance and needs the host-level `ssl-ca` it carries. `DEPLOY_PRIVATE_FILES` is
-one list for all hosts, so a host that provisions nothing would simply ignore it.
-`dev.conf` never leaves the deploy machine — it is sourced there (the framework's
-`init-local-env.sh`) and read by `gen-cert`. `machines.ini` feeds the local
+(no inner filtering, no section splicing). `ema.conf` no longer needs to ship:
+its host-level `ssl-ca` is the committed default in `etc/ema.default.conf`,
+which rides with the swapped repo, so `DEPLOY_PRIVATE_FILES` names only
+`reuter.ini`. `dev.conf` never leaves the deploy machine — it is sourced there
+(the framework's `init-local-env.sh`, from the committed default then the
+optional override) and read by `gen-cert`. `machines.ini` feeds the local
 deploy roster, `team.ini` feeds
 `gen-cert`/`gen-team-accounts`/`gen-service-accounts`,
 `hosts` feeds the dev `/etc/hosts` merge and the generated ssh config on the
