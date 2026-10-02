@@ -3,8 +3,8 @@
 In production the site is served by a global system web server (Apache) that
 forwards PHP to the nix-built `php-fpm` over FastCGI — it does **not** run PHP
 as an Apache module (`mod_php`). The deploy's `web` step installs and manages
-the php-fpm pool config (`/etc/simox/php-fpm-simox.conf`) and systemd unit
-(`php-fpm-simox.service`) and starts the service. The Apache install, the
+the php-fpm pool config (`/etc/<app>/php-fpm-<app>.conf`) and systemd unit
+(`php-fpm-<app>.service`) and starts the service. The Apache install, the
 `mod_php` → php-fpm switch, the vhost and the site enable below are one-time
 manual steps that deploy does not manage; run them as root.
 
@@ -15,11 +15,11 @@ manual steps that deploy does not manage; run them as root.
 apt-get update && apt-get install -y apache2
 a2enmod proxy proxy_fcgi
 apache2ctl -M 2>/dev/null | grep -i php      # if mod_php appears: a2dismod php8.4
-# write /etc/apache2/sites-available/simox.conf (the vhost block below)
-a2dissite simox                              # keep the site disabled until the first deploy
+# write /etc/apache2/sites-available/<app>.conf (the vhost block below)
+a2dissite <app>                              # keep the site disabled until the first deploy
 
 # after the first deploy
-a2ensite simox && systemctl restart apache2
+a2ensite <app> && systemctl restart apache2
 ```
 
 ## Install Apache
@@ -63,15 +63,15 @@ not installed merely prints an error and exits non-zero.
 ## Vhost
 
 Point the vhost at the deploy directory and forward `.php` to the php-fpm
-socket. Write it to `/etc/apache2/sites-available/simox.conf`:
+socket. Write it to `/etc/apache2/sites-available/<app>.conf`:
 
 ```apache
-DocumentRoot "/srv/apps/simox/public"
-<Directory "/srv/apps/simox/public">
+DocumentRoot "/srv/apps/<app>/public"
+<Directory "/srv/apps/<app>/public">
     Require all granted
 </Directory>
 <FilesMatch "\.php$">
-    SetHandler "proxy:unix:/run/php-fpm-simox.sock|fcgi://localhost"
+    SetHandler "proxy:unix:/run/php-fpm-<app>.sock|fcgi://localhost"
 </FilesMatch>
 ```
 
@@ -82,20 +82,20 @@ php-fpm does not inherit Apache `SetEnv`.
 
 Do this **after the first deploy**, not before: Apache checks `DocumentRoot`
 while parsing the config and refuses to start when the path is missing
-(`AH00526: ... DocumentRoot '/srv/apps/simox/public' is not a directory, or is
-not readable`), and `/srv/apps/simox` appears only with that deploy's swap.
-Until then leave the site disabled (`a2dissite simox`) and Apache stopped.
+(`AH00526: ... DocumentRoot '/srv/apps/<app>/public' is not a directory, or is
+not readable`), and `/srv/apps/<app>` appears only with that deploy's swap.
+Until then leave the site disabled (`a2dissite <app>`) and Apache stopped.
 
 ```bash
-a2ensite simox
+a2ensite <app>
 systemctl restart apache2
 ```
 
 Deploy never touches Apache — its `web` step only restarts
-`php-fpm-simox.service` — so this vhost switch is the operator's step: once per
+`php-fpm-<app>.service` — so this vhost switch is the operator's step: once per
 host, plus a `systemctl reload apache2` after any later vhost edit. The site
-becomes reachable once the first deploy has created `/srv/apps/simox` and
-started `php-fpm-simox.service` (the socket the vhost proxies to).
+becomes reachable once the first deploy has created `/srv/apps/<app>` and
+started `php-fpm-<app>.service` (the socket the vhost proxies to).
 
 This is (relatively) safe because the browser physically cannot look "backward"
 into your root directory.

@@ -1,7 +1,7 @@
 # Adding a database
 
-The sequence for adding a database to simox. `simo0` is the reference case;
-`simo1` is the same sequence plus the replica build.
+The sequence for adding a database to this repo. `<primary>` is the reference
+case; `<replica>` is the same sequence plus the replica build.
 
 ## Quick setup
 
@@ -38,9 +38,9 @@ scaffolds `pkg/<pkg>-<GUID>/` (both shapes are in the framework's
 [doc/system/ema.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/ema.md)). The shared `pkg/roles-<GUID>/` package is untouched — its
 roles are global (`member`/`worker`/`web`), not per-database. For the new
 database's own grants, add a `pkg/<name>.roles-<GUID>/` package (mirroring
-`pkg/simo0.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
+`pkg/<primary>.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
 scoped with the `{{dbname}}` placeholder — e.g. `GRANT ALL PRIVILEGES ON
-{{dbname}}.* TO simox_worker;`. A `db:<name>` tag pins no role of its own:
+{{dbname}}.* TO <account>_worker;`. A `db:<name>` tag pins no role of its own:
 access follows what a host runs (`worker`/`web`) or its members, never what
 database it stores.
 

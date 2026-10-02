@@ -1,14 +1,15 @@
-# Read-replica bootstrap (simo0 -> simo1)
+# Read-replica bootstrap (`<primary>` -> `<replica>`)
 
-How `simo1` is created as the read-only replica of the writable primary
-`simo0`. The replica serves the website (`simox` account) and can offload reads
-from `simox`. Naming convention: the primary is `0`-suffixed (`simo0`), its
-replica `1`-suffixed (`simo1`).
+How `<replica>` is created as the read-only replica of the writable primary
+`<primary>`. The replica serves the website (`<account>`) and can offload reads
+from `<primary>`. Naming convention (a consumer choice): the primary and its
+replica carry distinct database names — the examples below use the `0`-suffixed
+`<primary>` and `1`-suffixed `<replica>` pair.
 
 Two operator steps, both run from this repo's root: the framework's
 `replica-bootstrap` CLI prepares the transport account and a snapshot on
-`simo0`, then `ema create` builds the replica on `simo1`. The mechanism is
-upstream — this document carries only the simox-side policy:
+`<primary>`, then `ema create` builds the replica on `<replica>`. The mechanism
+is upstream — this document carries only the consumer-side policy:
 
 - the CLI — flags, the `etc/reuter.ini` lookup, snapshot + coordinate, the
   primary's host requirements: the framework's
@@ -20,28 +21,28 @@ upstream — this document carries only the simox-side policy:
 ## Quick setup
 
 ```bash
-# primary (simo0): enable binary logging (log_bin) in its instance my.cnf and
-#                  restart it
+# primary (<primary>): enable binary logging (log_bin) in its instance my.cnf
+#                      and restart it
 # both hosts: install the MariaDB backup package (mariabackup)
 
 # from this repo's root
-vendor/bin/pf-host simo1                     # -> <simo1-ip>
-vendor/bin/replica-bootstrap --primary simo0 --replica-host <simo1-ip>
+vendor/bin/pf-host <replica>                 # -> <replica-ip>
+vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip>
 
-# on simo1, inside a tmux-remote session
-ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-simo0
+# on <replica>, inside a tmux-remote session
+ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
-# then record the printed [simo1] section in the private etc/reuter.ini
+# then record the printed [<replica>] section in the private etc/reuter.ini
 ```
 
-## What simox owns
+## What this repo owns
 
-1. **A live `simo0`** with its schema applied (`ema create
-   srv/simo0-D03J4K6RM0K7X8E4`).
-2. **The `srv/simo1-D0L4SEWTLXQQSVJC` package** — `type=replica`,
-   `replica_of=simo0`, and no `dependencies`/`upgrade.sql`: `simo1`'s schema
-   arrives from the primary via replication, never from a schema builder. It
-   sets `replica_ssl_verify_server_cert: false` explicitly, so ema
+1. **A live `<primary>`** with its schema applied (`ema create
+   srv/<primary>-<GUID>`).
+2. **The `srv/<replica>-<GUID>` package** — `type=replica`,
+   `replica_of=<primary>`, and no `dependencies`/`upgrade.sql`: `<replica>`'s
+   schema arrives from the primary via replication, never from a schema
+   builder. It sets `replica_ssl_verify_server_cert: false` explicitly, so ema
    emits `MASTER_SSL_VERIFY_SERVER_CERT=0` — verification stays off while
    the primary's certificate is the self-signed one; flip it to `true` once
    a CA is provisioned.
@@ -51,9 +52,9 @@ ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-sim
    no roles and must not manage its `*.*` grant. It *is* declared in the package
    `allowlist` so the closed-world drop pass keeps it (the framework's drop
    floor is only `root`/`mariadb.sys`).
-4. **`simo0`'s host prerequisites.** Two prerequisites must hold before the
-   run: the MariaDB backup package (`mariabackup`) installed on `simo0`, and
-   binary logging (`log_bin`) enabled on `simo0`. The bootstrap checks only
+4. **`<primary>`'s host prerequisites.** Two prerequisites must hold before the
+   run: the MariaDB backup package (`mariabackup`) installed on `<primary>`, and
+   binary logging (`log_bin`) enabled on `<primary>`. The bootstrap checks only
    the first — it aborts with an `ERROR:` line if `mariabackup` is missing. It
    does **not** check binlog: verify it manually, or the snapshot ships with
    no binlog coordinate and `ema create` fails on the replica host instead. A
@@ -62,26 +63,27 @@ ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-sim
 ## Run it
 
 ```bash
-vendor/bin/pf-host simo1                     # the replica's ZeroTier IP
-vendor/bin/replica-bootstrap --primary simo0 --replica-host <simo1-ip> --dry-run
-vendor/bin/replica-bootstrap --primary simo0 --replica-host <simo1-ip>
+vendor/bin/pf-host <replica>                 # the replica's ZeroTier IP
+vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip> --dry-run
+vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip>
 ```
 
 `--replica-host` takes the literal IP `pf-host` prints, not a name: the CLI uses
 it both as the `root@<ip>` SSH/scp target and as the `'replication'@'<ip>'` host
-pin, which must be the address `simo0` sees as the replica's client source (the
-framework's CLI doc has the full argument).
+pin, which must be the address `<primary>` sees as the replica's client source
+(the framework's CLI doc has the full argument).
 
-Then build the replica on `simo1` — inside a `tmux-remote` session, like any
+Then build the replica on `<replica>` — inside a `tmux-remote` session, like any
 database creation ([add-database.md](add-database.md)):
 
 ```bash
-ema create srv/simo1-D0L4SEWTLXQQSVJC --from-snapshot /root/replica-snapshot-simo0
+ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 ```
 
 ## After the build
 
-Record `simo1`'s `[simo1]` section in the private `etc/reuter.ini` — the section
-`ema create` printed, or `ema values simo1` if it was lost. The website reads
-`simo1`, not `simo0`; both sections carry the single `simox` password key
-(`simox` is ALL on `simo0` and SELECT on `simo1`).
+Record `<replica>`'s `[<replica>]` section in the private `etc/reuter.ini` — the
+section `ema create` printed, or `ema values <replica>` if it was lost. The
+website reads `<replica>`, not `<primary>`; both sections carry the single
+`<account>` password key (`<account>` is ALL on `<primary>` and SELECT on
+`<replica>`).

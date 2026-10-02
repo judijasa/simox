@@ -1,15 +1,15 @@
 # Machine certs and the X509 service account
 
 Date: 2026-09-29
-Scope: simox's client-certificate values and the operator steps around them —
+Scope: this repo's client-certificate values and the operator steps around them —
 the per-machine certificate the `require: 'X509'` service account demands, the
 CA the prod instances verify it against, and where each value comes from. The
-mechanism is not simox's: the framework owns the client half (the `SSL_DIR` read
-in the app layer, the `gen-cert` CLI, the `etc/dev.conf` sourcing) and `ema` the
-server half (`ssl-ca` in each instance's `[mysqld]`). The generic contract is in
-the framework's
+mechanism is not this repo's: the framework owns the client half (the `SSL_DIR`
+read in the app layer, the `gen-cert` CLI, the `etc/dev.conf` sourcing) and
+`ema` the server half (`ssl-ca` in each instance's `[mysqld]`). The generic
+contract is in the framework's
 [doc/system/machine-certs.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/machine-certs.md);
-this doc carries simox's data and the order to apply it in.
+this doc carries this repo's data and the order to apply it in.
 
 ## Quick setup
 
@@ -17,8 +17,8 @@ this doc carries simox's data and the order to apply it in.
 # 1. dev machine, once: record this machine's hostname -> its ZeroTier IP in the
 #    private etc/team.ini (materialized by make dev-init). SSL_DIR defaults to
 #    the generic ~/.ssl via the committed etc/dev.default.conf; the private
-#    etc/dev.conf override sets the actual ~/.simox/ssl (diverge only):
-#      export SSL_DIR=~/.simox/ssl
+#    etc/dev.conf override sets the actual ~/.<app>/ssl (diverge only):
+#      export SSL_DIR=~/.<app>/ssl
 
 # 2. dev machine, repo root (nix develop): mint the key + CSR. The CN is derived,
 #    never typed — the team.ini hostname whose IP is one of this machine's own.
@@ -29,16 +29,16 @@ gen-cert
 #    doc/system/cert-authority.md.
 
 # 4. dev machine, repo root: install the signed cert next to the local key and
-#    write the ~/.my.cnf.d/simox.cnf drop-in (mysql CLI over TCP)
+#    write the ~/.my.cnf.d/<app>.cnf drop-in (mysql CLI over TCP)
 gen-cert install client.crt
 
 # 5. prod host, once: install the CA and CRL (the server-side trust anchors)
 #    and the host's own client certificate out of band (never through a
 #    deploy), then reconcile the accounts
-install -m 0644 simox-ca.crt        /etc/simox/ssl/ca.crt
-install -m 0644 crl.pem             /etc/simox/ssl/crl.pem
-install -m 0644 <host>-client.crt   /etc/simox/ssl/client.crt
-install -m 0600 <host>-client.key   /etc/simox/ssl/client.key
+install -m 0644 <app>-ca.crt        /etc/<app>/ssl/ca.crt
+install -m 0644 crl.pem             /etc/<app>/ssl/crl.pem
+install -m 0644 <host>-client.crt   /etc/<app>/ssl/client.crt
+install -m 0600 <host>-client.key   /etc/<app>/ssl/client.key
 gen-service-accounts <db> -n        # review: REQUIRE X509 on every account
 gen-service-accounts <db>           # apply
 ```
@@ -49,7 +49,7 @@ One client certificate per **machine**, not per account: the same `client.crt`
 is presented for every service account that machine connects as. `REQUIRE X509`
 is a membership gate — it checks only that the presented certificate chains to a
 CA the server trusts, and never matches the subject. Identity stays what it
-already was: the source-IP host pin (`'simox'@'<ip>'`, derived by
+already was: the source-IP host pin (`'<account>'@'<ip>'`, derived by
 `gen-service-accounts` from `etc/team.ini` / `etc/machines.ini`). The
 certificate's CN is an audit identity (which machine connected), visible in the
 instance's audit log — not an authorization check.
@@ -58,24 +58,25 @@ Why the extra gate at all: the pin alone is satisfied by any peer on the trusted
 network that can claim the address, so it authenticates the network position, not
 the machine. A certificate adds a private key the peer must hold.
 
-The account stays **passwordless** (`SIMOX_PASSWORD=` empty in `reuter.ini`):
+The account stays **passwordless** (`<ACCOUNT>_PASSWORD=` empty in `reuter.ini`):
 the cert is not a replacement for a password, it is the condition under which a
 passwordless account is allowed to connect. Both halves must be in place — the
 server-side `ssl-ca` (or `REQUIRE X509` authenticates nobody) and a cert on the
 client (or the account refuses it).
 
-Per-project isolation comes from simox running **its own CA**, not from the
-subject: certificates signed by another project's CA do not chain to simox's.
+Per-project isolation comes from each project running **its own CA**, not from
+the subject: certificates signed by another project's CA do not chain to this
+project's.
 
 ## Values
 
 | Value | Where it lives | Consumed by |
 |---|---|---|
-| `require: 'X509'` | `pkg/roles-D0YRR7WII6V1XDZR/default.php` (committed) | framework `gen-service-accounts` → `REQUIRE X509` on every account |
-| dev machine `SSL_DIR` (`~/.simox/ssl`) | private `etc/dev.conf` override (committed `etc/dev.default.conf` ships the generic `~/.ssl`) | `gen-cert` (mint + install) |
-| host `SSL_DIR` (`/etc/simox/ssl`) | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
-| host CA path (`/etc/simox/ssl/ca.crt`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
-| host CRL path (`/etc/simox/ssl/crl.pem`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
+| `require: 'X509'` | `pkg/roles-<GUID>/default.php` (committed) | framework `gen-service-accounts` → `REQUIRE X509` on every account |
+| dev machine `SSL_DIR` (`~/.<app>/ssl`) | private `etc/dev.conf` override (committed `etc/dev.default.conf` ships the generic `~/.ssl`) | `gen-cert` (mint + install) |
+| host `SSL_DIR` (`/etc/<app>/ssl`) | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
+| host CA path (`/etc/<app>/ssl/ca.crt`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
+| host CRL path (`/etc/<app>/ssl/crl.pem`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
 
 The name is the same on both sides — `SSL_DIR` — because it is the same
 mechanism: one directory holding `client.crt` + `client.key`. `DEPLOY_SSL_DIR` is
@@ -106,7 +107,7 @@ from the committed `etc/dev.default.conf`, the optional `etc/dev.conf` override
 hostname whose IP equals one of this machine's local addresses, so the machine
 must be on the overlay before it can be issued a certificate. `gen-cert install
 <client.crt>` then places the returned cert and the local key into `$SSL_DIR`
-and writes the tagged `~/.my.cnf.d/simox.cnf` drop-in, so the `mysql` CLI
+and writes the tagged `~/.my.cnf.d/<app>.cnf` drop-in, so the `mysql` CLI
 presents the certificate over TCP as well. Both the key and the drop-in are
 idempotent — re-running the generator replaces the managed region and nothing
 else.
@@ -122,7 +123,7 @@ require X509 — including a host connecting to a database it does not itself
 serve. The material is installed out of band, never through the repo or the
 deploy: the private key must not travel, and the deploy swaps the repo
 directory anyway. The host's own client certificate lives under
-`/etc/simox/ssl` (`ca.crt`, `crl.pem`, `client.crt` + `client.key`); the
+`/etc/<app>/ssl` (`ca.crt`, `crl.pem`, `client.crt` + `client.key`); the
 server-side trust anchors — the CA and the CRL every instance verifies client
 certificates against — are the `etc/ema.default.conf` `ssl-ca`/`ssl-crl` paths
 (overridden by `etc/ema.conf`), which ride with the swapped repo (see
@@ -144,7 +145,7 @@ keeps an `index.txt` ledger, `openssl ca -revoke <serial>` marks a cert revoked,
 and `openssl ca -gencrl -out crl.pem` emits the CRL.
 
 The CRL is a server-side trust anchor, beside the CA: the host CRL path is
-`/etc/simox/ssl/crl.pem` (the `etc/ema.conf` override, over the generic
+`/etc/<app>/ssl/crl.pem` (the `etc/ema.conf` override, over the generic
 `/etc/ssl/crl.pem` committed default), and ema writes it into each instance's
 `[mysqld]` beside `ssl-ca` at first provision. The operator installs the file
 out of band — the same as the CA — never through a repo or a deploy.

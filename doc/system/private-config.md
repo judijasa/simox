@@ -1,10 +1,10 @@
 # Private configuration
 
 Date: 2026-09-08 (shipping moved to the framework 2026-09-20; committed defaults 2026-10-01)
-Scope: the simox-specific private data and the delivery that puts it on dev and
+Scope: the consumer-specific private data and the delivery that puts it on dev and
 prod machines.
 
-simox owns the materialization half: the `.private-source` pointer and
+this repo owns the materialization half: the `.private-source` pointer and
 `bin/fetch-private-data` (copy the real `etc/` files in locally). The shipping
 half is the framework's: it ships the files named in `DEPLOY_PRIVATE_FILES`
 into the freshly swapped `etc/` on each host and replays the deploy machine's
@@ -24,12 +24,12 @@ A machine that must reach a database whose accounts require X509 also needs its
 own client certificate — a separate, occasionally-run step, not part of
 `dev-init`. See [machine-certs.md](machine-certs.md).
 
-## Private data in simox
+## Private data in this repo
 
 | File | Committed in public repo | Private data | Ships to prod? |
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
-| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `simo0`/`simo1` (recorded from `ema create`) | **yes — via `DEPLOY_PRIVATE_FILES`** |
+| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`) | **yes — via `DEPLOY_PRIVATE_FILES`** |
 | `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **no — the committed default rides with the repo; an override ships only if it diverges** |
 | `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
@@ -43,7 +43,7 @@ framework sources it locally and replays its environment to the host, so the
 public repo keeps only `etc/deploy.conf.template`. `etc/hosts` is a dev-only
 name→IP convenience mapping. It feeds two dev-machine conveniences from the same
 entries: the `/etc/hosts` merge (`make dev-init`) and the generated
-`~/.ssh/config.d/simox.conf`, where each entry becomes `ssh simox-<name>` as
+`~/.ssh/config.d/<app>.conf`, where each entry becomes `ssh <app>-<name>` as
 `root` with the project key (see [deploy.md](deploy.md#dev-ssh-config)).
 
 `etc/dev.default.conf` and `etc/ema.default.conf` are different from the rest:
@@ -95,16 +95,16 @@ host-level `ssl-ca` reaches them as the committed `etc/ema.default.conf` that
 rides with the swapped repo.
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
-credentials. Each `[simo0]`/`[simo1]` section carries `SERVER`/`PORT`/
+credentials. Each `[<primary>]`/`[<replica>]` section carries `SERVER`/`PORT`/
 `MYSQL_UNIX_PORT` (ZeroTier IPs and socket paths, recorded from `ema create`),
 and those live only in the private repo, never in the public history. The
-`SIMOX_PASSWORD` key is **not** secret: the service account is passwordless, and
+`<ACCOUNT>_PASSWORD` key is **not** secret: the service account is passwordless, and
 what gates it is the `require: 'X509'` declaration in the roles package plus the
 host-level `ssl-ca` in `etc/ema.default.conf` (see [machine-certs.md](machine-certs.md)),
 so the key stays empty. The framework `gen-service-accounts` reconciles
 the account (create/drop, role-based) against the shared `pkg/roles-<GUID>`
 declaration but never writes a password back into this file — the template ships
-`SIMOX_PASSWORD=` empty. The service-account *policy* itself — which accounts
+`<ACCOUNT>_PASSWORD=` empty. The service-account *policy* itself — which accounts
 exist and on which databases (the shared `pkg/roles-<GUID>`
 `sources`/`accounts` declaration plus the per-database `pkg/<db>.roles-<GUID>`
 grants) — is committed, not private.

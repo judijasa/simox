@@ -35,19 +35,19 @@ A single account, passwordless and gated by `REQUIRE X509`. Each source maps to
 a role; a host carrying a tag
 gets the corresponding role, and a host carrying several tags gets the union:
 
-| Source   | Role           | `simo0`        | `simo1` |
-|----------|----------------|----------------|---------|
-| `member` | `simox_member` | ALL PRIVILEGES | SELECT  |
-| `worker` | `simox_worker` | ALL PRIVILEGES | SELECT  |
-| `web`    | `simox_web`    | —              | SELECT  |
+| Source   | Role               | `<primary>`    | `<replica>` |
+|----------|--------------------|----------------|-------------|
+| `member` | `<account>_member` | ALL PRIVILEGES | SELECT      |
+| `worker` | `<account>_worker` | ALL PRIVILEGES | SELECT      |
+| `web`    | `<account>_web`    | —              | SELECT      |
 
 `member` resolves to the `etc/team.ini` member IPs; `worker` and `web` are
 `etc/machines.ini` bare tags matched exactly. A `db:<name>` tag is a
 provisioning marker only — it pins no role. A role with no grant on a database
-means the account is not wanted there, so `simox_web` being absent from `simo0`
-drops `simox@<ip>` on `simo0` for a web host. Privileges therefore follow what
-a host runs (`worker`, `web`) — never the database it happens to store, so a
-host hosting the read replica cannot write the primary.
+means the account is not wanted there, so `<account>_web` being absent from
+`<primary>` drops `<account>@<ip>` on `<primary>` for a web host. Privileges
+therefore follow what a host runs (`worker`, `web`) — never the database it
+happens to store, so a host hosting the read replica cannot write the primary.
 
 ## Authentication
 
@@ -56,7 +56,7 @@ connection to be accepted:
 
 1. **Overlay membership** — every operational address is a ZeroTier IP, so
    nothing outside the network can reach the instance.
-2. **Source-IP host pin** — `'simox'@'<ip>'`, one row per host, derived by
+2. **Source-IP host pin** — `'<account>'@'<ip>'`, one row per host, derived by
    `gen-service-accounts` from `etc/team.ini` / `etc/machines.ini`. The account
    name is not a credential: the pin is the whole identity.
 3. **Client certificate** — `require: 'X509'` in the roles package makes
@@ -75,9 +75,9 @@ hostname) and serves as the audit trail. Issuing, installing and rotating the
 certificates is documented in [machine-certs.md](machine-certs.md).
 
 Routing: the website (`public/index.php`, `public/insight.php`) reads from
-`simo1` via `simox`; the indexer and pipeline agents write to `simo0` via
-`simox`. The `replication` transport account (used only by the replica's
-replication thread) is created by `vendor/bin/replica-bootstrap`, which the
-operator runs from the dev machine against the primary; it is declared in the
-roles package `allowlist` so the reconcile never drops it, and it stays
-passwordless and host-pinned to the replica host — it is not certed.
+`<replica>` via `<account>`; the indexer and pipeline agents write to
+`<primary>` via `<account>`. The `replication` transport account (used only by
+the replica's replication thread) is created by `vendor/bin/replica-bootstrap`,
+which the operator runs from the dev machine against the primary; it is
+declared in the roles package `allowlist` so the reconcile never drops it, and
+it stays passwordless and host-pinned to the replica host — it is not certed.
