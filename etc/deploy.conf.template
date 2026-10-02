@@ -55,7 +55,7 @@ export DEPLOY_REUTER_INI=/srv/apps/simox/etc/reuter.ini
 # provisioned out of band on the host — it is a private key, never shipped by
 # the deploy, and only the public cert travels back from the CA. See
 # doc/system/machine-certs.md.
-export DEPLOY_SSL_DIR=/etc/simox/ssl
+export DEPLOY_SSL_DIR=/etc/<app>/ssl
 
 # DEPLOY_PRIVATE_FILES: space-separated etc/-relative private file names the
 # framework ships from the deploy machine's etc/ into the freshly swapped

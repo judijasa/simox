@@ -71,11 +71,30 @@ The file is generated and idempotent — never hand-edit it; edit `etc/hosts` an
 
 A machine that must connect to a production database also needs its own TLS client certificate, since the service accounts require X509. That is a separate, occasionally-run step (the certificate is signed by the project CA, which only the operator holds) — see [doc/system/machine-certs.md](doc/system/machine-certs.md).
 
+## Public repo, private config (human-in-the-loop)
+
+I want this repository to remain public and reusable, while it is in production and under
+continuous development. For this reason, the deployment's real values never appear here,
+only templates or default values.
+The real values live in a separate private repo (`.private-source` → `PRIVATE_DATA_GIT`),
+are materialized into `etc/` at deploy time, and are never committed.
+
+Because the private values sit outside this repo's history, two points in the flow
+depend on an operator rather than on git:
+
+- **Materialization — `bin/fetch-private-data`.** The operator chooses to run it, and
+  it copies whatever the private repo actually provides.
+- **Deploy-time confirmation.** When a private file the deploy would otherwise ship is
+  absent, the deploy asks the operator to confirm: intentional or a missed materialization.
+
+The alternative — keeping both a public and a private fork — would leave the public (or
+private) fork vulnerable to drift.
+
 ## Production Server Setup
 
 **1. Apache vhost + php-fpm** — one-time manual steps (vhost + FastCGI to the nix-built php-fpm). See [doc/system/web_setup.md](doc/system/web_setup.md).
 
-**2. TLS cert material** — install the project CA and the host's client certificate under `/etc/simox/ssl` (out of band, before the accounts are reconciled with `REQUIRE X509`). See [doc/system/machine-certs.md](doc/system/machine-certs.md).
+**2. TLS cert material** — install the project CA and the host's client certificate under `/etc/<app>/ssl` (out of band, before the accounts are reconciled with `REQUIRE X509`). See [doc/system/machine-certs.md](doc/system/machine-certs.md).
 
 **3. Cron daemon** — install a cron daemon on each prod host. The deploy's cron step writes the `#[CronJob]` jobs and restarts the daemon; the package/service name is distro-specific (`cron`, `crond`, or `cronie` depending on the OS).
 
