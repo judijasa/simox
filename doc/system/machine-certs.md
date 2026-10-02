@@ -24,8 +24,7 @@ this doc carries this repo's data and the order to apply it in.
 gen-cert
 
 # 3. offline CA machine: sign the CSR — a standard `openssl ca` operation (the
-#    CA key never leaves that machine). See the private config repo's
-#    doc/system/cert-authority.md.
+#    CA key never leaves that machine).
 
 # 4. dev machine, repo root: install the signed cert next to the local key and
 #    write the ~/.my.cnf.d/<app>.cnf drop-in (mysql CLI over TCP)
