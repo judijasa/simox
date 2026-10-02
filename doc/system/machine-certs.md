@@ -16,9 +16,8 @@ this doc carries this repo's data and the order to apply it in.
 ```bash
 # 1. dev machine, once: record this machine's hostname -> its ZeroTier IP in the
 #    private etc/team.ini (materialized by make dev-init). SSL_DIR defaults to
-#    the generic ~/.ssl via the committed etc/dev.default.conf; the private
-#    etc/dev.conf override sets the actual ~/.<app>/ssl (diverge only):
-#      export SSL_DIR=~/.<app>/ssl
+#    a value committed in etc/dev.default.conf; the private etc/dev.conf override
+#    sets the actual value.
 
 # 2. dev machine, repo root (nix develop): mint the key + CSR. The CN is derived,
 #    never typed — the team.ini hostname whose IP is one of this machine's own.
@@ -35,10 +34,14 @@ gen-cert install client.crt
 # 5. prod host, once: install the CA and CRL (the server-side trust anchors)
 #    and the host's own client certificate out of band (never through a
 #    deploy), then reconcile the accounts
-install -m 0644 <app>-ca.crt        /etc/<app>/ssl/ca.crt
-install -m 0644 crl.pem             /etc/<app>/ssl/crl.pem
+install -m 0644 <app>-ca.crt        /etc/ssl/ca.crt
+install -m 0644 crl.pem             /etc/ssl/crl.pem
 install -m 0644 <host>-client.crt   /etc/<app>/ssl/client.crt
 install -m 0600 <host>-client.key   /etc/<app>/ssl/client.key
+#    client.crt + client.key are the client certificate and its private key —
+#    they stay together under the host SSL_DIR (the DEPLOY_SSL_DIR value from
+#    deploy.conf); ca.crt + crl.pem are the separate server-side trust anchors
+#    (ssl-ca / ssl-crl paths).
 gen-service-accounts <db> -n        # review: REQUIRE X509 on every account
 gen-service-accounts <db>           # apply
 ```
@@ -73,10 +76,10 @@ project's.
 | Value | Where it lives | Consumed by |
 |---|---|---|
 | `require: 'X509'` | `pkg/roles-<GUID>/default.php` (committed) | framework `gen-service-accounts` → `REQUIRE X509` on every account |
-| dev machine `SSL_DIR` (`~/.<app>/ssl`) | private `etc/dev.conf` override (committed `etc/dev.default.conf` ships the generic `~/.ssl`) | `gen-cert` (mint + install) |
-| host `SSL_DIR` (`/etc/<app>/ssl`) | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
-| host CA path (`/etc/<app>/ssl/ca.crt`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
-| host CRL path (`/etc/<app>/ssl/crl.pem`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
+| dev machine `SSL_DIR` | private `etc/dev.conf` override (committed `etc/dev.default.conf` ships the generic `~/.ssl`) | `gen-cert` (mint + install) |
+| host `SSL_DIR` | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
+| host CA path | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
+| host CRL path | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
 
 The name is the same on both sides — `SSL_DIR` — because it is the same
 mechanism: one directory holding `client.crt` + `client.key`. `DEPLOY_SSL_DIR` is
@@ -122,8 +125,8 @@ A host needs its own certificate to connect to any instance whose accounts
 require X509 — including a host connecting to a database it does not itself
 serve. The material is installed out of band, never through the repo or the
 deploy: the private key must not travel, and the deploy swaps the repo
-directory anyway. The host's own client certificate lives under
-`/etc/<app>/ssl` (`ca.crt`, `crl.pem`, `client.crt` + `client.key`); the
+directory anyway. The host's own client certificate (`client.crt` +
+`client.key`) lives under the host `SSL_DIR` (the `DEPLOY_SSL_DIR` value); the
 server-side trust anchors — the CA and the CRL every instance verifies client
 certificates against — are the `etc/ema.conf` `ssl-ca`/`ssl-crl` paths (the
 override shipped via `DEPLOY_PRIVATE_FILES`, over the generic
@@ -145,8 +148,8 @@ keeps an `index.txt` ledger, `openssl ca -revoke <serial>` marks a cert revoked,
 and `openssl ca -gencrl -out crl.pem` emits the CRL.
 
 The CRL is a server-side trust anchor, beside the CA: the host CRL path is
-`/etc/<app>/ssl/crl.pem` (the `etc/ema.conf` override, over the generic
-`/etc/ssl/crl.pem` committed default), and ema writes it into each instance's
+the `etc/ema.conf` `ssl-crl` override (over the generic `/etc/ssl/crl.pem`
+committed default), and ema writes it into each instance's
 `[mysqld]` beside `ssl-ca` at first provision. The operator installs the file
 out of band — the same as the CA — never through a repo or a deploy.
 
