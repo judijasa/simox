@@ -32,7 +32,8 @@ gen-cert install client.crt
 
 # 5. prod host, once: install the CA and CRL (the server-side trust anchors)
 #    and the host's own client certificate out of band (never through a
-#    deploy), then reconcile the accounts
+#    deploy), then reconcile the accounts. What each file is and where it comes
+#    from: [Prod hosts](#prod-hosts).
 install -m 0644 <app>-ca.crt        /etc/ssl/ca.crt
 install -m 0644 crl.pem             /etc/ssl/crl.pem
 install -m 0644 <host>-client.crt   /etc/<app>/ssl/client.crt
