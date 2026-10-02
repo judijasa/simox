@@ -9,12 +9,15 @@
 # into the git-ignored var/private-data.
 #
 # The private repo's root layout is then COPIED into etc/ as real files, never
-# symlinked, so a checkout carries its own operational data. `deploy.conf` and
-# `reuter.ini` are required: the deploy flow sources the first, and the app
-# cannot resolve a database without the second. `dev.conf` and `ema.conf` are
-# optional overrides now — their defaults are committed in etc/dev.default.conf
-# and etc/ema.default.conf, so a checkout works without the private copies and
-# only a host that diverges from a default needs one.
+# symlinked, so a checkout carries its own operational data. `deploy.conf` is
+# required: the deploy flow sources it, and a missing one fails the step.
+# `reuter.ini` is expected (every DB-connecting host needs it) but its absence
+# is not a materialization error — a no-database bootstrap legitimately has
+# none; it is warned here and confirmed by the deploy wrapper before shipping.
+# `dev.conf` and `ema.conf` are optional overrides now — their defaults are
+# committed in etc/dev.default.conf and etc/ema.default.conf, so a checkout
+# works without the private copies and only a host that diverges from a default
+# needs one.
 # `machines.ini`, `team.ini`, `hosts` and `host-hardening.php` are copied only
 # when the private source provides them. Copying is idempotent: etc/<file> is
 # overwritten on every run, so a local edit to one of these files is lost — edit
@@ -24,12 +27,12 @@
 # committed templates); a present pointer that sets no PRIVATE_DATA_GIT is an
 # error, not a silent skip.
 #
-# Prod hosts have neither git nor the pointer: they receive their runtime files
-# (reuter.ini, plus ema.conf on a host that provisions instances) from the
-# deploy machine's deploy step instead — the framework's DEPLOY_PRIVATE_FILES
-# ships them into the freshly swapped etc/, while deploy.conf's values travel as
-# replayed environment. dev.conf never leaves the dev machine. See
-# doc/system/private-config.md.
+# Prod hosts have neither git nor the pointer: they receive their runtime file
+# (reuter.ini) from the deploy machine's deploy step instead — the framework's
+# DEPLOY_PRIVATE_FILES ships it into the freshly swapped etc/ (a no-database
+# bootstrap ships none, confirmed by the deploy wrapper), while deploy.conf's
+# values travel as replayed environment. dev.conf never leaves the dev machine.
+# See doc/system/private-config.md.
 #
 # Usage: bin/fetch-private-data [target-dir]   (default: $PWD)
 
@@ -68,7 +71,7 @@ fi
 
 # The tracked files, in the private repo's root layout: the required ones first
 # (a missing one is a hard error), then the optional ones.
-REQUIRED_FILES=(deploy.conf reuter.ini)
+REQUIRED_FILES=(deploy.conf)
 OPTIONAL_FILES=(dev.conf ema.conf machines.ini team.ini hosts host-hardening.php)
 
 # copy_file <name> — install one private file into etc/. Returns 1 when the
@@ -92,6 +95,12 @@ for f in "${REQUIRED_FILES[@]}"; do
         exit 1
     fi
 done
+# reuter.ini is expected but not a hard prerequisite: a no-database bootstrap
+# ships none. Warn here; the deploy wrapper confirms the absence before it
+# ships (the framework skips an absent DEPLOY_PRIVATE_FILES name).
+if ! copy_file reuter.ini; then
+    echo "fetch-private-data: private source $SOURCE_DIR has no reuter.ini (no database provisioned yet — the deploy will confirm)." >&2
+fi
 for f in "${OPTIONAL_FILES[@]}"; do
     copy_file "$f" || true
 done

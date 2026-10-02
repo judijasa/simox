@@ -57,8 +57,9 @@ Connecting to a production server via `ema` needs the machine registry config:
   ssh config described below.
 - `.private-source` — a pointer to the private config repo (copy
   `.private-source.example`, set `PRIVATE_DATA_GIT`). `bin/fetch-private-data`
-  (run by `make dev-init`) copies the required `etc/deploy.conf` and
-  `etc/reuter.ini`, plus the optional `etc/dev.conf` and `etc/ema.conf`
+  (run by `make dev-init`) copies the required `etc/deploy.conf` and the
+  expected `etc/reuter.ini` (its absence is only warned — a no-database
+  bootstrap ships none), plus the optional `etc/dev.conf` and `etc/ema.conf`
   overrides and `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
   `etc/host-hardening.php`, into `etc/` as real files. See
   [private-config.md](private-config.md).

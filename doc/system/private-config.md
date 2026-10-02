@@ -61,10 +61,12 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    fetches `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`, default `main`)
    into `var/private-data`, then copies the eight tracked files
    from there into `etc/` as **real files**, overwriting them on every run.
-   `etc/deploy.conf` and `etc/reuter.ini` are required — a private source
-   without them fails the step, because a checkout that cannot deploy or
-   connect is worse than a loud stop. `etc/dev.conf` and `etc/ema.conf` are
-   optional overrides now: their defaults are committed in
+   `etc/deploy.conf` is required — a private source without it fails the step,
+   because a checkout that cannot deploy is worse than a loud stop.
+   `etc/reuter.ini` is expected but not a hard prerequisite: a no-database
+   bootstrap legitimately has none, so its absence is only warned here and
+   confirmed by the deploy wrapper before shipping. `etc/dev.conf` and
+   `etc/ema.conf` are optional overrides now: their defaults are committed in
    `etc/dev.default.conf` and `etc/ema.default.conf`, so a checkout works
    without the private copies and only a machine that diverges from a default
    needs one. `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
@@ -77,7 +79,9 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    `DEPLOY_PRIVATE_FILES` (here `reuter.ini`) — and nothing else — **whole**
    from the deploy machine's `etc/` into the freshly swapped `etc/` on each
    prod host (the roster read locally from `etc/machines.ini` via
-   `vendor/bin/pf-roster`). At the same time it replays the deploy machine's
+   `vendor/bin/pf-roster`), skipping any name that is absent from `etc/` —
+   `bin/deploy.sh` asks the operator to confirm such an absence first. At the
+   same time it replays the deploy machine's
    `deploy.conf` environment to every remote step, so the host's `gen-env`,
    `provision-extra.sh` and `server-side-post-deploy.sh` resolve `DEPLOY_*`
    without a `deploy.conf` of their own. `bin/deploy.sh` runs
@@ -109,9 +113,10 @@ exist and on which databases (the shared `pkg/roles-<GUID>`
 `sources`/`accounts` declaration plus the per-database `pkg/<db>.roles-<GUID>`
 grants) — is committed, not private.
 
-`reuter.ini` is the one private file **every** prod host needs whatever its
-role, so it always leaves the private repo for a host — and it ships **whole**
-(no inner filtering, no section splicing). `ema.conf` no longer needs to ship:
+`reuter.ini` is the one private file **every** DB-connecting prod host needs
+whatever its role, so it ships **whole** (no inner filtering, no section
+splicing) — except on a no-database bootstrap, where its absence is confirmed
+and nothing ships. `ema.conf` no longer needs to ship:
 its host-level `ssl-ca` is the committed default in `etc/ema.default.conf`,
 which rides with the swapped repo, so `DEPLOY_PRIVATE_FILES` names only
 `reuter.ini`. `dev.conf` never leaves the deploy machine — it is sourced there

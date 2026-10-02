@@ -7,8 +7,10 @@
 #   1. simox-owned private config: bin/fetch-private-data materializes the real
 #      etc/ files locally from the private config repo (the single source of
 #      truth). The one runtime file (reuter.ini) is shipped to each host by the
-#      framework's DEPLOY_PRIVATE_FILES key; the deploy values themselves travel
-#      as replayed environment, never as a prod file.
+#      framework's DEPLOY_PRIVATE_FILES key; if it is absent (a no-database
+#      bootstrap), the operator confirms that absence before the framework
+#      ships. The deploy values themselves travel as replayed environment,
+#      never as a prod file.
 #
 #   2. Framework `pf-deploy.sh`, a closed operation: it swaps the repo, copies
 #      the nix closure, installs composer deps, ships DEPLOY_PRIVATE_FILES,
@@ -48,6 +50,30 @@ done
 # 1. Private config (simox-owned): materialize the real etc/ files locally
 #    (idempotent). Shipping + env replay happen inside the framework deploy.
 bin/fetch-private-data "$REPO_ROOT"
+
+# 1b. Deploy-time confirmation: DEPLOY_PRIVATE_FILES names the private files the
+#     framework ships into etc/ on each host. A name absent from etc/ after
+#     materialization is either intentional (e.g. no database provisioned yet)
+#     or a missed materialization — ask the operator instead of shipping a
+#     partial set silently. Read the value in a subshell so deploy.conf's
+#     exports do not leak into this shell (pf-deploy.sh must discover them
+#     itself to build its replay environment).
+shipped="$( . ./etc/deploy.conf >/dev/null 2>&1; printf '%s' "${DEPLOY_PRIVATE_FILES:-}" )"
+missing=""
+# shellcheck disable=SC2086
+for _f in $shipped; do
+    [ -f "etc/$_f" ] || missing="${missing:+$missing }$_f"
+done
+if [ -n "$missing" ]; then
+    printf 'deploy: private file(s) absent from etc/ (not shipped):%s\n' "$missing" >&2
+    printf 'Continue (e.g. no database provisioned yet)? [y/N] ' >&2
+    answer=""
+    read -r answer || true
+    case "$answer" in
+        [yY]|[yY][eE][sS]) ;;
+        *) echo 'deploy: aborted — absent private file(s) not confirmed.' >&2; exit 1 ;;
+    esac
+fi
 
 # 2. Target host in the form the roster is keyed by (its ZeroTier IP).
 #    The shared host lookup takes either spelling, so a name typed above is
