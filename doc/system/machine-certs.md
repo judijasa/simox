@@ -133,6 +133,15 @@ override shipped via `DEPLOY_PRIVATE_FILES`, over the generic
 `DEPLOY_SSL_DIR` is what tells the deployed app layer where its own cert
 directory is (a `deploy.conf` value, replayed to the host).
 
+Where each Quick-setup file comes from: `<app>-ca.crt` is the CA's own
+certificate, generated when the CA is bootstrapped (the bootstrap produces the
+CA's certificate and private key; only the public cert is copied onto the
+host). `crl.pem` is emitted by `openssl ca -gencrl` from the same CA (see
+[Revocation (CRL)](#revocation-crl)). `<host>-client.crt` +
+`<host>-client.key` are this host's own client certificate and its private key,
+produced by the `gen-cert` → CA-sign → `gen-cert install` flow (see
+[Dev machine](#dev-machine)), installed out of band here.
+
 Order matters: install the CA and CRL before the instances are provisioned (the
 `ssl-ca`/`ssl-crl` lines are written at first provision only), and the client
 certificate before the accounts are reconciled with `REQUIRE X509` — otherwise
@@ -141,10 +150,9 @@ the deploy's own DB check (`db-check`, warn-only) stops connecting.
 ## Revocation (CRL)
 
 A leaked machine certificate is revoked through a CRL (Certificate Revocation
-List), not by re-issuing the CA. The CA workflow is standard `openssl ca`,
-documented in the private config repo's `doc/system/cert-authority.md`: signing
-keeps an `index.txt` ledger, `openssl ca -revoke <serial>` marks a cert revoked,
-and `openssl ca -gencrl -out crl.pem` emits the CRL.
+List), not by re-issuing the CA. The CA workflow is standard `openssl ca`:
+signing keeps an `index.txt` ledger, `openssl ca -revoke <serial>` marks a cert
+revoked, and `openssl ca -gencrl -out crl.pem` emits the CRL.
 
 The CRL is a server-side trust anchor, beside the CA: the host CRL path is
 the `etc/ema.conf` `ssl-crl` override (over the generic `/etc/ssl/crl.pem`
