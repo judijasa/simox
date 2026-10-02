@@ -82,7 +82,7 @@ A machine that must connect to a production database also needs its own TLS clie
 **4. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
-make deploy                        # every [prod] host in etc/machines.ini
+make deploy                        # every prod host in etc/machines.ini
 make deploy <host>                 # a single prod host (short name or ZeroTier IP)
 ```
 

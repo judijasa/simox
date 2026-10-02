@@ -37,7 +37,7 @@ _dev-init: TAG_END   = \# end: simox-hosts
 help:
 	@echo "Available targets:"
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
-	@echo "  deploy     - Deploy to [prod] (args via ARGS)"
+	@echo "  deploy     - Deploy to prod (args via ARGS)"
 	@echo "  web        - Run the local PHP built-in server"
 
 dev-init: _dev-assert-nix _dev-init
@@ -45,7 +45,7 @@ dev-init: _dev-assert-nix _dev-init
 # Production deploy: materialize private config, wrap the framework CLI (which
 # ships DEPLOY_PRIVATE_FILES and replays deploy.conf env), then run the
 # consumer post-deploy step (`web`) per host. Pass deploy args via ARGS
-# (empty = every [prod] host).
+# (empty = every prod host).
 deploy:
 	@bin/deploy.sh $(ARGS)
 

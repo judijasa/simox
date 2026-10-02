@@ -17,7 +17,7 @@
 //   );
 //
 // `sources` maps a source to the role it grants: `member` resolves to the
-// etc/team.ini IPs; any other key is an etc/machines.ini [prod] bare tag
+// etc/team.ini IPs; any other key is an etc/machines.ini bare tag
 // (`worker`, `web`), matched exactly. A `db:<name>` tag is a provisioning
 // marker only — it pins no role, because access follows what a host runs
 // (`worker`, `web`) or who its members are, never what database it stores.

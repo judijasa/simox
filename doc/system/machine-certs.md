@@ -74,8 +74,8 @@ subject: certificates signed by another project's CA do not chain to simox's.
 | `require: 'X509'` | `pkg/roles-D0YRR7WII6V1XDZR/default.php` (committed) | framework `gen-service-accounts` → `REQUIRE X509` on every account |
 | dev machine `SSL_DIR` (`~/.simox/ssl`) | private `etc/dev.conf` override (committed `etc/dev.default.conf` ships the generic `~/.ssl`) | `gen-cert` (mint + install) |
 | host `SSL_DIR` (`/etc/simox/ssl`) | private `etc/deploy.conf` `DEPLOY_SSL_DIR` → `gen-env` → host `.env` | the app layer (`Database::connectAs()`), over TCP |
-| host CA path (`/etc/simox/ssl/ca.crt`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `[default] ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
-| host CRL path (`/etc/simox/ssl/crl.pem`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `[default] ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
+| host CA path (`/etc/simox/ssl/ca.crt`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-ca` ships the generic `/etc/ssl/ca.crt`) | `ema`, into each instance's `[mysqld]` |
+| host CRL path (`/etc/simox/ssl/crl.pem`) | private `etc/ema.conf` override (committed `etc/ema.default.conf` `ssl-crl` ships the generic `/etc/ssl/crl.pem`) | `ema`, into each instance's `[mysqld]` |
 
 The name is the same on both sides — `SSL_DIR` — because it is the same
 mechanism: one directory holding `client.crt` + `client.key`. `DEPLOY_SSL_DIR` is

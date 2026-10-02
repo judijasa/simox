@@ -76,7 +76,7 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
 2. **Ship (framework, during deploy).** `pf-deploy.sh` ships the files named in
    `DEPLOY_PRIVATE_FILES` (here `reuter.ini`) — and nothing else — **whole**
    from the deploy machine's `etc/` into the freshly swapped `etc/` on each
-   `[prod]` host (the roster read locally from `etc/machines.ini` via
+   prod host (the roster read locally from `etc/machines.ini` via
    `vendor/bin/pf-roster`). At the same time it replays the deploy machine's
    `deploy.conf` environment to every remote step, so the host's `gen-env`,
    `provision-extra.sh` and `server-side-post-deploy.sh` resolve `DEPLOY_*`

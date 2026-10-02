@@ -16,15 +16,15 @@ apt-get install -y cron                      # a cron daemon (cron, crond, or cr
 
 # from the dev machine, inside nix develop
 cp .private-source.example .private-source   # set PRIVATE_DATA_GIT
-make deploy <host>                           # or make deploy for every [prod] host
+make deploy <host>                           # or make deploy for every prod host
 ```
 
 ## Machine roster
 
 Connecting to a production server via `ema` needs the machine registry config:
 
-- `etc/machines.ini` — the `[prod]` roster (private data; see
-  [private-config.md](private-config.md)). The `[prod]` section lists the prod
+- `etc/machines.ini` — the roster (private data; see
+  [private-config.md](private-config.md)). The roster lists the prod
   servers by ZeroTier IP; the value is a comma-separated list of `tag[:name]`
   tokens (`ip=db:simo0, db:simo1, web, worker`). `db` (named) is the
   framework's built-in tag — a `db:<name>` token names a database (the instance
@@ -39,7 +39,7 @@ Connecting to a production server via `ema` needs the machine registry config:
   `web` → `simox_web`); a `db:<name>` token pins no role (provisioning only);
   see [service-accounts.md](service-accounts.md). Each named token maps to exactly
   one server; a server may host several databases. `pf-deploy.sh` targets every
-  `[prod]` host by default; a server with a `db:<name>` token hosts one or more
+  prod host by default; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
 - `etc/team.ini` — private data. One section per team member, carrying
   `hostname = ZeroTier-IP` entries and no credential: there is no longer one DB
@@ -100,14 +100,14 @@ certificate under `/etc/simox/ssl` before the accounts are reconciled with
 **4. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
-make deploy                        # every [prod] host in etc/machines.ini
-make deploy <host>                 # a single prod host (must be in [prod]);
+make deploy                        # every prod host in etc/machines.ini
+make deploy <host>                 # a single prod host (must be in the roster);
                                    # its short name or its ZeroTier IP
 ```
 
 `<host>` takes either spelling: `bin/deploy.sh` resolves it through the
 framework's shared host lookup (`vendor/bin/pf-host`; the framework's
-[doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)) to the ZeroTier IP the `[prod]` roster is keyed
+[doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)) to the ZeroTier IP the roster is keyed
 by, so the per-host post-deploy step below always matches the host the framework
 deployed to.
 
@@ -126,7 +126,7 @@ The framework CLI also runs its built-in per-host steps — regenerating `.env`,
 verifying DB connectivity via `db-check` (warn-only), and installing cron
 (`/etc/cron.d/simo-orchestrator`) from the `#[CronJob]`/`#[Agent]` attributes
 on every host, scope-filtered by that host's tag list. After it returns, the
-deploy entrypoint runs `bin/deploy/server-side-post-deploy.sh` on each `[prod]`
+deploy entrypoint runs `bin/deploy/server-side-post-deploy.sh` on each prod
 host (passing that host's tag list via `DEPLOY_TAGS` plus the `deploy.conf`
 values the render needs); only simox's own `web` step remains there — restoring
 Apache www-data traversal on the repo dir and installing the nix-built php-fpm

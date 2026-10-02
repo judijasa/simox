@@ -9,7 +9,7 @@
 // mirror the real deployment.
 //
 // Consumed by the framework gen-firewall: it reads etc/host-hardening.php,
-// computes the desired ufw rule set for each [prod] host from its
+// computes the desired ufw rule set for each prod host from its
 // etc/machines.ini tags, and applies it as root (fail-open: SSH first,
 // enable last). The framework owns the mechanism and the built-in tags; the
 // real file carries only consumer data. There is no SQL here — data only.

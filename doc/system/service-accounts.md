@@ -42,7 +42,7 @@ gets the corresponding role, and a host carrying several tags gets the union:
 | `web`    | `simox_web`    | —              | SELECT  |
 
 `member` resolves to the `etc/team.ini` member IPs; `worker` and `web` are
-`etc/machines.ini` `[prod]` bare tags matched exactly. A `db:<name>` tag is a
+`etc/machines.ini` bare tags matched exactly. A `db:<name>` tag is a
 provisioning marker only — it pins no role. A role with no grant on a database
 means the account is not wanted there, so `simox_web` being absent from `simo0`
 drops `simox@<ip>` on `simo0` for a web host. Privileges therefore follow what

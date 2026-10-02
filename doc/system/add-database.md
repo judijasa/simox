@@ -6,7 +6,7 @@ The sequence for adding a database to simox. `simo0` is the reference case;
 ## Quick setup
 
 ```bash
-# private etc/machines.ini: add db:<name> to the target host's [prod] tokens
+# private etc/machines.ini: add db:<name> to the target host's tokens
 
 ema database <name>                          # scaffold srv/<name>-<GUID>/
 ema schema <name>                            # scaffold pkg/<pkg>-<GUID>/
@@ -27,7 +27,7 @@ bin/deploy.sh <host>                         # read db-check
 ## 1. Tag the host
 
 Add `db:<name>` to the target host's token list in the private
-`etc/machines.ini` `[prod]` roster (`etc/machines.ini.template` documents what
+`etc/machines.ini` roster (`etc/machines.ini.template` documents what
 the tag drives). The roster is read on the deploy machine and never shipped to
 a host, so the tag must be in place before the deploy in step 3.
 
@@ -50,10 +50,10 @@ Which roles a database grants, and to which sources, is
 ## 3. Deploy
 
 ```bash
-bin/deploy.sh <host>        # or `make deploy` for every [prod] host
+bin/deploy.sh <host>        # or `make deploy` for every prod host
 ```
 
-`<host>` is a `[prod]` host by its short name or its ZeroTier IP, resolved by
+`<host>` is a prod host by its short name or its ZeroTier IP, resolved by
 the framework's shared host lookup (`vendor/bin/pf-host`; the framework's
 [doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)).
 

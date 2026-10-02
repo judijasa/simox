@@ -21,15 +21,15 @@
 #      scope), so this wrapper forwards its args verbatim to it — resolving a
 #      typed host name to that host's ZeroTier IP first, via the shared host
 #      lookup, so the roster re-derivation below matches — then re-derives the
-#      [prod] roster (ZeroTier IP → tags) from etc/machines.ini via the shared
+#      roster (ZeroTier IP → tags) from etc/machines.ini via the shared
 #      pf-roster CLI and runs the consumer server-side post-deploy step
 #      (bin/deploy/server-side-post-deploy.sh) on each host, passing that
 #      host's tag list via DEPLOY_TAGS — it covers only the consumer-owned tags
 #      (`web`).
 #
 # Usage (from the repo root, inside `nix develop`):
-#   bin/deploy.sh                 # every [prod] host
-#   bin/deploy.sh <host>          # a single prod host (in [prod]), as its
+#   bin/deploy.sh                 # every prod host
+#   bin/deploy.sh <host>          # a single prod host (in the roster), as its
 #                                 # short name or its ZeroTier IP
 set -euo pipefail
 
@@ -38,7 +38,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Which host(s) this run targets: the first non-flag positional arg (if any),
-# else every [prod] host. The framework CLI resolves and validates any host and
+# else every prod host. The framework CLI resolves and validates any host and
 # deploys to exactly this set.
 wanted=""
 for arg in "$@"; do
@@ -49,11 +49,11 @@ done
 #    (idempotent). Shipping + env replay happen inside the framework deploy.
 bin/fetch-private-data "$REPO_ROOT"
 
-# 2. Target host in the form the [prod] roster is keyed by (its ZeroTier IP).
+# 2. Target host in the form the roster is keyed by (its ZeroTier IP).
 #    The shared host lookup takes either spelling, so a name typed above is
 #    resolved here — after step 1 (it reads the materialized etc/machines.ini
 #    and etc/hosts) and before anything is deployed, so an unknown name or a
-#    host outside [prod] aborts the whole run rather than skipping a step
+#    host outside the roster aborts the whole run rather than skipping a step
 #    later. pf-host prints the reason itself.
 if [ -n "$wanted" ]; then
   if ! wanted="$(vendor/bin/pf-host "$wanted")"; then
@@ -100,10 +100,10 @@ if [ -n "$wanted" ]; then
       break
     fi
   done < <(read_prod_roster)
-  # `wanted` is already a [prod] key (step 2), so this cannot happen; fail
+  # `wanted` is already a roster key (step 2), so this cannot happen; fail
   # loudly rather than let the post-deploy step go missing.
   if [ -z "$matched" ]; then
-    echo "deploy: '$wanted' is missing from the [prod] roster output;" \
+    echo "deploy: '$wanted' is missing from the roster output;" \
       "aborting instead of skipping its post-deploy step" >&2
     exit 1
   fi

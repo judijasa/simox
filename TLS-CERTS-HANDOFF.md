@@ -161,7 +161,7 @@ Two halves, and they are independent:
   `REQUIRE X509` + `ssl-ca` apply to prod DB hosts only.
 - **ema server side = paths only.** ema reads `ssl-ca = <path>` from a
   consumer-owned **host-level config file** — `etc/ema.conf.template` (committed,
-  a `[default]` section carrying `ssl-ca = <path>`) materialized to
+  carrying `ssl-ca = <path>`) materialized to
   `etc/ema.conf` (gitignored; shipped by `fetch-private-data` or hand-copied, the
   `reuter.ini.template`/private `reuter.ini` delivery pattern). Host-level — one
   value shared by every DB on the host — so it does not belong in the
@@ -214,8 +214,8 @@ repo, split by **mechanism (framework) vs values (consumer)**:
   env-var read for the cert directory; the `dev.conf` mechanism (template +
   materialization + sourcing); and the repurposed `gen-cert` as the machine-cert
   CLI writing the `~/.my.cnf.d` drop-in (mirroring `gen-ssh-config`).
-- **`ema` (mechanism, server half):** `etc/ema.conf.template` (committed,
-  `[default]`) → `etc/ema.conf` (gitignored, materialized) carrying
+- **`ema` (mechanism, server half):** `etc/ema.conf.template` (committed) →
+  `etc/ema.conf` (gitignored, materialized) carrying
   `ssl-ca = <path>`, emitted into `<db>/my.cnf`; replication keys only if the
   replication account is later certed.
 - **`simox` (values):** the consumer data (`DEV_MYSQL_SSL_DIR`, `DBUSER`), the
