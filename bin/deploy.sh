@@ -6,11 +6,11 @@
 #
 #   1. simox-owned private config: bin/fetch-private-data materializes the real
 #      etc/ files locally from the private config repo (the single source of
-#      truth). The one runtime file (reuter.ini) is shipped to each host by the
-#      framework's DEPLOY_PRIVATE_FILES key; if it is absent (a no-database
-#      bootstrap), the operator confirms that absence before the framework
-#      ships. The deploy values themselves travel as replayed environment,
-#      never as a prod file.
+#      truth). The runtime files (reuter.ini and ema.conf) are shipped to each
+#      host by the framework's DEPLOY_PRIVATE_FILES key; an absent name (e.g.
+#      reuter.ini on a no-database bootstrap) is confirmed by the operator
+#      before the framework ships. The deploy values themselves travel as
+#      replayed environment, never as a prod file.
 #
 #   2. Framework `pf-deploy.sh`, a closed operation: it swaps the repo, copies
 #      the nix closure, installs composer deps, ships DEPLOY_PRIVATE_FILES,

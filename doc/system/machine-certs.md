@@ -125,9 +125,9 @@ deploy: the private key must not travel, and the deploy swaps the repo
 directory anyway. The host's own client certificate lives under
 `/etc/<app>/ssl` (`ca.crt`, `crl.pem`, `client.crt` + `client.key`); the
 server-side trust anchors — the CA and the CRL every instance verifies client
-certificates against — are the `etc/ema.default.conf` `ssl-ca`/`ssl-crl` paths
-(overridden by `etc/ema.conf`), which ride with the swapped repo (see
-[private-config.md](private-config.md)).
+certificates against — are the `etc/ema.conf` `ssl-ca`/`ssl-crl` paths (the
+override shipped via `DEPLOY_PRIVATE_FILES`, over the generic
+`etc/ema.default.conf` fallback — see [private-config.md](private-config.md)).
 `DEPLOY_SSL_DIR` is what tells the deployed app layer where its own cert
 directory is (a `deploy.conf` value, replayed to the host).
 

@@ -61,15 +61,14 @@ export DEPLOY_SSL_DIR=/etc/<app>/ssl
 # framework ships from the deploy machine's etc/ into the freshly swapped
 # etc/ on the host (whole, verbatim). `reuter.ini` is the expected baseline —
 # every DB-connecting host needs it; deploy.conf itself is NOT shipped (its
-# values travel as replayed environment). `ema.conf` is no longer shipped: its
-# value (the host-level ssl-ca, the server-side trust anchor of the X509
-# requirement) is now the committed default in etc/ema.default.conf, which rides
-# with the swapped repo — the override etc/ema.conf exists only when a host
-# diverges from it. The ship step skips any name absent from etc/
-# (materialized from the private repo by bin/fetch-private-data); bin/deploy.sh
-# asks the operator to confirm such an absence (a no-database bootstrap ships
-# no reuter.ini) before handing off to the framework.
-export DEPLOY_PRIVATE_FILES="reuter.ini"
+# values travel as replayed environment). `ema.conf` ships too: the committed
+# etc/ema.default.conf carries only a generic ssl-ca/ssl-crl fallback (the real
+# host paths must never be committed), so the real value travels in the
+# git-ignored override etc/ema.conf. The ship step skips any name absent from
+# etc/ (materialized from the private repo by bin/fetch-private-data);
+# bin/deploy.sh asks the operator to confirm such an absence (a no-database
+# bootstrap ships no reuter.ini) before handing off to the framework.
+export DEPLOY_PRIVATE_FILES="reuter.ini ema.conf"
 
 # DEPLOY_NIX_RESULT_DIR: remote nix result parent.
 export DEPLOY_NIX_RESULT_DIR=/usr/local/simox

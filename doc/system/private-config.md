@@ -30,7 +30,7 @@ own client certificate — a separate, occasionally-run step, not part of
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
 | `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`) | **yes — via `DEPLOY_PRIVATE_FILES`** |
-| `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **no — the committed default rides with the repo; an override ships only if it diverges** |
+| `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **yes — via `DEPLOY_PRIVATE_FILES` (the override over the generic committed default)** |
 | `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
 | `etc/team.ini` | `etc/team.ini.template` | member identities, hostnames, ZeroTier IPs | no (dev-only) |
@@ -65,18 +65,19 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    because a checkout that cannot deploy is worse than a loud stop.
    `etc/reuter.ini` is expected but not a hard prerequisite: a no-database
    bootstrap legitimately has none, so its absence is only warned here and
-   confirmed by the deploy wrapper before shipping. `etc/dev.conf` and
-   `etc/ema.conf` are optional overrides now: their defaults are committed in
-   `etc/dev.default.conf` and `etc/ema.default.conf`, so a checkout works
-   without the private copies and only a machine that diverges from a default
-   needs one. `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
+   confirmed by the deploy wrapper before shipping. `etc/dev.conf` is an
+   optional override (its default is committed in `etc/dev.default.conf`, so a
+   checkout works without the private copy and only a machine that diverges
+   needs one); `etc/ema.conf` is the host-level override whose real
+   `ssl-ca`/`ssl-crl` ship to prod (the committed `etc/ema.default.conf` carries
+   only a generic fallback). `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
    `etc/host-hardening.php` are copied only when the private source provides
    them. `make dev-init` runs it, so a dev checkout carries its own
    `etc/reuter.ini` and `etc/team.ini` (plus whatever else the private repo
    carries). An absent `.private-source` makes the step a no-op, and the repo
    then runs on its committed defaults.
 2. **Ship (framework, during deploy).** `pf-deploy.sh` ships the files named in
-   `DEPLOY_PRIVATE_FILES` (here `reuter.ini`) — and nothing else — **whole**
+   `DEPLOY_PRIVATE_FILES` (here `reuter.ini ema.conf`) — and nothing else — **whole**
    from the deploy machine's `etc/` into the freshly swapped `etc/` on each
    prod host (the roster read locally from `etc/machines.ini` via
    `vendor/bin/pf-roster`), skipping any name that is absent from `etc/` —
@@ -94,9 +95,9 @@ source repo; copying overwrites, so a local edit to one of these files is lost �
 the private repo is the place to change settings.
 
 Prod hosts have neither git nor the `.private-source` pointer, so they only ever
-receive `reuter.ini` through the framework's ship step above; `ema.conf`'s
-host-level `ssl-ca` reaches them as the committed `etc/ema.default.conf` that
-rides with the swapped repo.
+receive `reuter.ini` and `ema.conf` through the framework's ship step above; the
+latter carries the host-level `ssl-ca` (the committed `etc/ema.default.conf` is
+only a generic fallback).
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
 credentials. Each `[<primary>]`/`[<replica>]` section carries `SERVER`/`PORT`/
@@ -116,10 +117,11 @@ grants) — is committed, not private.
 `reuter.ini` is the one private file **every** DB-connecting prod host needs
 whatever its role, so it ships **whole** (no inner filtering, no section
 splicing) — except on a no-database bootstrap, where its absence is confirmed
-and nothing ships. `ema.conf` no longer needs to ship:
-its host-level `ssl-ca` is the committed default in `etc/ema.default.conf`,
-which rides with the swapped repo, so `DEPLOY_PRIVATE_FILES` names only
-`reuter.ini`. `dev.conf` never leaves the deploy machine — it is sourced there
+and nothing ships. `ema.conf` ships too: its
+host-level `ssl-ca` is the real host path, which the committed
+`etc/ema.default.conf` carries only as a generic fallback (the real value must
+never be committed), so `DEPLOY_PRIVATE_FILES` names `reuter.ini ema.conf`.
+`dev.conf` never leaves the deploy machine — it is sourced there
 (the framework's `init-local-env.sh`, from the committed default then the
 optional override) and read by `gen-cert`. `machines.ini` feeds the local
 deploy roster, `team.ini` feeds

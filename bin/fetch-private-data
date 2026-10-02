@@ -14,10 +14,12 @@
 # `reuter.ini` is expected (every DB-connecting host needs it) but its absence
 # is not a materialization error — a no-database bootstrap legitimately has
 # none; it is warned here and confirmed by the deploy wrapper before shipping.
-# `dev.conf` and `ema.conf` are optional overrides now — their defaults are
-# committed in etc/dev.default.conf and etc/ema.default.conf, so a checkout
-# works without the private copies and only a host that diverges from a default
-# needs one.
+# `dev.conf` is an optional override — its default is committed in
+# etc/dev.default.conf, so a checkout works without the private copy and only a
+# machine that diverges from the default needs one. `ema.conf` is the host-level
+# override whose real ssl-ca/ssl-crl ship to prod (the committed
+# etc/ema.default.conf carries only a generic fallback — the real host paths
+# must never be committed).
 # `machines.ini`, `team.ini`, `hosts` and `host-hardening.php` are copied only
 # when the private source provides them. Copying is idempotent: etc/<file> is
 # overwritten on every run, so a local edit to one of these files is lost — edit
@@ -27,11 +29,12 @@
 # committed templates); a present pointer that sets no PRIVATE_DATA_GIT is an
 # error, not a silent skip.
 #
-# Prod hosts have neither git nor the pointer: they receive their runtime file
-# (reuter.ini) from the deploy machine's deploy step instead — the framework's
-# DEPLOY_PRIVATE_FILES ships it into the freshly swapped etc/ (a no-database
-# bootstrap ships none, confirmed by the deploy wrapper), while deploy.conf's
-# values travel as replayed environment. dev.conf never leaves the dev machine.
+# Prod hosts have neither git nor the pointer: they receive their runtime files
+# (reuter.ini and ema.conf) from the deploy machine's deploy step instead — the
+# framework's DEPLOY_PRIVATE_FILES ships them into the freshly swapped etc/ (an
+# absent name is skipped and confirmed by the deploy wrapper; a no-database
+# bootstrap ships no reuter.ini), while deploy.conf's values travel as replayed
+# environment. dev.conf never leaves the dev machine.
 # See doc/system/private-config.md.
 #
 # Usage: bin/fetch-private-data [target-dir]   (default: $PWD)
