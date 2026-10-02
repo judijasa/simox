@@ -70,6 +70,14 @@
             pre-commit
           ];
           shellHook = ''
+            # Private config freshness: materialize the real etc/ files from the
+            # private repo (.private-source) on every shell entry, so a re-entered
+            # shell never runs on stale etc/. Idempotent, and a no-op without
+            # .private-source (a public checkout stays on its committed templates).
+            # `make dev-init` remains the one-time bootstrap (composer install,
+            # .env, hooks, hosts, ssh config).
+            bin/fetch-private-data
+
             # Code (framework + ema CLIs, the dev scripts, pf-provision.sh) is
             # Composer-delivered: `make dev-init` runs composer install, which
             # populates vendor/bin. On first `nix develop` entry vendor/bin

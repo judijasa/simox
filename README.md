@@ -82,8 +82,10 @@ are materialized into `etc/` at deploy time, and are never committed.
 Because the private values sit outside this repo's history, two points in the flow
 depend on an operator rather than on git:
 
-- **Materialization — `bin/fetch-private-data`.** The operator chooses to run it, and
-  it copies whatever the private repo actually provides.
+- **Materialization — `bin/fetch-private-data`.** Runs automatically on every
+  `nix develop` entry (and before every deploy), keeping `etc/` fresh; it copies
+  whatever the private repo actually provides. The operator only sets the
+  `.private-source` pointer once.
 - **Deploy-time confirmation.** When a private file the deploy would otherwise ship is
   absent, the deploy asks the operator to confirm: intentional or a missed materialization.
 
