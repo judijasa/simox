@@ -80,13 +80,14 @@ OPTIONAL_FILES=(dev.conf ema.conf machines.ini team.ini hosts host-hardening.php
 # copy_file <name> — install one private file into etc/. Returns 1 when the
 # private source does not provide it (the caller decides whether that is fatal).
 copy_file() {
-    local f="$1" src="$SOURCE_DIR/$f"
+    local name="$1"
+    local src="$SOURCE_DIR/$name"
     [[ -f "$src" ]] || return 1
     # Remove first: an injection by the older symlink mechanism left a link at
     # this path, and the real file must not be written through it.
-    rm -f "$ROOT/etc/$f"
-    install -m 0644 "$src" "$ROOT/etc/$f"
-    copied="$copied $f"
+    rm -f "$ROOT/etc/$name"
+    install -m 0644 "$src" "$ROOT/etc/$name"
+    copied="$copied $name"
     return 0
 }
 
