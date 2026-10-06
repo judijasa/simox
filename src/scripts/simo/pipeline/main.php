@@ -395,4 +395,3 @@ function main(PDO $conn): void
         fn(array $rows) => process_batch($conn, $rows, $batch_size),
     );
 }
-

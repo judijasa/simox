@@ -5,7 +5,7 @@ It has been superseded by the use of the API endpoint. A minor role is still
 kept to showcase the use of crawling with Casper.
 
 `Utils\Crawler\CasperTrio` (from the `judijasa/php-daas-framework` composer
-package, used by `src/scripts/indexer/helpers.php`) is a subclass of
+package, used by `src/scripts/simo/indexer/helper.php`) is a subclass of
 `vendor/phpcasperjs/phpcasperjs/src/Casper.php:Casper`. It overrides and defines
 new methods. To use this subclass, after downloading the vendor libraries, the
 `judijasa/php-daas-framework` composer plugin edits

@@ -145,4 +145,3 @@ function persist_snapshots($conn, $jobs){
         ]);
     }
 }
-

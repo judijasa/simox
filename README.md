@@ -31,7 +31,7 @@ ema sandbox srv/simo0-D03J4K6RM0K7X8E4
 Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribute, so `main()` takes no explicit connection argument). The dev `.env` no longer pins `EMA_TARGET`, so scripts default to `prod` — prefix local runs with `EMA_TARGET=sandbox` to hit the sandbox instance:
 
 ```bash
-EMA_TARGET=sandbox phprun 'src/scripts/indexer/get_jobs.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/indexer/main.php:main()'
 ```
 
 Access the local `simo0` instance (schema `simo`) and verify content:
@@ -44,7 +44,7 @@ SELECT count(*) FROM empleo_snapshot;
 Run the pipeline and verify content:
 
 ```bash
-EMA_TARGET=sandbox phprun 'src/scripts/pipeline/pipeline.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/pipeline/main.php:main()'
 ```
 
 Start PHP's built-in server (from the repo root, inside `nix develop`; serves `public/` as docroot). The website defaults to `simo1` (prod's read-only replica), so for the local sandbox swap it to `simo0` — in `public/index.php` and `public/insight.php` change `$dbname = 'simo1'` to `$dbname = 'simo0'` — then serve with `EMA_TARGET=sandbox`:

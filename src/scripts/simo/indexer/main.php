@@ -1,6 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-require __DIR__ . '/helpers.php';
+require __DIR__ . '/helper.php';
 
 use Utils\Agent;
 use Utils\CronJob;
@@ -77,4 +77,3 @@ function indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
         Logger::info("Nothing to save. Skipping db insertion.");
     }
 }
-
