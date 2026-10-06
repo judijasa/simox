@@ -57,9 +57,9 @@ git-ignored `*.conf` override layered on top only when a machine diverges.
 
 One retrieval mechanism — git, through `.private-source` — and two steps:
 
-1. **Materialize (dev/deploy machine).** `bin/fetch-private-data` clones or
-   fetches `PRIVATE_DATA_GIT` (+ optional `PRIVATE_DATA_REF`, default `main`)
-   into `var/private-data`, then copies the eight tracked files
+1. **Materialize (dev/deploy machine).** `bin/fetch-private-data` clones
+   `PRIVATE_DATA_GIT` fresh each run (+ optional `PRIVATE_DATA_REF`, default
+   `main`) into a throwaway directory, then copies the eight tracked files
    from there into `etc/` as **real files**, overwriting them on every run.
    `etc/deploy.conf` is required — a private source without it fails the step,
    because a checkout that cannot deploy is worse than a loud stop.
@@ -90,7 +90,7 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
 
 Real files, not symlinks: the private repo's committed content is the single
 source of truth, and every machine materializes its own copy of it. A symlinked
-`etc/` would leave the operational data dangling whenever `var/private-data` is rebuilt, and would let a local edit silently change the
+`etc/` would leave the operational data dangling once the throwaway clone is removed, and would let a local edit silently change the
 source repo; copying overwrites, so a local edit to one of these files is lost —
 the private repo is the place to change settings.
 

@@ -9,9 +9,8 @@
 # This file tells simox's `bin/fetch-private-data` where to find that repo.
 #
 # Copy this file to `.private-source` (untracked, machine-specific) and set
-# the one retrieval mechanism — a git URL (+ optional ref), fetched on demand
-# into var/private-data (git-ignored, like the rest of /var/) and copied from
-# there into etc/ as real files:
+# the one retrieval mechanism — a git URL (+ optional ref), cloned fresh each
+# run into a throwaway directory and copied from there into etc/ as real files:
 #
 # PRIVATE_DATA_GIT=git@example.com:team/simox-private-config.git
 # PRIVATE_DATA_REF=main

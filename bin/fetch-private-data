@@ -5,8 +5,8 @@
 # The private config repo's committed content is the single source of truth: no
 # machine runs on a loose, uncommitted copy. There is exactly one retrieval
 # mechanism — the git-ignored `.private-source` pointer at the repo root, whose
-# PRIVATE_DATA_GIT (+ optional PRIVATE_DATA_REF) is cloned/fetched on demand
-# into the git-ignored var/private-data.
+# PRIVATE_DATA_GIT (+ optional PRIVATE_DATA_REF) is cloned fresh on demand
+# into a throwaway directory each run (then removed after copying).
 #
 # The private repo's root layout is then COPIED into etc/ as real files, never
 # symlinked, so a checkout carries its own operational data. `deploy.conf` is
@@ -59,18 +59,15 @@ if [[ -z "${PRIVATE_DATA_GIT:-}" ]]; then
     exit 1
 fi
 
-# Git is the only retrieval mechanism: refresh the on-demand checkout (or create
-# it) and pin it to the configured ref.
-SOURCE_DIR="$ROOT/var/private-data"
+# Git is the only retrieval mechanism: clone fresh into a throwaway directory
+# each run (no persistent checkout to go stale), pin it to the configured ref,
+# and copy from it. The clone is removed on exit.
 REF="${PRIVATE_DATA_REF:-main}"
-if [[ -d "$SOURCE_DIR/.git" ]]; then
-    git -C "$SOURCE_DIR" fetch --quiet origin "$REF"
-    git -C "$SOURCE_DIR" checkout --quiet --detach FETCH_HEAD
-else
-    mkdir -p "$ROOT/var"
-    git clone --quiet "$PRIVATE_DATA_GIT" "$SOURCE_DIR"
-    git -C "$SOURCE_DIR" checkout --quiet --detach "$REF"
-fi
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/fetch-private-data.XXXXXX")"
+trap 'rm -rf "$TMP_ROOT"' EXIT
+SOURCE_DIR="$TMP_ROOT/private-data"
+git clone --quiet "$PRIVATE_DATA_GIT" "$SOURCE_DIR"
+git -C "$SOURCE_DIR" checkout --quiet --detach "$REF"
 
 # The tracked files, in the private repo's root layout: the required ones first
 # (a missing one is a hard error), then the optional ones.
