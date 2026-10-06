@@ -22,7 +22,7 @@ make dev-init
 
 Re-enter the shell (or `source .env`) so the repo paths, `DBUSER` and `SSL_DIR` written to `.env` are in scope.
 
-Create the `simo0` database + dev sandbox (under `var/sandbox/`); `ema sandbox` builds and starts the isolated MariaDB instance:
+Create the `simo0` instance (schema `simo`) + dev sandbox (under `var/sandbox/`); `ema sandbox` builds and starts the isolated MariaDB instance:
 
 ```bash
 ema sandbox srv/simo0-D03J4K6RM0K7X8E4
@@ -34,7 +34,7 @@ Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribut
 EMA_TARGET=sandbox phprun 'src/scripts/indexer/get_jobs.php:main()'
 ```
 
-Access the local `simo0` database and verify content:
+Access the local `simo0` instance (schema `simo`) and verify content:
 
 ```bash
 EMA_TARGET=sandbox ema mariadb simo0
@@ -115,7 +115,7 @@ Adding a database — its own MariaDB instance on its own host (`ema create`), i
 
 ## Service Accounts & Read Replica
 
-MariaDB users/grants are declared in the shared `pkg/roles-<GUID>` package and the per-database `pkg/<db>.roles-<GUID>` grant packages, reconciled by the framework's `gen-service-accounts` CLI, run from the dev machine: it plans from the private roster here and applies on the database's host as `root` over ssh. A single passwordless account, gated by a TLS client certificate: the security boundary is ZeroTier membership, the source-IP host pin, and `REQUIRE X509` with a certificate signed by the project CA. See [doc/system/service-accounts.md](doc/system/service-accounts.md) for the role/source table, the authentication layers and routing, [doc/system/machine-certs.md](doc/system/machine-certs.md) for the certificates, and [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md) for the `simo1` read-replica build.
+MariaDB users/grants are declared in the shared `pkg/roles-<GUID>` package and the per-instance `pkg/<db>.roles-<GUID>` grant packages, reconciled by the framework's `gen-service-accounts` CLI, run from the dev machine: it plans from the private roster here and applies on the database's host as `root` over ssh. A single passwordless account, gated by a TLS client certificate: the security boundary is ZeroTier membership, the source-IP host pin, and `REQUIRE X509` with a certificate signed by the project CA. See [doc/system/service-accounts.md](doc/system/service-accounts.md) for the role/source table, the authentication layers and routing, [doc/system/machine-certs.md](doc/system/machine-certs.md) for the certificates, and [doc/system/replica-bootstrap.md](doc/system/replica-bootstrap.md) for the `simo1` read-replica build.
 
 ## Dependencies
 

@@ -3,8 +3,9 @@
 How `<replica>` is created as the read-only replica of the writable primary
 `<primary>`. The replica serves the website (`<account>`) and can offload reads
 from `<primary>`. Naming convention (a consumer choice): the primary and its
-replica carry distinct database names — the examples below use the `0`-suffixed
-`<primary>` and `1`-suffixed `<replica>` pair.
+replica are two *instances* that share the primary's schema under a plain name
+— the examples below use the `0`-suffixed `<primary>` and `1`-suffixed
+`<replica>` pair, both serving the same `<schema>`.
 
 Two operator steps, both run from this repo's root: the framework's
 `replica-bootstrap` CLI prepares the transport account and a snapshot on
@@ -84,6 +85,7 @@ ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
 Record `<replica>`'s `[<replica>]` section in the private `etc/reuter.ini` — the
 section `ema create` printed, or `ema values <replica>` if it was lost. The
-website reads `<replica>`, not `<primary>`; both sections carry the single
-`<account>` password key (`<account>` is ALL on `<primary>` and SELECT on
-`<replica>`).
+section header names the instance; its `DBNAME` key names the shared `<schema>`
+both instances serve. The website reads `<replica>`, not `<primary>`; both
+sections carry the single `<account>` password key (`<account>` is ALL on
+`<primary>` and SELECT on `<replica>`).

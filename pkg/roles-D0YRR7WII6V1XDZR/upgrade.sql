@@ -1,6 +1,6 @@
 -- Shared simox role definitions (instance-level, one copy per team).
--- gen-service-accounts applies this before the per-database grant package, so
--- CREATE ROLE precedes the per-database GRANTs. Role assignment to accounts is
+-- gen-service-accounts applies this before the per-instance grant package, so
+-- CREATE ROLE precedes the per-instance GRANTs. Role assignment to accounts is
 -- done by gen-service-accounts (GRANT <role> TO 'simox'@'<host>'), never
 -- hardcoded here.
 --

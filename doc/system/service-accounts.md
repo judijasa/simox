@@ -5,7 +5,7 @@ schema only). They are this repo's policy, declared in the shared
 `pkg/roles-<GUID>` package (role definitions, the `sources`/`accounts`
 mapping, the `allowlist` of accounts the drop pass must never remove, and the
 `require` clause every account is created with) and
-the per-database `pkg/<db>.roles-<GUID>` grant packages, then reconciled by the
+the per-instance `pkg/<db>.roles-<GUID>` grant packages, then reconciled by the
 framework's `gen-service-accounts` CLI (shipped via Composer to `vendor/bin`).
 The reconcile is closed-world on **role memberships**: the desired state per
 account per host is the union of the roles for that host's sources; excess roles

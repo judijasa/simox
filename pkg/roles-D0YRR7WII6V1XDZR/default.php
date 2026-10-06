@@ -1,6 +1,6 @@
 <?php
 // Shared simox role definitions (instance-level, one copy per team). Consumed
-// by the framework gen-service-accounts before the per-database grant package.
+// by the framework gen-service-accounts before the per-instance grant package.
 // Nothing else lives here: the SQL is in upgrade.sql.
 //
 // Service-account declaration (consumed by gen-service-accounts). Every key is

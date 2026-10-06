@@ -29,7 +29,7 @@ own client certificate — a separate, occasionally-run step, not part of
 | File | Committed in public repo | Private data | Ships to prod? |
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
-| `etc/reuter.ini` | `etc/reuter.ini.template` | per-database connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`) | **yes — via `DEPLOY_PRIVATE_FILES`** |
+| `etc/reuter.ini` | `etc/reuter.ini.template` | per-instance connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`; each section's `DBNAME` names the shared schema) | **yes — via `DEPLOY_PRIVATE_FILES`** |
 | `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **yes — via `DEPLOY_PRIVATE_FILES` (the override over the generic committed default)** |
 | `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
@@ -111,7 +111,7 @@ the account (create/drop, role-based) against the shared `pkg/roles-<GUID>`
 declaration but never writes a password back into this file — the template ships
 `<ACCOUNT>_PASSWORD=` empty. The service-account *policy* itself — which accounts
 exist and on which databases (the shared `pkg/roles-<GUID>`
-`sources`/`accounts` declaration plus the per-database `pkg/<db>.roles-<GUID>`
+`sources`/`accounts` declaration plus the per-instance `pkg/<db>.roles-<GUID>`
 grants) — is committed, not private.
 
 `reuter.ini` is the one private file **every** DB-connecting prod host needs
