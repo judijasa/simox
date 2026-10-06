@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # simox deploy — consumer entrypoint that wraps the framework
-# `pf-deploy.sh` CLI (vendor/bin/pf-deploy.sh).
+# `deploy` CLI (vendor/bin/deploy).
 #
 # Two halves, both driven from here:
 #
@@ -12,7 +12,7 @@
 #      before the framework ships. The deploy values themselves travel as
 #      replayed environment, never as a prod file.
 #
-#   2. Framework `pf-deploy.sh`, a closed operation: it swaps the repo, copies
+#   2. Framework `deploy`, a closed operation: it swaps the repo, copies
 #      the nix closure, installs composer deps, ships DEPLOY_PRIVATE_FILES,
 #      replays the deploy.conf environment to every remote step, runs idempotent
 #      provisioning and — as built-in steps on every host — regenerates .env
@@ -25,27 +25,44 @@
 #      lookup, so the roster re-derivation below matches — then re-derives the
 #      roster (ZeroTier IP → tags) from etc/machines.ini via the shared
 #      pf-roster CLI and runs the consumer server-side post-deploy step
-#      (bin/deploy/server-side-post-deploy.sh) on each host, passing that
+#      (bin/deploy-steps/server-side-post-deploy.sh) on each host, passing that
 #      host's tag list via DEPLOY_TAGS — it covers only the consumer-owned tags
 #      (`web`).
 #
 # Usage (from the repo root, inside `nix develop`):
-#   bin/deploy.sh                 # every prod host
-#   bin/deploy.sh <host>          # a single prod host (in the roster), as its
-#                                 # short name or its ZeroTier IP
+#   deploy                # error: a target is required
+#   deploy all            # every prod host
+#   deploy <host>         # a single prod host (in the roster), as its
+#                         # short name or its ZeroTier IP
 set -euo pipefail
 
-# Run from the repo root (vendor/bin/pf-deploy.sh and etc/* are relative to it).
+# Run from the repo root (vendor/bin/deploy and etc/* are relative to it).
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-# Which host(s) this run targets: the first non-flag positional arg (if any),
-# else every prod host. The framework CLI resolves and validates any host and
-# deploys to exactly this set.
+# Which host(s) this run targets: exactly one target — `all` (every prod host)
+# or a single host (short name or ZeroTier IP). A bare `deploy` is an error,
+# mirrored here so it fails BEFORE the private config is materialized. The
+# framework CLI re-resolves and re-validates the same target.
 wanted=""
+count=0
 for arg in "$@"; do
-  [[ "$arg" == -* ]] || { wanted="$arg"; break; }
+  if [[ "$arg" != -* ]]; then
+    count=$((count + 1))
+    [ "$count" -eq 1 ] && wanted="$arg"
+  fi
 done
+if [ "$count" -eq 0 ]; then
+  echo "deploy: no target defined — require 'all' or a host (short name or ZeroTier IP)" >&2
+  exit 1
+fi
+if [ "$count" -gt 1 ]; then
+  echo "deploy: at most one target may be given" >&2
+  exit 1
+fi
+if [ "$wanted" = "all" ]; then
+  wanted=""
+fi
 
 # 1. Private config (simox-owned): materialize the real etc/ files locally
 #    (idempotent). Shipping + env replay happen inside the framework deploy.
@@ -56,7 +73,7 @@ bin/fetch-private-data "$REPO_ROOT"
 #     materialization is either intentional (e.g. no database provisioned yet)
 #     or a missed materialization — ask the operator instead of shipping a
 #     partial set silently. Read the value in a subshell so deploy.conf's
-#     exports do not leak into this shell (pf-deploy.sh must discover them
+#     exports do not leak into this shell (deploy must discover them
 #     itself to build its replay environment).
 shipped="$( . ./etc/deploy.conf >/dev/null 2>&1; printf '%s' "${DEPLOY_PRIVATE_FILES:-}" )"
 missing=""
@@ -89,7 +106,7 @@ fi
 
 # 3. Framework deploy: swap, nix, composer, ship DEPLOY_PRIVATE_FILES, replay
 #    deploy.conf env, idempotent provisioning.
-vendor/bin/pf-deploy.sh "$@"
+vendor/bin/deploy "$@"
 
 # 4. Deploy config (deploy-machine private data; DEPLOY_TARGET_DIR for the
 #    remote post-deploy step).
@@ -113,7 +130,7 @@ post_deploy_one() {
     DEPLOY_REUTER_INI='$DEPLOY_REUTER_INI' \
     DEPLOY_LOG_DIR='$DEPLOY_LOG_DIR' \
     DEPLOY_NIX_RESULT_DIR='$DEPLOY_NIX_RESULT_DIR' \
-    bin/deploy/server-side-post-deploy.sh"
+    bin/deploy-steps/server-side-post-deploy.sh"
 }
 
 if [ -n "$wanted" ]; then

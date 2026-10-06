@@ -2,7 +2,7 @@
 # `git archive`, which honors `export-ignore`. These paths are omitted from
 # the deployed tarball while remaining present in dev checkouts. Everything
 # the remote needs at runtime (composer.json/lock, src/, public/, pkg/, srv/,
-# etc/, bin/deploy/ hooks, LICENSE, README.md) stays in the archive.
+# etc/, bin/deploy-steps/ hooks, LICENSE, README.md) stays in the archive.
 
 # Note: `export-ignore` also affects Composer's prefer-dist and flake archive
 # consumers — keep composer.json (+ lock) and flake.nix/flake.lock out of here.

@@ -84,6 +84,12 @@
             # may not exist yet, so both references below are conditional;
             # re-entering the shell after `make dev-init` puts vendor/bin on
             # PATH.
+            # Consumer CLIs live in bin/ (the deploy entrypoint bin/deploy and
+            # the host-side steps bin/deploy-steps/); bin/ must precede
+            # vendor/bin so the consumer `deploy` shadows the framework’s
+            # Composer-delivered `deploy`.
+            [ -d bin ] && export PATH="$PWD/bin:$PATH"
+
             [ -d vendor/bin ] && export PATH="$PWD/vendor/bin:$PATH"
 
             # .env (git-ignored) is the single machine settings file,

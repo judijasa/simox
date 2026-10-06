@@ -10,7 +10,7 @@
 # .env (generated, git-ignored) holds machine settings; this file holds the
 # deployment target shared by every machine of the project.
 #
-# `gen-env` (run on the remote by the framework pf-deploy on every deploy)
+# `gen-env` (run on the remote by the framework deploy on every deploy)
 # projects the git-ignored .env from THIS file's replayed environment — there
 # is no separate etc/env.prod anymore. The projection:
 #   REPO_PATH      := DEPLOY_TARGET_DIR
@@ -43,7 +43,7 @@ export DEPLOY_LOG_DIR=/var/log/simox
 # recorded from `ema create`'s output. Service accounts are reconciled by the
 # framework gen-service-accounts against the shared pkg/roles-<GUID>
 # declaration, not provisioned here. gen-env writes it into .env
-# as REUTER_INI; pf-deploy's db-check reads it to verify reachability. The
+# as REUTER_INI; deploy's db-check reads it to verify reachability. The
 # file itself is private data, shipped into etc/ by the framework's
 # DEPLOY_PRIVATE_FILES (see below).
 export DEPLOY_REUTER_INI=/srv/apps/simox/etc/reuter.ini
@@ -67,7 +67,7 @@ export DEPLOY_SSL_DIR=/etc/<app>/ssl
 # host paths must never be committed), so the real value travels in the
 # git-ignored override etc/ema.conf. The ship step skips any name absent from
 # etc/ (materialized from the private repo by bin/fetch-private-data);
-# bin/deploy.sh asks the operator to confirm such an absence (a no-database
+# deploy asks the operator to confirm such an absence (a no-database
 # bootstrap ships no reuter.ini) before handing off to the framework.
 export DEPLOY_PRIVATE_FILES="reuter.ini ema.conf"
 
@@ -78,15 +78,15 @@ export DEPLOY_NIX_RESULT_DIR=/usr/local/simox
 export DEPLOY_NIX_GCROOT=/nix/var/nix/gcroots/simox
 
 # DEPLOY_INIT_CMD: consumer-specific provisioning extras run over SSH by `deploy`
-# AFTER the framework's bin/pf-provision.sh and BEFORE other pf-deploy
+# AFTER the framework's bin/pf-provision.sh and BEFORE other deploy
 # steps, with this file's environment replayed. Skipped if unset.
-export DEPLOY_INIT_CMD="bash bin/deploy/provision-extra.sh"
+export DEPLOY_INIT_CMD="bash bin/deploy-steps/provision-extra.sh"
 
 # CRON_FILE: remote crontab file the framework `cron-manifest` output is
-# installed to by pf-deploy's built-in server step on every host (filtered by
+# installed to by deploy's built-in server step on every host (filtered by
 # that host's tags — a job runs only where its `scope` matches, and
 # `host`-scoped jobs run everywhere). REQUIRED whenever the repo declares a
-# `#[CronJob]` attribute (pf-deploy fails loudly if unset then); unused when
+# `#[CronJob]` attribute (deploy fails loudly if unset then); unused when
 # the repo declares no cron jobs.
 export CRON_FILE=/etc/cron.d/simo-orchestrator
 

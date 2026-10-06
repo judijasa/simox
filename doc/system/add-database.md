@@ -12,7 +12,7 @@ ema database <name>                          # scaffold srv/<name>-<GUID>/
 ema schema <name>                            # scaffold pkg/<pkg>-<GUID>/
 # add pkg/<name>.roles-<GUID>/, granting the roles on {{dbname}}
 
-bin/deploy.sh <host>
+deploy <host>
 
 tmux-remote <host> <session>                 # then inside the session:
 ema create srv/<name>-<GUID>
@@ -21,7 +21,7 @@ ema create srv/<name>-<GUID>
 
 gen-service-accounts <name>      # from the dev machine
 vendor/bin/gen-firewall <host> --apply
-bin/deploy.sh <host>                         # read db-check
+deploy <host>                                 # read db-check
 ```
 
 ## 1. Tag the host
@@ -50,7 +50,7 @@ Which roles a database grants, and to which sources, is
 ## 3. Deploy
 
 ```bash
-bin/deploy.sh <host>        # or `make deploy` for every prod host
+deploy <host>               # or `deploy all` for every prod host
 ```
 
 `<host>` is a prod host by its short name or its ZeroTier IP, resolved by

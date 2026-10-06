@@ -37,7 +37,7 @@ function trim_log_files(): void
 function nix_store_gc(): void
 // Runs nix-store GC, then --optimise unless NIX_GC_OPTIMISE=0.
 {
-    // The nix store grows with every nixpkgs revision shipped by deploy.sh;
+    // The nix store grows with every nixpkgs revision shipped by deploy;
     // only the latest closure is gcroot-protected, so old ones accumulate.
     $nix_store = locate_nix_store();
     if ($nix_store === null) {
@@ -54,7 +54,7 @@ function nix_store_gc(): void
 }
 
 /**
- * Locates the nix-store binary. deploy.sh symlinks it into /usr/local/bin;
+ * Locates the nix-store binary. deploy symlinks it into /usr/local/bin;
  * fall back to the canonical multi-user nix path.
  */
 function locate_nix_store(): ?string

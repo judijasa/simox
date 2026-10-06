@@ -1,4 +1,4 @@
-; simox php-fpm pool — rendered by bin/deploy/server-side-post-deploy.sh
+; simox php-fpm pool — rendered by bin/deploy-steps/server-side-post-deploy.sh
 ; (`web` step) into /etc/simox/php-fpm-simox.conf on `web`-tagged hosts.
 ; The REUTER_INI and log-path tokens are filled from the replayed
 ; etc/deploy.conf values on each deploy.

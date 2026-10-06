@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Consumer server-side post-deploy step (simox data): run on each prod host
-# by the deploy entrypoint (bin/deploy.sh) AFTER the framework `pf-deploy.sh`
+# by the deploy entrypoint (deploy) AFTER the framework `deploy`
 # CLI has completed its built-in server steps (regenerating .env via gen-env and
 # verifying DB connectivity via db-check — warn-only — on every host, and
 # installing the scope-filtered cron-manifest output on every host; the private
@@ -17,11 +17,11 @@
 # DEPLOY_TAGS (comma-separated), plus the deploy.conf values the php-fpm render
 # needs (DEPLOY_REUTER_INI, DEPLOY_LOG_DIR, DEPLOY_NIX_RESULT_DIR). `db` (named)
 # is the framework's built-in tag; every tag doubles as a cron scope and is
-# handled by pf-deploy itself — this script must not re-run them.
+# handled by deploy itself — this script must not re-run them.
 
 set -euo pipefail
 
-# The deployed repo root is the CWD (bin/deploy.sh cds there before running
+# The deployed repo root is the CWD (deploy cds there before running
 # this step) and IS the deploy target dir.
 DEPLOY_TARGET_DIR="$PWD"
 
@@ -29,7 +29,7 @@ DEPLOY_TARGET_DIR="$PWD"
 # empty so the script is safe to run standalone.
 DEPLOY_TAGS="${DEPLOY_TAGS:-}"
 
-# Deploy values replayed by the wrapper (bin/deploy.sh) from etc/deploy.conf.
+# Deploy values replayed by the wrapper (deploy) from etc/deploy.conf.
 # Empty when run standalone; the `web` step fails loudly if a web host lacks
 # them, mirroring the framework's fail-fast gen-env guard.
 DEPLOY_REUTER_INI="${DEPLOY_REUTER_INI:-}"

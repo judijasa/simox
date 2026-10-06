@@ -1,4 +1,4 @@
-; simox php-fpm systemd unit — rendered by bin/deploy/server-side-post-deploy.sh
+; simox php-fpm systemd unit — rendered by bin/deploy-steps/server-side-post-deploy.sh
 ; (`web` step) into /etc/systemd/system/php-fpm-simox.service on `web`-tagged
 ; hosts. The binary token resolves to the stable nix `result` bin path
 ; (/usr/local/simox/result/bin/php-fpm), so this unit does not churn when the

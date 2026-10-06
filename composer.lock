@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a498c69d5059488c96ff75e1c3d1e4b",
+    "content-hash": "9ce031321101fc10f0349d235231ff2d",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -155,12 +155,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "c7bcc73d0e97870f780b7a24f35c0540ad95398a"
+                "reference": "64ebca1ae6023da3327e1bac24a5da591d1adb2d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/c7bcc73d0e97870f780b7a24f35c0540ad95398a",
-                "reference": "c7bcc73d0e97870f780b7a24f35c0540ad95398a",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/64ebca1ae6023da3327e1bac24a5da591d1adb2d",
+                "reference": "64ebca1ae6023da3327e1bac24a5da591d1adb2d",
                 "shasum": ""
             },
             "require": {
@@ -180,7 +180,7 @@
             "default-branch": true,
             "bin": [
                 "bin/phprun",
-                "bin/pf-deploy.sh",
+                "bin/deploy",
                 "bin/gen-env",
                 "bin/db-check",
                 "bin/gen-team-accounts",
@@ -223,7 +223,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-10-06T14:30:29+00:00"
+            "time": "2026-10-06T18:15:26+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",

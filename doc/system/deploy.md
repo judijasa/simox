@@ -1,6 +1,6 @@
 # Deploy & production setup
 
-How production servers are provisioned and how `make deploy` ships the app.
+How production servers are provisioned and how `deploy` ships the app.
 Complements [private-config.md](private-config.md) (what the private files are
 and how they materialize/ship) and [web_setup.md](web_setup.md) (the web
 server/php-fpm configuration).
@@ -16,7 +16,7 @@ apt-get install -y cron                      # a cron daemon (cron, crond, or cr
 
 # from the dev machine, inside nix develop
 cp .private-source.example .private-source   # set PRIVATE_DATA_GIT
-make deploy <host>                           # or make deploy for every prod host
+deploy <host>                                # or deploy all for every prod host
 ```
 
 ## Machine roster
@@ -38,8 +38,8 @@ Connecting to a production server via `ema` needs the machine registry config:
   `pkg/roles-<GUID>` declaration (`worker` → `<account>_worker`,
   `web` → `<account>_web`); a `db:<name>` token pins no role (provisioning only);
   see [service-accounts.md](service-accounts.md). Each named token maps to exactly
-  one server; a server may host several databases. `pf-deploy.sh` targets every
-  prod host by default; a server with a `db:<name>` token hosts one or more
+  one server; a server may host several databases. `deploy all` targets every
+  prod host; a server with a `db:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
 - `etc/team.ini` — private data. One section per team member, carrying
   `hostname = ZeroTier-IP` entries and no credential: there is no longer one DB
@@ -101,33 +101,33 @@ certificate under `/etc/<app>/ssl` before the accounts are reconciled with
 **4. Deploy** — run from the dev machine inside `nix develop`:
 
 ```bash
-make deploy                        # every prod host in etc/machines.ini
-make deploy <host>                 # a single prod host (must be in the roster);
+deploy all                         # every prod host in etc/machines.ini
+deploy <host>                      # a single prod host (must be in the roster);
                                    # its short name or its ZeroTier IP
 ```
 
-`<host>` takes either spelling: `bin/deploy.sh` resolves it through the
+`<host>` takes either spelling: `deploy` resolves it through the
 framework's shared host lookup (`vendor/bin/pf-host`; the framework's
 [doc/system/host-resolution.md](https://github.com/judijasa/php_daas_framework/blob/main/doc/system/host-resolution.md)) to the ZeroTier IP the roster is keyed
 by, so the per-host post-deploy step below always matches the host the framework
 deployed to.
 
-`make deploy` runs the deploy entrypoint (`bin/deploy.sh`), which first runs
+`deploy` runs the deploy entrypoint (`deploy`), which first runs
 this repo's own private-config materialization (`bin/fetch-private-data` copies
-the real `etc/` files in locally), then the framework `pf-deploy.sh` CLI
+the real `etc/` files in locally), then the framework `deploy` CLI
 (shipped via Composer to `vendor/bin`) — which ships `DEPLOY_PRIVATE_FILES`
 (`reuter.ini`) to each target host and replays the `deploy.conf`
 environment to every remote step — and finally the per-host post-deploy step.
 On every deploy, the framework's generic `vendor/bin/pf-provision.sh` runs on
 the remote (idempotently) to assert the app user and create system directories
 (`/srv/apps`, `/var/log/<app>`), then the consumer-specific `DEPLOY_INIT_CMD`
-(`bin/deploy/provision-extra.sh`: Apache www-data traversal).
+(`bin/deploy-steps/provision-extra.sh`: Apache www-data traversal).
 
 The framework CLI also runs its built-in per-host steps — regenerating `.env`,
 verifying DB connectivity via `db-check` (warn-only), and installing cron
 (`/etc/cron.d/<app>-orchestrator`) from the `#[CronJob]`/`#[Agent]` attributes
 on every host, scope-filtered by that host's tag list. After it returns, the
-deploy entrypoint runs `bin/deploy/server-side-post-deploy.sh` on each prod
+deploy entrypoint runs `bin/deploy-steps/server-side-post-deploy.sh` on each prod
 host (passing that host's tag list via `DEPLOY_TAGS` plus the `deploy.conf`
 values the render needs); only this repo's own `web` step remains there —
 restoring Apache www-data traversal on the repo dir and installing the
@@ -180,7 +180,7 @@ environment:
   `SSL_DIR=~/.<app>/ssl`), overridden by the optional `etc/dev.conf`; the
   Makefile appends nothing of its own.
 - **prod** — every deploy regenerates `/srv/apps/<app>/.env` via the framework
-  `gen-env` CLI, run by `pf-deploy.sh` as a built-in per-host step; it projects
+  `gen-env` CLI, run by `deploy` as a built-in per-host step; it projects
   it from the replayed `deploy.conf` environment (no separate `etc/env.prod`):
   `REPO_PATH=/srv/apps/<app>`, `REPO_LOG=/var/log/<app>`,
   `REUTER_INI=/srv/apps/<app>/etc/reuter.ini`, `SSL_DIR=/etc/<app>/ssl` (the
@@ -191,7 +191,7 @@ environment:
   (values recorded from `ema create` output), shipped (whole) into `etc/` by the
   framework's `DEPLOY_PRIVATE_FILES` key; `gen-env` only projects its path
   (`DEPLOY_REUTER_INI`), never its contents. On the same per-host pass,
-  `pf-deploy.sh` runs `db-check` (warn-only) to verify the host's own
+  `deploy` runs `db-check` (warn-only) to verify the host's own
   `mariadb@*` instances are up and each `reuter.ini` section's TCP endpoint is
   reachable. `ema create srv/<name>-<GUID>` (run on the DB host) uses the
   section socket for root auth; the app (`Database.php`) reads `.env` and stays

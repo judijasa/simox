@@ -1,21 +1,21 @@
-# simox Makefile (dev-init + deploy entrypoints).
-# Production deploy is the consumer entrypoint bin/deploy.sh: it first runs
+# simox Makefile (dev-init only; production deploy is the bare `deploy`
+# command, not a make target).
+# Production deploy is the consumer entrypoint bin/deploy: it first runs
 # simox's own private-config materialization (bin/fetch-private-data copies the
-# real etc/ files in locally), then the framework `pf-deploy.sh` CLI
-# (vendor/bin/pf-deploy.sh) — which ships DEPLOY_PRIVATE_FILES (reuter.ini ema.conf) to
+# real etc/ files in locally), then the framework `deploy` CLI
+# (vendor/bin/deploy) — which ships DEPLOY_PRIVATE_FILES (reuter.ini ema.conf) to
 # each host, replays the deploy.conf environment to every remote step, and runs
 # its built-in per-host steps (gen-env/db-check on every host, cron install on
 # `worker` hosts) — and finally the consumer post-deploy step
-# bin/deploy/server-side-post-deploy.sh, covering only simox's own tags
-# (`web`). The provisioning extra stays bin/deploy/provision-extra.sh via
+# bin/deploy-steps/server-side-post-deploy.sh, covering only simox's own tags
+# (`web`). The provisioning extra stays bin/deploy-steps/provision-extra.sh via
 # DEPLOY_INIT_CMD.
 # Generic dev-init steps delegate to the Composer-delivered scripts in
 # vendor/bin (init-local-env.sh from the `judijasa/php-daas-framework` package);
 # this Makefile keeps only the consumer-specific steps (git hooks, private
-# config, hosts, ssh config) plus the `deploy` entrypoint. The dev MariaDB
-# daemon is owned by ema's per-instance sandbox lifecycle (`ema sandbox` /
-# `ema start` / `ema stop`) — this Makefile no longer initializes or starts a
-# shared daemon.
+# config, hosts, ssh config). The dev MariaDB daemon is owned by ema's
+# per-instance sandbox lifecycle (`ema sandbox` / `ema start` / `ema stop`) —
+# this Makefile no longer initializes or starts a shared daemon.
 
 SHELL := $(shell which bash 2>/dev/null)
 
@@ -31,23 +31,15 @@ _dev-init: DEV_LOG_DIR = $(REPO_LOG)
 _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
 
-.PHONY: help dev-init deploy web _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
+.PHONY: help dev-init web _dev-assert-nix _dev-init _dev-init-git-hooks _dev-create-dirs \
     _dev-init-composer _dev-init-private-config _dev-update-hosts _dev-ssh-config _dev-init-local-env
 
 help:
 	@echo "Available targets:"
 	@echo "  dev-init   - Run ONCE after cloning locally to build the dev sandbox"
-	@echo "  deploy     - Deploy to prod (args via ARGS)"
 	@echo "  web        - Run the local PHP built-in server"
 
 dev-init: _dev-assert-nix _dev-init
-
-# Production deploy: materialize private config, wrap the framework CLI (which
-# ships DEPLOY_PRIVATE_FILES and replays deploy.conf env), then run the
-# consumer post-deploy step (`web`) per host. Pass deploy args via ARGS
-# (empty = every prod host).
-deploy:
-	@bin/deploy.sh $(ARGS)
 
 # Local website: run the same nix-built PHP the web server uses (the php84
 # closure php-fpm is built from) as a built-in server. `-t public` matches

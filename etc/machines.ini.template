@@ -1,11 +1,11 @@
 # Machine registry: prod machines only.
 # This file is private data, kept in the private config repo and copied into
 # etc/ as a real file by simox's bin/fetch-private-data via .private-source
-# (see doc/system/private-config.md). `pf-deploy.sh` reads the roster
+# (see doc/system/private-config.md). `deploy` reads the roster
 # (locally, on the deploy machine — `machines.ini` is never shipped to a host).
 #
 # Prod deploy targets. Each key is the server's ZeroTier IP (the same
-#        address `pf-deploy.sh` uses for SSH). The value is a comma-separated
+#        address `deploy` uses for SSH). The value is a comma-separated
 #        list of `tag[:name]` tokens:
 #          named tag   `db:simo0` -> a `db` resource named `simo0`
 #          bare tag    `worker`   -> a bare tag data jobs use as their cron

@@ -17,7 +17,7 @@ reaches prod. The generic contract is documented in the framework's
 ```bash
 cp .private-source.example .private-source   # set PRIVATE_DATA_GIT (+ PRIVATE_DATA_REF)
 make dev-init                                # materialize the private files into etc/
-make deploy [<host>]                         # ship the private files, then deploy
+deploy <host>                                # ship the private files, then deploy
 ```
 
 A machine that must reach a database whose accounts require X509 also needs its
@@ -76,16 +76,16 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    `etc/reuter.ini` and `etc/team.ini` (plus whatever else the private repo
    carries). An absent `.private-source` makes the step a no-op, and the repo
    then runs on its committed defaults.
-2. **Ship (framework, during deploy).** `pf-deploy.sh` ships the files named in
+2. **Ship (framework, during deploy).** `deploy` ships the files named in
    `DEPLOY_PRIVATE_FILES` (here `reuter.ini ema.conf`) — and nothing else — **whole**
    from the deploy machine's `etc/` into the freshly swapped `etc/` on each
    prod host (the roster read locally from `etc/machines.ini` via
    `vendor/bin/pf-roster`), skipping any name that is absent from `etc/` —
-   `bin/deploy.sh` asks the operator to confirm such an absence first. At the
+   `deploy` asks the operator to confirm such an absence first. At the
    same time it replays the deploy machine's
    `deploy.conf` environment to every remote step, so the host's `gen-env`,
    `provision-extra.sh` and `server-side-post-deploy.sh` resolve `DEPLOY_*`
-   without a `deploy.conf` of their own. `bin/deploy.sh` runs
+   without a `deploy.conf` of their own. `deploy` runs
    `fetch-private-data` first, then hands off to the framework.
 
 Real files, not symlinks: the private repo's committed content is the single
@@ -148,7 +148,7 @@ repo (tracked files: `deploy.conf`, `reuter.ini`, `ema.conf`, `dev.conf`,
 ```bash
 make dev-init                     # materializes the private files into etc/ (dev)
 bin/fetch-private-data            # that same step alone (idempotent)
-make deploy [<host>]              # ships the private files via DEPLOY_PRIVATE_FILES, then deploys
+deploy <host>                     # ships the private files via DEPLOY_PRIVATE_FILES, then deploys
 ```
 
 `bin/fetch-private-data` performs only the materialize step — the deploy
