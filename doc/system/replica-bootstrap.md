@@ -30,10 +30,16 @@ is upstream — this document carries only the consumer-side policy:
 vendor/bin/pf-host <replica>                 # -> <replica-ip>
 vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip>
 
+# open the primary's db:<primary> port to the overlay (the replication channel
+# the replica pulls over) — re-apply after a rebuild that changed its PORT:
+vendor/bin/gen-firewall <primary-host> --apply
+
 # on <replica>, inside a tmux-remote session
 ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
-# then record the printed [<replica>] section in the private etc/reuter.ini
+# record the printed [<replica>] section in the private etc/reuter.ini, then
+# open the replica's db:<replica> port for the website's reads:
+vendor/bin/gen-firewall <replica-host> --apply
 ```
 
 ## What this repo owns
@@ -53,13 +59,15 @@ ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
    no roles and must not manage its `*.*` grant. It *is* declared in the package
    `allowlist` so the closed-world drop pass keeps it (the framework's drop
    floor is only `root`/`mariadb.sys`).
-4. **`<primary>`'s host prerequisites.** Two prerequisites must hold before the
-   run: the MariaDB backup package (`mariabackup`) installed on `<primary>`, and
-   binary logging (`log_bin`) enabled on `<primary>`. The bootstrap checks only
-   the first — it aborts with an `ERROR:` line if `mariabackup` is missing. It
-   does **not** check binlog: verify it manually, or the snapshot ships with
-   no binlog coordinate and `ema create` fails on the replica host instead. A
-   miss leaves no partial state, so the run is safe to repeat.
+4. **`<primary>`'s host prerequisites.** Three prerequisites must hold on
+   `<primary>` before the run: the MariaDB client, the backup package
+   (`mariabackup`/`mariadb-backup`), and binary logging (`@@log_bin=1`). The
+   bootstrap checks all three and aborts with an `ERROR:` line if any is
+   missing or off — nothing is created or changed, so the run is safe to
+   repeat. It also preflights the replica→primary TCP channel before touching
+   the primary, so a firewall/network miss aborts early instead of surfacing
+   inside `ema create` as `Slave_IO_Running='Connecting'` / `Connection timed
+   out`.
 
 ## Run it
 
@@ -73,6 +81,22 @@ vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip>
 it both as the `root@<ip>` SSH/scp target and as the `'replication'@'<ip>'` host
 pin, which must be the address `<primary>` sees as the replica's client source
 (the framework's CLI doc has the full argument).
+
+Open the primary's port before the build. The replica's IO thread pulls the
+primary's binlog over the primary's `db:<primary>` port, so that port must be
+reachable from `<replica>` **before** `ema create` — otherwise the build fails
+with `Slave_IO_Running='Connecting'` / `Last_IO_Error ... Connection timed
+out`. `gen-firewall` opens it from the `[<primary>]` `PORT` in `reuter.ini`:
+
+```bash
+vendor/bin/gen-firewall <primary-host> --dry-run
+vendor/bin/gen-firewall <primary-host> --apply
+```
+
+This is normally done when `<primary>` is first added; re-run it after a rebuild
+that changed the primary's `PORT` (the stale rule no longer matches). After the
+build, record `[<replica>]` and open the replica's own `db:<replica>` port the
+same way — [add-database.md](add-database.md) step 7.
 
 Then build the replica on `<replica>` — inside a `tmux-remote` session, like any
 database creation ([add-database.md](add-database.md)):
