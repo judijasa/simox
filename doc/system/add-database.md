@@ -85,13 +85,13 @@ primary's snapshot and attaches replication, reading the primary's
 
 Put the printed section in the private config repo's `reuter.ini` (which
 [private-config.md](private-config.md) delivers; the keys are documented in
-`etc/reuter.ini.template`), with the password key recorded empty:
+`etc/reuter.ini.template`). The `<ACCOUNT>_PASSWORD` key is optional (an absent
+or empty value means a passwordless account):
 
 ```ini
 [<name>]
 SERVER=<overlay ip>
 PORT=<auto-picked>
-<ACCOUNT>_PASSWORD=
 MYSQL_UNIX_PORT=/var/lib/mariadb/<name>/mysql.sock
 ```
 

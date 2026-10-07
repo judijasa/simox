@@ -111,5 +111,6 @@ Record `<replica>`'s `[<replica>]` section in the private `etc/reuter.ini` — t
 section `ema create` printed, or `ema values <replica>` if it was lost. The
 section header names the instance; its `DBNAME` key names the shared `<schema>`
 both instances serve. The website reads `<replica>`, not `<primary>`; both
-sections carry the single `<account>` password key (`<account>` is ALL on
-`<primary>` and SELECT on `<replica>`).
+sections may carry the single `<account>` password key (optional — absent or
+empty means passwordless); `<account>` is ALL on `<primary>` and SELECT on
+`<replica>`).

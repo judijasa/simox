@@ -38,8 +38,8 @@ export DEPLOY_LOG_DIR=/var/log/simox
 
 # DEPLOY_REUTER_INI: path to the consumer's manual reuter.ini — one
 # [<instance>] section per instance (`simo0` primary and `simo1` read-only
-# replica, both serving the `simo` schema; SERVER/PORT/MYSQL_UNIX_PORT/DBNAME
-# plus the SIMOX_PASSWORD key),
+# replica, both serving the `simo` schema; SERVER/PORT/MYSQL_UNIX_PORT/DBNAME,
+# plus an optional SIMOX_PASSWORD key),
 # recorded from `ema create`'s output. Service accounts are reconciled by the
 # framework gen-service-accounts against the shared pkg/roles-<GUID>
 # declaration, not provisioned here. gen-env writes it into .env

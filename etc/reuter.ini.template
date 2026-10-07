@@ -9,8 +9,8 @@
 ; $account is this repo's single service account (declared in the shared
 ; pkg/roles-<GUID> package): `simox` (read-write on the primary, read on the
 ; replica). The connector reads the password from the <ACCOUNT>_PASSWORD key
-; (uppercased account name + _PASSWORD); an empty value means a passwordless
-; account. This repo is passwordless by policy: the security boundary is
+; (uppercased account name + _PASSWORD); an absent or empty value means a
+; passwordless account. This repo is passwordless by policy: the security boundary is
 ; ZeroTier membership plus the source-IP host pin that the framework
 ; gen-service-accounts derives from etc/team.ini / etc/machines.ini, plus the
 ; client certificate the accounts demand (`require: 'X509'` in the roles
@@ -32,8 +32,8 @@
 ; app layer resolves an instance to that sandbox ini by instance name (the
 ; schema still comes from DBNAME; prod via REUTER_INI / this file, unchanged).
 ;
-; The <ACCOUNT>_PASSWORD keys are manual, consumer-side credentials (recorded
-; here by hand; empty = passwordless). The framework gen-service-accounts
+; The <ACCOUNT>_PASSWORD keys are optional consumer-side credentials (recorded
+; here by hand; absent or empty = passwordless). The framework gen-service-accounts
 ; reconciles the account (create + drop stale, role-based, REQUIRE X509)
 ; against the shared pkg/roles-<GUID> declaration but does NOT write these keys
 ; back — this file is the manual source of truth.
@@ -41,9 +41,9 @@
 ; Two instances: `simo0` (the writable primary) and `simo1` (its read-only
 ; replica; replication is established by ema's replica build — see
 ; doc/system/replica-bootstrap.md) both serve the shared `simo` schema, so each
-; section below carries `DBNAME=simo`. Each section also carries the single
-; `simox` password key (`simox` is ALL on `simo0`, SELECT on `simo1`, and the
-; website reads `simo1` through the same account).
+; section below carries `DBNAME=simo`. The single `simox` password key is
+; optional (absent or empty means passwordless); `simox` is ALL on `simo0`,
+; SELECT on `simo1`, and the website reads `simo1` through the same account.
 ;
 ; Transport: the section is authoritative for the 'ema' CLI. When
 ; MYSQL_UNIX_PORT is set, ema connects via that socket (root/unix_socket
@@ -60,13 +60,11 @@
 [simo0]
 SERVER=10.147.x.10
 PORT=3307
-SIMOX_PASSWORD=
 DBNAME=simo
 MYSQL_UNIX_PORT=/path/to/mysql.sock
 
 [simo1]
 SERVER=10.147.x.11
 PORT=3308
-SIMOX_PASSWORD=
 DBNAME=simo
 MYSQL_UNIX_PORT=/path/to/mysql.sock

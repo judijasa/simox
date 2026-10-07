@@ -106,10 +106,10 @@ and those live only in the private repo, never in the public history. The
 `<ACCOUNT>_PASSWORD` key is **not** secret: the service account is passwordless, and
 what gates it is the `require: 'X509'` declaration in the roles package plus the
 host-level `ssl-ca` in `etc/ema.default.conf` (see [machine-certs.md](machine-certs.md)),
-so the key stays empty. The framework `gen-service-accounts` reconciles
+so the key stays empty (an absent key means the same). The framework `gen-service-accounts` reconciles
 the account (create/drop, role-based) against the shared `pkg/roles-<GUID>`
 declaration but never writes a password back into this file — the template ships
-`<ACCOUNT>_PASSWORD=` empty. The service-account *policy* itself — which accounts
+`<ACCOUNT>_PASSWORD=` empty (or omits the key, which also means passwordless). The service-account *policy* itself — which accounts
 exist and on which databases (the shared `pkg/roles-<GUID>`
 `sources`/`accounts` declaration plus the per-instance `pkg/<db>.roles-<GUID>`
 grants) — is committed, not private.

@@ -41,7 +41,7 @@ Why the extra gate at all: the pin alone is satisfied by any peer on the trusted
 network that can claim the address, so it authenticates the network position, not
 the machine. A certificate adds a private key the peer must hold.
 
-The account stays **passwordless** (`<ACCOUNT>_PASSWORD=` empty in `reuter.ini`):
+The account stays **passwordless** (`<ACCOUNT>_PASSWORD=` absent or empty in `reuter.ini`):
 the cert is not a replacement for a password, it is the condition under which a
 passwordless account is allowed to connect. Both halves must be in place — the
 server-side `ssl-ca` (or `REQUIRE X509` authenticates nobody) and a cert on the
