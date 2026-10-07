@@ -162,7 +162,7 @@ nix-built php-fpm (pool config + systemd unit, then restarting the service).
   socket, the `$account` arg ignored); `prod` — the default, also for
   unset/empty — goes through `REUTER_INI` / `etc/reuter.ini` on the
   service-account path (`connectAs`, TCP). The `ema` CLI consults it only for
-  its one dbname-addressed verb (`ema mariadb <db>`); its other verbs resolve
+  its one dbname-addressed verb (`ema mdb <db>`); its other verbs resolve
   their own side. Any other value is an error.
 
 No `/etc/environment` entries are required: the framework's `phprun` CLI

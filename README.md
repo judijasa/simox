@@ -37,7 +37,7 @@ EMA_TARGET=sandbox phprun 'src/scripts/simo/indexer/main.php:main()'
 Access the local `simo0` instance (schema `simo`) and verify content:
 
 ```bash
-EMA_TARGET=sandbox ema mariadb simo0
+EMA_TARGET=sandbox ema mdb simo0
 SELECT count(*) FROM empleo_snapshot;
 ```
 

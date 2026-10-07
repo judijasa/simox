@@ -73,7 +73,7 @@ ema create srv/<name>-<GUID>         # inside the session
 instance and creates the database; it reads nothing from `reuter.ini`, because
 the section does not exist yet. It is create-only (`ema drop` is retired: to
 delete a created database, run a deliberate `DROP DATABASE` over
-`ema mariadb <name>` — the instance's datadir/unit are removed by hand) and
+`ema mdb <name>` — the instance's datadir/unit are removed by hand) and
 prints the `[<name>]` section on success.
 
 A replica package instead takes `--from-snapshot <path>`: it restores the
@@ -100,7 +100,7 @@ recoverable with `ema values <name>`.
 
 ## 6. Reconcile the accounts and grants
 
-The section must be recorded first: the reconcile runs `ema mariadb <name>` on
+The section must be recorded first: the reconcile runs `ema mdb <name>` on
 the host, which resolves it. From the dev machine:
 
 ```bash
@@ -128,4 +128,4 @@ section recorded in step 5.
 ## 8. Verify
 
 Run a deploy and read `db-check`'s warn-only output, or open the database with
-`ema mariadb <name>`.
+`ema mdb <name>`.
