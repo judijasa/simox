@@ -56,15 +56,23 @@
 ; reads MYSQL_UNIX_PORT from the sandbox instance's own
 ; var/sandbox/<name>-<guid>/reuter.ini section (written by 'ema sandbox') and
 ; connects as root over that socket, where no certificate is applied.
+;
+; Server verification is ON by default: the connector verifies the server
+; against <SSL_DIR>/ca.crt (secure by default). A self-signed server cert
+; (no CA yet) must opt out explicitly per instance with
+; SSL_VERIFY_SERVER_CERT=0 (absent or '1'/'true' = verify). See
+; doc/system/machine-certs.md.
 
 [simo0]
 SERVER=10.147.x.10
 PORT=3307
 DBNAME=simo
 MYSQL_UNIX_PORT=/path/to/mysql.sock
+; SSL_VERIFY_SERVER_CERT=0   # opt out: self-signed server cert (no CA yet)
 
 [simo1]
 SERVER=10.147.x.11
 PORT=3308
 DBNAME=simo
 MYSQL_UNIX_PORT=/path/to/mysql.sock
+; SSL_VERIFY_SERVER_CERT=0   # opt out: self-signed server cert (no CA yet)

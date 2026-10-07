@@ -117,8 +117,9 @@ CRL takes effect on restart (`FLUSH SSL` does not reload it).
 - **Revocation mechanics** — the CRL is generated on the offline CA and
   installed out of band (above); automated renewal or distribution stays out of
   scope — it is a deliberate, operator-driven event.
-- **Client-side server verification** — for v1 the client presents its
-  certificate and the server verifies it; the client does not verify the
-  server's. Full mutual TLS needs CA-signed server certificates.
+- **Client-side server verification** — on by default (`connectAs` verifies the
+  server against `<SSL_DIR>/ca.crt`). simox opts out to v1 — its server cert is
+  self-signed, no CA yet — via `SSL_VERIFY_SERVER_CERT=0` in each instance's
+  `reuter.ini` section. Full mutual TLS needs a CA-signed server cert.
 - **The `replication` account** — stays passwordless and host-pinned to the
   replica host, unless it is later certed as well.
