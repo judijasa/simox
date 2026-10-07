@@ -26,6 +26,9 @@ pm.start_servers = 4
 pm.min_spare_servers = 2
 pm.max_spare_servers = 6
 
-; The web process has no .env (unlike phprun/cron), so REUTER_INI is set here
-; the way the Apache vhost's SetEnv used to.
+; The web process has no .env (unlike phprun/cron), so REUTER_INI and SSL_DIR
+; are set here the way the Apache vhost's SetEnv used to. SSL_DIR names the
+; host's TLS client-cert directory (client.crt + client.key) presented to the
+; `require: 'X509'` service account.
 env[REUTER_INI] = @REUTER_INI@
+env[SSL_DIR] = @SSL_DIR@

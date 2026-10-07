@@ -131,6 +131,7 @@ post_deploy_one() {
   ssh -n "root@$host" "cd '$DEPLOY_TARGET_DIR' && \
     DEPLOY_TAGS='$tags' \
     DEPLOY_REUTER_INI='$DEPLOY_REUTER_INI' \
+    DEPLOY_SSL_DIR='$DEPLOY_SSL_DIR' \
     DEPLOY_LOG_DIR='$DEPLOY_LOG_DIR' \
     DEPLOY_NIX_RESULT_DIR='$DEPLOY_NIX_RESULT_DIR' \
     bin/deploy-steps/server-side-post-deploy.sh"
