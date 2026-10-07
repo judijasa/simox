@@ -125,7 +125,10 @@ post_deploy_one() {
   local tags="$2"
   # Replay the deploy.conf values the `web` step needs (php-fpm render) into
   # the remote step, mirroring how the framework replays deploy.conf env.
-  ssh "root@$host" "cd '$DEPLOY_TARGET_DIR' && \
+  # `-n` detaches stdin from the outer `while read` roster pipe, otherwise ssh
+  # consumes the remaining roster lines and every host after the first is
+  # silently skipped (Bug 2).
+  ssh -n "root@$host" "cd '$DEPLOY_TARGET_DIR' && \
     DEPLOY_TAGS='$tags' \
     DEPLOY_REUTER_INI='$DEPLOY_REUTER_INI' \
     DEPLOY_LOG_DIR='$DEPLOY_LOG_DIR' \
