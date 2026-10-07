@@ -89,7 +89,8 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
             } catch (PDOException $e) {
-                echo "Error: ". $e->getMessage(). PHP_EOL;
+                error_log('simox: database connection failed: ' . $e->getMessage());
+                echo 'Error de conexión con la base de datos.';
                 exit;
             } finally {
                 $conn = null;

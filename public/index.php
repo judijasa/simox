@@ -111,7 +111,8 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             try {
                 $conn = Database::connectTo($dbname, 'simox');
             } catch (PDOException $e) {
-                echo 'Connection failed: ' . $e->getMessage();
+                error_log('simox: database connection failed: ' . $e->getMessage());
+                echo 'Error de conexión con la base de datos.';
                 exit;
             }
 
