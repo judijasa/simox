@@ -96,7 +96,7 @@ private) fork vulnerable to drift.
 
 ## Production Server Setup
 
-**1. Apache vhost + php-fpm** — one-time manual steps (vhost + FastCGI to the nix-built php-fpm). See [doc/system/web_setup.md](doc/system/web_setup.md).
+**1. php-fpm (web)** — installed by the deploy's `web` step; the web server and vhost (forwarding `.php` to the php-fpm socket) are consumer-owned. See [doc/system/web_setup.md](doc/system/web_setup.md).
 
 **2. TLS cert material** — install the project CA and the host's client certificate under `/etc/<app>/ssl` (out of band, before the accounts are reconciled with `REQUIRE X509`). See [doc/system/machine-certs.md](doc/system/machine-certs.md).
 

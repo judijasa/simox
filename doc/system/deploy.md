@@ -2,15 +2,15 @@
 
 How production servers are provisioned and how `deploy` ships the app.
 Complements [private-config.md](private-config.md) (what the private files are
-and how they materialize/ship) and [web_setup.md](web_setup.md) (the web
-server/php-fpm configuration).
+and how they materialize/ship) and [web_setup.md](web_setup.md) (the php-fpm
+pool configuration and the web-server contract).
 
 ## Quick setup
 
 ```bash
 # on the new host, as root (one-time)
 useradd --create-home <PROD_USER>            # lock the password, authorize the project key
-# Apache vhost + php-fpm: see web_setup.md
+# php-fpm: see web_setup.md (web server + vhost are consumer-owned)
 # TLS cert material under /etc/<app>/ssl (CA + this host's client cert): see machine-certs.md
 apt-get install -y cron                      # a cron daemon (cron, crond, or cronie)
 
@@ -90,7 +90,7 @@ One-time steps. The app user (`PROD_USER` in `etc/deploy.conf`) must exist with
 SSH access first (create the user with `useradd --create-home`, lock the
 password, install the SSH key).
 
-**1. Apache vhost + php-fpm** — see [web_setup.md](web_setup.md).
+**1. php-fpm (web)** — installed by the deploy's `web` step; the web server and vhost are consumer-owned. See [web_setup.md](web_setup.md).
 
 **2. TLS cert material** — install the project CA and this host's client
 certificate under `/etc/<app>/ssl` before the accounts are reconciled with
