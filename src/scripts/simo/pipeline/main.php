@@ -337,7 +337,7 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
             $row['estado_inscripcion'],
             isset($row['favorito']) ? (int)$row['favorito'] : null,
             $row['inscripcion_id'],
-            $row['fecha_inscripcion'],
+            ($row['fecha_inscripcion'] !== '' ? $row['fecha_inscripcion'] : null),
             $row['nivel_nombre'],
             $row['access'],
         ];
