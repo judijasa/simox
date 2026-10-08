@@ -1,6 +1,6 @@
 CREATE OR REPLACE TABLE municipio (
     id SMALLINT UNSIGNED AUTO_INCREMENT,
-    code SMALLINT UNSIGNED NOT NULL, -- id at simo
+    code INT UNSIGNED NOT NULL, -- id at simo
     nombre VARCHAR(100) NOT NULL,
     departamento VARCHAR(100),
 
