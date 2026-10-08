@@ -2,7 +2,7 @@ CREATE OR REPLACE TABLE entidad (
     id SMALLINT UNSIGNED AUTO_INCREMENT,
     code INT UNSIGNED,
     nit VARCHAR(100),
-    nombre VARCHAR(100),
+    nombre VARCHAR(1000),
     tipo_entidad JSON,
     tipo_entidad_id TINYINT UNSIGNED,
 
