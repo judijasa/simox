@@ -20,10 +20,6 @@ function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
 }
 
 function get_total_job_offers($base_url){
-    // About MAX_FILE_SIZE:
-    // stackoverflow.com/questions/48098911/the-use-of-the-php-simple-html-dom-parser-when-parsing-large-html-files-result
-    //  stackoverflow.com/questions/30966569/str-get-html-doesnt-work-and-return-blank/30967650
-    define('MAX_FILE_SIZE', 4000000);
     $target_site = $base_url. '/#ofertaEmpleo';
 
     $casper = new CasperTrio();
