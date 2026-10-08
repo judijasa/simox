@@ -8,7 +8,10 @@ use Utils\Logger;
 
 #[CronJob(schedule: '0 2 * * *', scope: 'worker')]
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
-function main($conn, $batch_size_limit = 200, $jobs_per_page = 50, $timeout = 60 * 45){
+function main($conn,
+    $batch_size_limit = 200,
+    $jobs_per_page = 50, $timeout = 60 * 45  // secs
+){
     $base_url = "https://simo.cnsc.gov.co";
     indexer(
         $conn,
