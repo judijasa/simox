@@ -27,6 +27,13 @@ REPO_PATH = $(CURDIR)
 REPO_VAR = $(REPO_PATH)/var
 REPO_LOG = $(REPO_VAR)/log
 
+# The app layer's config file, named explicitly because a web server cannot
+# honour the repo's "run from the repo root" convention: php -S chdirs into
+# its document root, so the app layer's $PWD/etc/reuter.ini fallback resolves
+# to public/etc/reuter.ini and misses. Same knob prod's php-fpm pool sets via
+# env[REUTER_INI]; `?=` keeps an explicit REUTER_INI=… make web in charge.
+REUTER_INI ?= $(REPO_PATH)/etc/reuter.ini
+
 _dev-init: DEV_LOG_DIR = $(REPO_LOG)
 _dev-init: TAG_BEGIN = \# generated: simox-hosts
 _dev-init: TAG_END   = \# end: simox-hosts
@@ -43,9 +50,10 @@ dev-init: _dev-assert-nix _dev-init
 
 # Local website: run the same nix-built PHP the web server uses (the php84
 # closure php-fpm is built from) as a built-in server. `-t public` matches
-# prod's DocumentRoot.
+# prod's DocumentRoot; REUTER_INI compensates for the chdir that comes with it
+# (see the definition above).
 web: _dev-assert-nix
-	@php -S localhost:8000 -t public
+	@REUTER_INI=$(REUTER_INI) php -S localhost:8000 -t public
 
 _dev-assert-nix:
 	@if [ -z "$$IN_NIX_SHELL" ]; then \
