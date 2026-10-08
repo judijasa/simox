@@ -3,7 +3,7 @@ CREATE OR REPLACE TABLE convocatoria (
     code INT,  -- id by simo
     nombre VARCHAR(250),
     agno YEAR,
-    codigo VARCHAR(10),
+    codigo VARCHAR(50),
     entidad JSON,
     entidad_id SMALLINT UNSIGNED,
     es_tipo_fase BOOL,
