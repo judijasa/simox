@@ -134,6 +134,7 @@ post_deploy_one() {
     DEPLOY_SSL_DIR='$DEPLOY_SSL_DIR' \
     DEPLOY_LOG_DIR='$DEPLOY_LOG_DIR' \
     DEPLOY_NIX_RESULT_DIR='$DEPLOY_NIX_RESULT_DIR' \
+    DEPLOY_PHP_FPM_RUN='$DEPLOY_PHP_FPM_RUN' \
     bin/deploy-steps/server-side-post-deploy.sh"
 }
 

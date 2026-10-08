@@ -1,6 +1,6 @@
 ; simox php-fpm pool — rendered by bin/deploy-steps/server-side-post-deploy.sh
 ; (`web` step) into /etc/simox/php-fpm-simox.conf on `web`-tagged hosts.
-; The REUTER_INI and log-path tokens are filled from the replayed
+; The REUTER_INI, log-path and run-path tokens are filled from the replayed
 ; etc/deploy.conf values on each deploy.
 ;
 ; The nix-built PHP's php.ini is immutable inside the store, so anything
@@ -10,12 +10,12 @@
 
 [global]
 error_log = @PHP_FPM_LOG@
-pid = /run/php-fpm-simox.pid
+pid = @PHP_FPM_RUN@.pid
 
 [simox]
 user = www-data
 group = www-data
-listen = /run/php-fpm-simox.sock
+listen = @PHP_FPM_RUN@.sock
 listen.owner = www-data
 listen.group = www-data
 listen.mode = 0660

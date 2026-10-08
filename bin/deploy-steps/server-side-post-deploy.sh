@@ -16,7 +16,7 @@
 # The wrapper passes this host's `tag[:name]` tokens from etc/machines.ini via
 # DEPLOY_TAGS (comma-separated), plus the deploy.conf values the php-fpm render
 # needs (DEPLOY_REUTER_INI, DEPLOY_LOG_DIR, DEPLOY_NIX_RESULT_DIR,
-# DEPLOY_SSL_DIR). `db` (named)
+# DEPLOY_SSL_DIR, DEPLOY_PHP_FPM_RUN). `db` (named)
 # is the framework's built-in tag; every tag doubles as a cron scope and is
 # handled by deploy itself — this script must not re-run them.
 
@@ -37,6 +37,7 @@ DEPLOY_REUTER_INI="${DEPLOY_REUTER_INI:-}"
 DEPLOY_LOG_DIR="${DEPLOY_LOG_DIR:-}"
 DEPLOY_NIX_RESULT_DIR="${DEPLOY_NIX_RESULT_DIR:-}"
 DEPLOY_SSL_DIR="${DEPLOY_SSL_DIR:-}"
+DEPLOY_PHP_FPM_RUN="${DEPLOY_PHP_FPM_RUN:-}"
 
 has_tag() {
     local tag="$1"
@@ -53,7 +54,7 @@ if has_tag web; then
     chmod o+x "$DEPLOY_TARGET_DIR"
 
     echo "    Installing nix-built php-fpm (pool config + systemd unit)..."
-    for _v in DEPLOY_REUTER_INI DEPLOY_LOG_DIR DEPLOY_NIX_RESULT_DIR DEPLOY_SSL_DIR; do
+    for _v in DEPLOY_REUTER_INI DEPLOY_LOG_DIR DEPLOY_NIX_RESULT_DIR DEPLOY_SSL_DIR DEPLOY_PHP_FPM_RUN; do
         if [ -z "${!_v:-}" ]; then
             echo "ERROR: $_v is required on a 'web' host (missing from the replayed deploy.conf)." >&2
             exit 1
@@ -67,6 +68,7 @@ if has_tag web; then
         -e "s|@REUTER_INI@|$DEPLOY_REUTER_INI|g" \
         -e "s|@SSL_DIR@|$DEPLOY_SSL_DIR|g" \
         -e "s|@PHP_FPM_LOG@|$DEPLOY_LOG_DIR/php-fpm.log|g" \
+        -e "s|@PHP_FPM_RUN@|$DEPLOY_PHP_FPM_RUN|g" \
         etc/php-fpm-simox.conf.in > /etc/simox/php-fpm-simox.conf
     sed \
         -e "s|@PHP_FPM_BIN@|$DEPLOY_NIX_RESULT_DIR/result/bin/php-fpm|g" \

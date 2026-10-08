@@ -36,6 +36,14 @@ export DEPLOY_TARGET_DIR=/srv/apps/simox
 # DEPLOY_LOG_DIR: remote log dir (deploy_version.log lives here).
 export DEPLOY_LOG_DIR=/var/log/simox
 
+# DEPLOY_PHP_FPM_RUN: base path for the nix-built php-fpm pool's pid file and
+# FastCGI socket — the pool renders `pid`/`listen` as `@PHP_FPM_RUN@.pid` /
+# `@PHP_FPM_RUN@.sock`, and the consumer's Apache vhost proxies to the same
+# socket, so keep the two in sync from this one value. It is a host-local
+# runtime convention under /run (tmpfs), not a secret; it lives here so both
+# sides render from a single source.
+export DEPLOY_PHP_FPM_RUN=/run/php-fpm-simox
+
 # DEPLOY_REUTER_INI: path to the consumer's manual reuter.ini — one
 # [<instance>] section per instance (`simo0` primary and `simo1` read-only
 # replica, both serving the `simo` schema; SERVER/PORT/MYSQL_UNIX_PORT/DBNAME,
