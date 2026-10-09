@@ -19,12 +19,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
         <link rel="shortcut icon" href="favicon.ico">
 
 
-        <!-- Bootstrap 3 HMTL Framework (plugin) -->
-        <!--
-        <link rel="stylesheet"
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        -->
-
         <!-- Bootstrap 5 HTML Framework (plugin)
              https://getbootstrap.com/docs/5.1/getting-started/introduction/
         -->
@@ -36,41 +30,12 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
             crossorigin="anonymous"></script>
 
-        <!-- Load search icon library
-        www.w3schools.com/howto/howto_css_search_button.asp
-        nothing here
-        -->
-
         <!-- Load arrow icon script src
         www.w3schools.com/icons/tryit.asp?icon=fas_fa-angle-left&unicon=f104
         -->
         <script src='https://kit.fontawesome.com/1d6d59d2e9.js' crossorigin='anonymous'></script>
 
-        <!-- Twitter Bootstrap: Button to match the style of the select menu with selectBoxIt
-
-        www.c-sharpcorner.com/UploadFile/736ca4/twitter-bootstrap-3-layout-and-buttons/
-        -->
-
-        <!-- Bootstrap HTML Framework (from local file) -->
-        <!-- Uncommentd in original config
-        <link href="bootstrap/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-        <link href="bootstrap/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" />
-        <script src="bootstrap/bootstrap/js/bootstrap.min.js"></script>
-        -->
-
-        <!--
-             To handle long text in select options
-             Required links:
-             gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
-             Theme: SelectBoxIt with Twitter Bootstrap
-        -->
-        <!-- Disabled: Bootstrap 2.2.2 pins body{font-size:14px} (fixed px), overriding
-             Bootstrap 5's rem sizing and defeating the fluid font-size in mystyle.css. -->
-        <!-- <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" /> -->
-        <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
-
-        <!-- My custom CSS-->
-        <!-- Uncommented in original config -->
+        <!-- My custom CSS -->
         <link rel="stylesheet" type="text/css" href="mystyle.css">
     </head>
     <body>
@@ -252,7 +217,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 stackoverflow.com/questions/647282/is-there-an-onselect-event-or-equivalent-for-html-select
                 -->
 
-                <select id="dept" onChange="go2Dept();">
+                <select id="dept" class="form-select" onChange="go2Dept();">
                 <?php
                     if($dept_id_param == -1) {
                         echo "<option selected value=-1> -- todos los deptos -- </option>";
@@ -262,9 +227,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     $i = 0;
                     for($x = 0; $x<$dept_count; $x++) {
                         if($dept_id_param == $i) {
-                            echo "<option selected value=$i>". $dept_id_to_dept_str[$x]. "</option><br>";
+                            echo "<option selected value=$i>". $dept_id_to_dept_str[$x]. "</option>";
                         }else {
-                            echo "<option value=$i>". $dept_id_to_dept_str[$x]. "</option><br>";
+                            echo "<option value=$i>". $dept_id_to_dept_str[$x]. "</option>";
                         }
                         $i++;
                     };
@@ -419,7 +384,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             function go2Dept()
             {
-                var width = "<?php echo $_GET['width'];?>";
+                var width = "<?php echo $width;?>";
                 var bool = "<?php echo isset($_GET['width']);?>";
                 var dept = document.getElementById("dept").value;
                 var here = "<?php echo $here;?>";
@@ -428,7 +393,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
 
             function go2Page()
             {
-                var width = "<?php echo $_GET['width'];?>";
+                var width = "<?php echo $width;?>";
                 var bool = "<?php echo isset($_GET['width']);?>";
                 var page = document.getElementById("page").value;
                 var dept = "<?php echo $dept_id_param;?>";
@@ -463,25 +428,6 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             //window.onload = function () {
             //document.getElementById("page").onchange = checkInput;
             //}
-        </script>
-
-        <!-- To handle long text in select options
-             gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
-             Example: //jsfiddle.net/ZTs42/2/
-        -->
-
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-        <script src="http://gregfranko.com/jquery.selectBoxIt.js/js/jquery.selectBoxIt.min.js"></script>
-
-        <script>
-            $(function(){
-            // "select" or specific target "#in_this_id_apply_selectBoxIt"
-              $("select").selectBoxIt({
-                                      theme: "default",
-                                      autoWidth: false
-                                      });
-              });
         </script>
     </body>
 </html>

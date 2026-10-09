@@ -18,15 +18,6 @@ Author: judijasa <ciudadania.ab@gmail.com>
         <!-- More: http://www.webweaver.nu/html-tips/favicon.shtml -->
         <link rel="shortcut icon" href="favicon.ico">
 
-        <!-- My custom CSS-->
-        <link rel="stylesheet" type="text/css" href="mystyle.css">
-
-        <!-- Bootstrap 3 HMTL Framework (plugin) -->
-        <!--
-        <link rel="stylesheet"
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        -->
-
         <!-- Bootstrap 5 HTML Framework (plugin)
              https://getbootstrap.com/docs/5.1/getting-started/introduction/
         -->
@@ -38,35 +29,13 @@ Author: judijasa <ciudadania.ab@gmail.com>
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
             crossorigin="anonymous"></script>
 
-        <!-- Load search icon library
-        www.w3schools.com/howto/howto_css_search_button.asp
-        nothing here
-        -->
-
         <!-- Load arrow icon script src
         www.w3schools.com/icons/tryit.asp?icon=fas_fa-angle-left&unicon=f104
         -->
         <script src='https://kit.fontawesome.com/1d6d59d2e9.js' crossorigin='anonymous'></script>
 
-        <!-- Twitter Bootstrap: Button to match the style of the select menu with selectBoxIt
-
-        www.c-sharpcorner.com/UploadFile/736ca4/twitter-bootstrap-3-layout-and-buttons/
-        -->
-
-        <!-- Bootstrap HTML Framework (from local file) -->
-        <!-- Uncommentd in original config
-        <link href="bootstrap/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-        <link href="bootstrap/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" />
-        <script src="bootstrap/bootstrap/js/bootstrap.min.js"></script>
-        -->
-
-        <!--
-             To handle long text in select options
-             Required links:
-             gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
-             Theme: SelectBoxIt with Twitter Bootstrap
-        -->
-            <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
+        <!-- My custom CSS -->
+        <link rel="stylesheet" type="text/css" href="mystyle.css">
     </head>
     <body>
         <div class="container">

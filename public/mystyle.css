@@ -93,16 +93,9 @@ input, button{
         border-radius: 50%;
     } */
 
-/* Handle long sel opts: jsfiddle.net/ZTs42/2/ */
-.selectboxit-container .selectboxit, .selectboxit-container .selectboxit-options {
-    width: 600px; /* Width of the dropdown button */
-    border-radius:0;
-    max-height:240px;
-}
-
-.selectboxit-options .selectboxit-option .selectboxit-option-anchor {
-    white-space: normal;
-    min-height: 30px;
-    height: auto;
+/* Search controls: fill the container on narrow screens, stay readable on wide
+   ones (Bootstrap's .form-select is width:100%). */
+.buscador-container .form-select {
+    max-width: 600px;
 }
 
