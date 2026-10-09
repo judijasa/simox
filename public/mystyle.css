@@ -27,7 +27,7 @@ input, button{
 @media only screen and (max-width: 992px) {
 /*@media (max-width: 992px) {*/
     .hscroll {
-        overflow-y: scroll;
+        overflow-x: auto;
         white-space: nowrap;
     }
 }
