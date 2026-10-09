@@ -12,16 +12,14 @@ Author: judijasa <ciudadania.ab@gmail.com>
 -->
 
     <head>
-        <title>SimoEx:Insight</title>
+        <title>SimoEx — análisis</title>
         <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1">
 
         <!-- More: http://www.webweaver.nu/html-tips/favicon.shtml -->
         <link rel="shortcut icon" href="favicon.ico">
 
         <!-- My custom CSS-->
-        <!-- Uncommented in original config
         <link rel="stylesheet" type="text/css" href="mystyle.css">
-        -->
 
         <!-- Bootstrap 3 HMTL Framework (plugin) -->
         <!--
@@ -68,13 +66,14 @@ Author: judijasa <ciudadania.ab@gmail.com>
              gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
              Theme: SelectBoxIt with Twitter Bootstrap
         -->
-            <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" />
             <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
     </head>
     <body>
         <?php
             require_once __DIR__ . '/../vendor/autoload.php';
             use Utils\Connectivity\Database;
+
+            $year_ago = date('Y-m-d', strtotime('-1 year'));
             try {
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo1';
@@ -85,7 +84,9 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now())";
                 $stmt = $conn->query($query);
                 $vigentes = $stmt->fetchColumn();
-                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion IS NULL";
+                $query = "
+                    SELECT count(*) FROM empleo
+                    WHERE fecha_inscripcion IS NULL AND created_date >= NOW() - INTERVAL 1 YEAR";
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
             } catch (PDOException $e) {
@@ -97,17 +98,21 @@ Author: judijasa <ciudadania.ab@gmail.com>
             }
         ?>
         <div class="container">
+            <?php require __DIR__ . '/_header.php'; ?>
+            <br>
             <center>
             <h2>Análisis de datos reportados</h2>
+            <br>
             <p><!-- <b>Datos:</b> -->Ofertas de trabajo publicadas en la sección <a href="https://simo-ppal.cnsc.gov.co/#ofertaEmpleo">#ofertaEmpleo</a> de la plataforma <a href="https://simo-ppal.cnsc.gov.co">SIMO</a>.</p>
-            <p>Total de ofertas<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br>
-            Número de ofertas vigentes: <?php echo $vigentes;?><br>
-            Número de ofertas con fecha de cierre "por definir": <?php echo $por_definir;?><br>
+            <p>
+            <!-- Total de ofertas<sup><a href="#fn1" id="ref1">1</a></sup>: <?php echo $total;?><br> -->
+            &bull; Número de ofertas con cierre de inscripción <b>vigente y no nulo</b>:<br><b><?php echo $vigentes;?></b><br>
+            &bull; Número de ofertas de empleo con cierre de inscripciones <b>por definir</b> y cuya fecha de<br>creación en la plataforma SIMO es posterior al <?php echo $year_ago ?>:<br><b><?php echo $por_definir;?></b><br>
 <hr></hr>
-        <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.  Las ofertas con fechas de inscripción vencidas o con cero número de vacantes no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+        <!-- <sup id="fn1">1. Cada oferta se identifica por su código <a href="https://simo.cnsc.gov.co/cnscwiki/doku.php?id=simo:documentos:manual_ciudadano#mis_empleos">OPEC</a> y puede tener más de una vacante.  Las ofertas con fechas de inscripción vencidas o con cero número de vacantes no son incluidas en el análisis.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup> -->
 <!-- Las ofertas sin número de vacantes reportado no son incluidas en el análisis. -->
-        </p>
+            </center>
+            </p>
         </div>
     </body>
 </html>
-

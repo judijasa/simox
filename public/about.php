@@ -12,16 +12,14 @@ Author: judijasa <ciudadania.ab@gmail.com>
 -->
 
     <head>
-        <title>SimoEx:About</title>
+        <title>SimoEx — acerca de</title>
         <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1">
 
         <!-- More: http://www.webweaver.nu/html-tips/favicon.shtml -->
         <link rel="shortcut icon" href="favicon.ico">
 
         <!-- My custom CSS-->
-        <!-- Uncommented in original config
         <link rel="stylesheet" type="text/css" href="mystyle.css">
-        -->
 
         <!-- Bootstrap 3 HMTL Framework (plugin) -->
         <!--
@@ -68,17 +66,18 @@ Author: judijasa <ciudadania.ab@gmail.com>
              gregfranko.com/jquery.selectBoxIt.js/#GettingStarted
              Theme: SelectBoxIt with Twitter Bootstrap
         -->
-            <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" />
             <link type="text/css" rel="stylesheet" href="http://gregfranko.com/jquery.selectBoxIt.js/css/jquery.selectBoxIt.css" />
     </head>
     <body>
         <div class="container">
+            <?php require __DIR__ . '/_header.php'; ?>
+            <br>
             <center>
-            <h2>Sobre esta página</h2>
+            <h2>Sobre este sitio web</h2>
+            <br>
             <!-- <p>Resume ofertas de trabajo vigentes en la pataforma SIMO del gobierno de Colombia.</p> -->
-            <p>Resumen de ofertas de trabajo publicadas en la pataforma SIMO del gobierno de Colombia.<br>
-               Se incluye reporte histórico de un año desde el cierre de inscripciones.</p>
+            <p>Este sitio ofrece un resumen de ofertas de trabajo publicadas en la pataforma SIMO del gobierno de Colombia.</p>
+            </center>
         </div>
     </body>
 </html>
-

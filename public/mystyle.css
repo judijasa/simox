@@ -1,3 +1,10 @@
+/* Fluid base font size: 16px on small screens -> 20px on large, so the UI
+   scales with the viewport without inflating phones. Bootstrap sizes most
+   of its type/spacing in rem, so this scales the whole UI. */
+html {
+    font-size: clamp(16px, calc(0.25vw + 15px), 20px);
+}
+
 table {
     border-collapse: collapse;
 }
@@ -34,6 +41,11 @@ input, button{
 
 .center-align {
     text-align: center;
+    margin-top: 1em;
+}
+
+.center-align a {
+    color: #08c;
 }
 
 .buscador-container {
