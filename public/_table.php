@@ -48,7 +48,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 // Ofertas con cierre de inscripciones por definir, creadas en el último año.
                 'sin_cierre' => [
                     'filter'      => 'fecha_inscripcion IS NULL AND created_date >= NOW() - INTERVAL 1 YEAR',
-                    'order_col'   => 'created_date',
+                    'order_col'   => 'fecha',
                     'date_expr'   => 'date(e.created_date) AS fecha',
                     'header'      => 'Fecha de creación',
                     'title'       => 'Empleos con cierre de inscripciones por definir',
@@ -57,7 +57,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 // Ofertas con cierre de inscripciones definido en el último año.
                 'con_cierre' => [
                     'filter'      => 'fecha_inscripcion >= NOW() - INTERVAL 1 YEAR',
-                    'order_col'   => 'fecha_inscripcion',
+                    'order_col'   => 'fecha',
                     'date_expr'   => 'e.fecha_inscripcion AS fecha',
                     'header'      => 'Cierre de inscripciones',
                     'title'       => 'Empleos con cierre de inscripciones definido',
@@ -80,7 +80,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             $items_per_page = 5;  // entries per page
 
             if (isset($_GET["page"])) {
-                $page  = intval($_GET["page"]);
+                $page  = max(1, intval($_GET["page"]));
             }
             else {
                 $page = 1;
@@ -126,12 +126,9 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             $stmt = $conn->query($query);
             $dept_id_to_dept_str = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-            $query = "
-                SELECT opec FROM empleo
-                WHERE {$config['filter']}
-            ";
+            $dept_filter = '';
             if($dept_id_param !== -1){
-                $query .= " AND id IN (
+                $dept_filter = " AND e.id IN (
                         SELECT empleo_id FROM empleo_vacante
                         WHERE vacante_id IN (
                             SELECT id FROM vacante
@@ -142,63 +139,59 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                         )
                     )";
             }
-            // order all records
-            $query .= " ORDER BY {$config['order_col']} DESC, opec DESC";
-            $stmt = $conn->prepare($query);
+
+            // Total matching records (drives pagination).
+            $count_query = "SELECT COUNT(*) FROM empleo e WHERE {$config['filter']}{$dept_filter}";
+            $stmt = $conn->prepare($count_query);
             if($dept_id_param !== -1){
-                $stmt->bindParam(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
+                $stmt->bindValue(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
             }
             $stmt->execute();
-            $all_opecs = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-            $total_records = count($all_opecs);
+            $total_records = (int) $stmt->fetchColumn();
             echo "</br>";
             $total_pages = ceil($total_records / $items_per_page);
 
             $start_from = ($page-1) * $items_per_page;
-            $page_opecs = array_slice($all_opecs, $start_from, $items_per_page);
-
             $dept_count = count($dept_id_to_dept_str);
-            $stmt = null;
-            if(count($page_opecs) > 0){
-                $placeholders = implode(',', array_fill(0, count($page_opecs), '?'));
-                if($dept_id_param === -1) {
-                    $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT dep.iso ORDER BY dep.iso SEPARATOR ', ')
-                         FROM empleo_vacante ev
-                         JOIN vacante v ON v.id = ev.vacante_id
-                         JOIN municipio m ON m.id = v.municipio_id
-                         JOIN departamento dep ON dep.nombre = m.departamento
-                         WHERE ev.empleo_id = e.id) AS lugar";
-                } else {
-                    $dept_str_quoted = $conn->quote($dept_id_to_dept_str[$dept_id_param]);
-                    $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT m.nombre ORDER BY m.nombre SEPARATOR ', ')
-                         FROM empleo_vacante ev
-                         JOIN vacante v ON v.id = ev.vacante_id
-                         JOIN municipio m ON m.id = v.municipio_id
-                         WHERE ev.empleo_id = e.id
-                         AND m.departamento = $dept_str_quoted) AS lugar";
-                }
-                $query = "
-                    WITH t AS (
-                        SELECT
-                            e.opec,
-                            e.nivel_nombre AS nivel,
-                            d.nombre AS denominacion,
-                            e.asignacion_salarial AS salario,
-                            {$config['date_expr']},
-                            '' AS estudio,
-                            '' AS keywords,
-                            $lugar_subquery
-                        FROM empleo e
-                        LEFT JOIN denominacion d ON d.id = e.denominacion_id
-                        WHERE e.opec IN ($placeholders)
-                    )
-                    -- order records within the page
-                    SELECT * FROM t ORDER BY fecha DESC, opec DESC
-                ";
-                $stmt = $conn->prepare($query);
-                $stmt->execute($page_opecs);
+
+            if($dept_id_param === -1) {
+                $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT dep.iso ORDER BY dep.iso SEPARATOR ', ')
+                     FROM empleo_vacante ev
+                     JOIN vacante v ON v.id = ev.vacante_id
+                     JOIN municipio m ON m.id = v.municipio_id
+                     JOIN departamento dep ON dep.nombre = m.departamento
+                     WHERE ev.empleo_id = e.id) AS lugar";
+            } else {
+                $dept_str_quoted = $conn->quote($dept_id_to_dept_str[$dept_id_param]);
+                $lugar_subquery = "(SELECT GROUP_CONCAT(DISTINCT m.nombre ORDER BY m.nombre SEPARATOR ', ')
+                     FROM empleo_vacante ev
+                     JOIN vacante v ON v.id = ev.vacante_id
+                     JOIN municipio m ON m.id = v.municipio_id
+                     WHERE ev.empleo_id = e.id
+                     AND m.departamento = $dept_str_quoted) AS lugar";
             }
+
+            $query = "
+                SELECT
+                    e.opec,
+                    e.nivel_nombre AS nivel,
+                    d.nombre AS denominacion,
+                    e.asignacion_salarial AS salario,
+                    {$config['date_expr']},
+                    '' AS estudio,
+                    '' AS keywords,
+                    $lugar_subquery
+                FROM empleo e
+                LEFT JOIN denominacion d ON d.id = e.denominacion_id
+                WHERE {$config['filter']}{$dept_filter}
+                ORDER BY {$config['order_col']} DESC, lugar, salario DESC, opec DESC
+                LIMIT $items_per_page OFFSET $start_from
+            ";
+            $stmt = $conn->prepare($query);
+            if($dept_id_param !== -1){
+                $stmt->bindValue(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
+            }
+            $stmt->execute();
         ?>
 
         <div class="container">
@@ -259,7 +252,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 <div class="col-xs-3">
                      ********** END comment ******** -->
 
-                <input id="page" type="text" placeholder="<?php echo $page; ?>" required>
+                <input id="page" type="text" placeholder="<?php echo $page; ?>" onkeydown="if(event.key === 'Enter') go2Page();" required>
                 </td>
                 <td>
                 <button class="btn" onClick="go2Page();"><i class="fa fa-search"></i></button>
