@@ -45,7 +45,7 @@ Author: judijasa <ciudadania.ab@gmail.com>
             <h2>Sobre este sitio web</h2>
             <br>
             <!-- <p>Resume ofertas de trabajo vigentes en la pataforma SIMO del gobierno de Colombia.</p> -->
-            <p>Este sitio ofrece un resumen de ofertas de trabajo publicadas en la pataforma SIMO del gobierno de Colombia.</p>
+            <p>Resumen de ofertas de trabajo publicadas en la pataforma SIMO del gobierno de Colombia.</p>
             </center>
         </div>
     </body>
