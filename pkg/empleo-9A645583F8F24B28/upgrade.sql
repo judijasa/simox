@@ -35,6 +35,7 @@ CREATE OR REPLACE TABLE empleo (
 
     PRIMARY KEY(id),
     UNIQUE INDEX(opec),
+    INDEX ix_empleo_created_date(created_date),
     INDEX ix_empleo_created_at(created_at),
     INDEX ix_empleo_fecha_inscripcion(fecha_inscripcion),
     FOREIGN KEY fk_empleo_denominacion_id(denominacion_id)
