@@ -184,7 +184,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                 FROM empleo e
                 LEFT JOIN denominacion d ON d.id = e.denominacion_id
                 WHERE {$config['filter']}{$dept_filter}
-                ORDER BY {$config['order_col']} DESC, lugar, salario DESC, opec DESC
+                ORDER BY {$config['order_col']} DESC, opec DESC
                 LIMIT $items_per_page OFFSET $start_from
             ";
             $stmt = $conn->prepare($query);
