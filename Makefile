@@ -61,8 +61,16 @@ _dev-assert-nix:
 	    exit 1; \
 	fi
 
+# The dev-shell bootstrap (PATH, .env, tmux session alias) is sourced by the
+# flake's shellHook from vendor/bin/pf-shell-enter.sh — a file this target
+# creates itself (the composer step), so the shell running `make dev-init`
+# started without it and never got those effects. Re-entering is what applies
+# them, hence the reminder printed below.
 _dev-init: _dev-init-git-hooks _dev-create-dirs _dev-init-composer _dev-init-private-config _dev-init-local-env _dev-update-hosts _dev-ssh-config
 	@echo "Developer environment successfully initialized."
+	@echo "Re-enter the shell ('nix develop' again) to apply the dev-shell"
+	@echo "bootstrap (PATH, .env, tmux session alias): it sources"
+	@echo "vendor/bin/pf-shell-enter.sh, which this target has just created."
 
 _dev-init-git-hooks:
 	@bin/dev/init-git-hooks.sh

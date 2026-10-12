@@ -22,7 +22,7 @@ Initialize the developer environment (git hooks, log dirs, `composer install`, t
 make dev-init
 ```
 
-Re-enter the shell (or `source .env`) so the repo paths, `DBUSER` and `SSL_DIR` written to `.env` are in scope.
+Re-enter the shell (`nix develop` again) so the dev-shell bootstrap applies: `PATH`, the `.env` values (repo paths, `DBUSER`, `SSL_DIR`) and the `tmux` session alias. It comes from `vendor/bin/pf-shell-enter.sh`, a file `make dev-init` creates — the shell that ran it lacks all of it.
 
 Create the `simo0` instance (schema `simo`) + dev sandbox (under `var/sandbox/`); `ema sandbox` builds and starts the isolated MariaDB instance:
 
