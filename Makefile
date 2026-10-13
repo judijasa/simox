@@ -95,6 +95,7 @@ _dev-init-private-config:
 
 # etc/hosts is private data, materialized as a real file by
 # _dev-init-private-config; this must therefore follow it in _dev-init.
+# Non-critical: an unwritable /etc/hosts (e.g. NixOS) warns and skips.
 _dev-update-hosts:
 	@bin/dev/update-hosts.sh "$(TAG_BEGIN)" "$(TAG_END)"
 

@@ -22,6 +22,12 @@ echo "$TAG_BEGIN" >> "$tmp_hosts"
 echo "$payload" >> "$tmp_hosts"
 echo "$TAG_END" >> "$tmp_hosts"
 echo "Applying changes (atomically) to /etc/hosts (requires sudo)..."
-sudo cp "$tmp_hosts" /etc/hosts
+if ! sudo cp "$tmp_hosts" /etc/hosts; then
+    echo "WARNING: cannot write /etc/hosts — some systems (e.g. NixOS) manage it" >&2
+    echo "         themselves; add the simox hosts block to the system configuration." >&2
+    echo "         Skipping this non-critical step." >&2
+    rm -f "$tmp_hosts"
+    exit 0
+fi
 rm -f "$tmp_hosts"
 echo "Successfully synced!"
