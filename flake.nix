@@ -39,6 +39,8 @@
         # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
         jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
+        # readline: fixes arrow keys in nix shell on NixOS (without it, arrows produce escape sequences)
+        readlinePkg = pkgs.readline;
 
         # Common packages shared by dev and prod: the environment binaries
         # only. Framework + ema code (CLIs, dev scripts, pf-provision.sh) is
@@ -50,6 +52,7 @@
           phpComposer
           jqPkg
           tmuxPkg
+          readlinePkg
         ];
       in
       {
