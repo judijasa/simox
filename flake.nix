@@ -30,8 +30,9 @@
         phpComposer = pkgs.php84Packages.composer.override {
           php = phpPkg;
         };
-
-        bashPkg = pkgs.bash;
+        # readline: fixes arrow keys in nix shell on NixOS (without it, arrows produce escape sequences)
+        # ncurses: together with readline, it fixes arrow keys in nix shell + tmux on NixOS
+        bashPkg = pkgs.bashInteractive;  # Includes readline + ncurses
         gitPkg = pkgs.git;
         mariadbPkg = pkgs.mariadb_118;
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
@@ -39,10 +40,6 @@
         # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
         jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
-        # readline: fixes arrow keys in nix shell on NixOS (without it, arrows produce escape sequences)
-        readlinePkg = pkgs.readline;
-        # ncurses: required for terminal handling in nix shell on NixOS (tmux, shell navigation)
-        ncursesPkg = pkgs.ncurses;
 
         # Common packages shared by dev and prod: the environment binaries
         # only. Framework + ema code (CLIs, dev scripts, pf-provision.sh) is
@@ -54,8 +51,6 @@
           phpComposer
           jqPkg
           tmuxPkg
-          readlinePkg
-          ncursesPkg
         ];
       in
       {
@@ -76,8 +71,8 @@
             pre-commit
           ];
           shellHook = ''
-            # Set terminfo database path for proper terminal handling on NixOS
-            export TERMINFO_DIRS="${pkgs.ncurses}/share/terminfo"
+            # Set SHELL to bashInteractive so tmux uses bash with readline support
+            export SHELL="${pkgs.bashInteractive}/bin/bash"
 
             # Private config freshness: materialize the real etc/ files from the
             # private repo (.private-source) on every shell entry, so a re-entered
