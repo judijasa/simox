@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d74064738ae99ab77d7a0fd247af48d5",
+    "content-hash": "2eb79061ec27c67792ee89c3863cdf8e",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/ema.git",
-                "reference": "95cbe90f21b88f08af7e4a8968458ebbaa6eac97"
+                "reference": "efe6a4c7f854d411015173183d047bfa4e1c9e1e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/ema/zipball/95cbe90f21b88f08af7e4a8968458ebbaa6eac97",
-                "reference": "95cbe90f21b88f08af7e4a8968458ebbaa6eac97",
+                "url": "https://api.github.com/repos/judijasa/ema/zipball/efe6a4c7f854d411015173183d047bfa4e1c9e1e",
+                "reference": "efe6a4c7f854d411015173183d047bfa4e1c9e1e",
                 "shasum": ""
             },
             "require": {
@@ -147,7 +147,7 @@
                 "source": "https://github.com/judijasa/ema/tree/main",
                 "issues": "https://github.com/judijasa/ema/issues"
             },
-            "time": "2026-10-12T23:41:44+00:00"
+            "time": "2026-10-13T15:56:37+00:00"
         },
         {
             "name": "judijasa/php-daas-framework",
