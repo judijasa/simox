@@ -41,6 +41,8 @@
         tmuxPkg = pkgs.tmux;
         # readline: fixes arrow keys in nix shell on NixOS (without it, arrows produce escape sequences)
         readlinePkg = pkgs.readline;
+        # ncurses: required for terminal handling in nix shell on NixOS (tmux, shell navigation)
+        ncursesPkg = pkgs.ncurses;
 
         # Common packages shared by dev and prod: the environment binaries
         # only. Framework + ema code (CLIs, dev scripts, pf-provision.sh) is
@@ -53,6 +55,7 @@
           jqPkg
           tmuxPkg
           readlinePkg
+          ncursesPkg
         ];
       in
       {
