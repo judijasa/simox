@@ -76,6 +76,9 @@
             pre-commit
           ];
           shellHook = ''
+            # Set terminfo database path for proper terminal handling on NixOS
+            export TERMINFO_DIRS="${pkgs.ncurses}/share/terminfo"
+
             # Private config freshness: materialize the real etc/ files from the
             # private repo (.private-source) on every shell entry, so a re-entered
             # shell never runs on stale etc/. Idempotent, and a no-op without
