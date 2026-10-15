@@ -1,12 +1,16 @@
 # SIMOExpress
 
-1. Extracts the job openings reported on the SIMO platform of the Colombian government.
+## What it is
+
+Collaborative platform that
+
+1. Extracts job openings reported on the [SIMO](https://simo.cnsc.gov.co/) platform of the Colombian government.
 2. Stores the job openings in a database.
 3. Provides an online portal for job openings.
 
 The application has three components: _crawler_ (indexer + pipeline), _database_, and _website_.
 
-Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (the underlying framework) and [judijasa/ema](https://github.com/judijasa/ema) (database & deploy tooling) — two public repos by the same [author](https://github.com/judijasa). Live at [http://192.159.99.50/](http://192.159.99.50/).
+Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (underlying framework) and [judijasa/ema](https://github.com/judijasa/ema) (MariaDB package manager) — two public repos by the same [author](https://github.com/judijasa). Live at [http://192.159.99.50/](http://192.159.99.50/).
 
 ## Quick Test
 
