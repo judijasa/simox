@@ -11,7 +11,7 @@ Collaborative platform that
 
 The application has three components: _crawler_ (indexer + pipeline), _database_, and _website_.
 
-Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (underlying framework) and [judijasa/ema](https://github.com/judijasa/ema) (MariaDB package manager) — two public repos by the same [author](https://github.com/judijasa).
+Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (PHP-based framework for collaborative data crawling projects) and [judijasa/ema](https://github.com/judijasa/ema) (MariaDB package manager) — two public repos by the same [author](https://github.com/judijasa).
 ## Quick Test
 
 Test under the `nix develop` environment, which supplies the binaries (PHP + extensions, composer, MariaDB, bash, ...). The framework and `ema` code are Composer-delivered, not part of `flake.nix`.
