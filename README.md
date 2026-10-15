@@ -6,12 +6,12 @@ Collaborative platform that
 
 1. Extracts job openings reported on the [SIMO](https://simo.cnsc.gov.co/) platform of the Colombian government.
 2. Stores the job openings in a database.
-3. Provides an online portal for job openings.
+3. Provides an online portal for job openings. Live at [http://192.159.99.50/](http://192.159.99.50/).
+
 
 The application has three components: _crawler_ (indexer + pipeline), _database_, and _website_.
 
-Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (underlying framework) and [judijasa/ema](https://github.com/judijasa/ema) (MariaDB package manager) — two public repos by the same [author](https://github.com/judijasa). Live at [http://192.159.99.50/](http://192.159.99.50/).
-
+Built on [judijasa/php_daas_framework](https://github.com/judijasa/php_daas_framework) (underlying framework) and [judijasa/ema](https://github.com/judijasa/ema) (MariaDB package manager) — two public repos by the same [author](https://github.com/judijasa).
 ## Quick Test
 
 Test under the `nix develop` environment, which supplies the binaries (PHP + extensions, composer, MariaDB, bash, ...). The framework and `ema` code are Composer-delivered, not part of `flake.nix`.
