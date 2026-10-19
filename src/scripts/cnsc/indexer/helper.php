@@ -2,6 +2,7 @@
 require 'vendor/autoload.php';
 
 use Utils\Crawler\HttpClient;
+use Utils\Logger;
 
 /**
  * Returns the aviso node ids listed on one page of /avisos-informativos.
@@ -187,17 +188,26 @@ function persist_snapshots($conn, $avisos){
         EOD;
     $stmt = $conn->prepare($sql);
     foreach ($avisos as $aviso) {
-        $stmt->execute([
-            ':node_id' => $aviso['node_id'],
-            ':aviso' => json_encode($aviso),
-            ':titulo' => $aviso['titulo'],
-            ':fecha_publicacion' => $aviso['fecha_publicacion'],
-            ':cuerpo' => $aviso['cuerpo'],
-            ':convocatoria' => $aviso['convocatoria'] === null
-                ? null
-                : json_encode($aviso['convocatoria']),
-            ':documentos' => json_encode($aviso['documentos']),
-        ]);
+        try {
+            $stmt->execute([
+                ':node_id' => $aviso['node_id'],
+                ':aviso' => json_encode($aviso),
+                ':titulo' => $aviso['titulo'],
+                ':fecha_publicacion' => $aviso['fecha_publicacion'],
+                ':cuerpo' => $aviso['cuerpo'],
+                ':convocatoria' => $aviso['convocatoria'] === null
+                    ? null
+                    : json_encode($aviso['convocatoria']),
+                ':documentos' => json_encode($aviso['documentos']),
+            ]);
+        } catch (Throwable $e) {
+            Logger::info("ERROR: could not persist aviso node {$aviso['node_id']} ({$aviso['url']}).");
+            throw new RuntimeException(
+                "Could not persist aviso node {$aviso['node_id']} ({$aviso['url']}): {$e->getMessage()}",
+                0,
+                $e
+            );
+        }
     }
 }
 
