@@ -56,7 +56,7 @@ Access the local `simo0` instance (schema `simo`) and verify content:
 ```bash
 EMA_TARGET=sandbox ema mdb simo0
 SELECT count(*) FROM empleo_snapshot;
-SELECT count(*) FROM cnsc_avisos_snapshot;
+SELECT count(*) FROM cnsc_aviso_snapshot;
 ```
 
 Run the pipeline and verify content:
