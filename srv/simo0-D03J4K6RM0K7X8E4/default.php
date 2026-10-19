@@ -7,6 +7,8 @@
 // gen-service-accounts).
 return new \Ema\Config\DatabaseConfig(
     dbname: 'simo',
+    charset: 'utf8mb4',         // 4-byte UTF-8: scraped bodies carry emoji
+    collation: 'utf8mb4_spanish_ci',
     binlog: true,               // primary only: binary logging (replica source, PITR, CDC)
     // binlog_expire_days: 7,   // retention (days); only applies with 'binlog'
     dependencies: [
