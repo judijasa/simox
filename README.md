@@ -40,6 +40,17 @@ Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribut
 EMA_TARGET=sandbox phprun 'src/scripts/simo/indexer/main.php:main()'
 ```
 
+The CNSC "Avisos informativos" indexer snapshots the amendments published on
+`www.cnsc.gov.co` (the job offers themselves come from the SIMO indexer above).
+It has two agents: `backfill()` dumps the whole archive once (manual) and
+`update()` is the incremental cron, which stops at the first page with no new
+node. Both write to `cnsc_aviso_snapshot` in the same `simo0` instance:
+
+```bash
+EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill()'
+EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:update()'
+```
+
 Access the local `simo0` instance (schema `simo`) and verify content:
 
 ```bash

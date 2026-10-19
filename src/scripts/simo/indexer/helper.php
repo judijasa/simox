@@ -2,7 +2,6 @@
 require 'vendor/autoload.php';
 
 use Utils\Crawler\CasperTrio;
-use Sunra\PhpSimple\HtmlDomParser;
 
 function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
     $new_batch = $batch;

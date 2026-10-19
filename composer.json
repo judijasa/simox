@@ -8,7 +8,6 @@
     }
   },
   "require": {
-    "sunra/php-simple-html-dom-parser": "1.5.2",
     "judijasa/php-daas-framework": "dev-main",
     "judijasa/ema": "dev-main"
   },

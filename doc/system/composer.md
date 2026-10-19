@@ -20,7 +20,6 @@ the framework's
     }
   },
   "require": {
-    "sunra/php-simple-html-dom-parser": "1.5.2",
     "judijasa/php-daas-framework": "dev-main",
     "judijasa/ema": "dev-main"
   },
@@ -47,9 +46,8 @@ Consumer-relevant keys:
 - `config.allow-plugins` — allow-lists the `judijasa/php-daas-framework`
   Composer plugin, the only plugin this repo runs (Composer refuses to run a
   plugin that is not allow-listed).
-- `require` — the dependencies. `sunra/php-simple-html-dom-parser` is a regular
-  Packagist package pinned to a stable tag; `judijasa/php-daas-framework` and
-  `judijasa/ema` are VCS packages consumed from `dev-main`, either floating or
+- `require` — the dependencies: `judijasa/php-daas-framework` and
+  `judijasa/ema`, both VCS packages consumed from `dev-main`, either floating or
   frozen to a commit (see Dependency updates below).
 - `repositories` — the two framework packages are not published on Packagist,
   so Composer must be told where their VCS sources live.
