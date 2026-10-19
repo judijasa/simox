@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2eb79061ec27c67792ee89c3863cdf8e",
+    "content-hash": "0ef57981354fcd381bb4d4ac106d9e34",
     "packages": [
         {
             "name": "jakoch/phantomjs-installer",
@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/ema.git",
-                "reference": "efe6a4c7f854d411015173183d047bfa4e1c9e1e"
+                "reference": "472241990db7d828bddf8588111bd83ef58c7ce4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/ema/zipball/efe6a4c7f854d411015173183d047bfa4e1c9e1e",
-                "reference": "efe6a4c7f854d411015173183d047bfa4e1c9e1e",
+                "url": "https://api.github.com/repos/judijasa/ema/zipball/472241990db7d828bddf8588111bd83ef58c7ce4",
+                "reference": "472241990db7d828bddf8588111bd83ef58c7ce4",
                 "shasum": ""
             },
             "require": {
@@ -147,7 +147,7 @@
                 "source": "https://github.com/judijasa/ema/tree/main",
                 "issues": "https://github.com/judijasa/ema/issues"
             },
-            "time": "2026-10-13T15:56:37+00:00"
+            "time": "2026-10-14T21:28:06+00:00"
         },
         {
             "name": "judijasa/php-daas-framework",
@@ -155,12 +155,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "6529f827f3bd52a7d065764714700ed21632002e"
+                "reference": "fecaa40b8c14f2d0418f64408a7ce7b5a5e8553f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/6529f827f3bd52a7d065764714700ed21632002e",
-                "reference": "6529f827f3bd52a7d065764714700ed21632002e",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/fecaa40b8c14f2d0418f64408a7ce7b5a5e8553f",
+                "reference": "fecaa40b8c14f2d0418f64408a7ce7b5a5e8553f",
                 "shasum": ""
             },
             "require": {
@@ -223,7 +223,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-10-13T00:45:22+00:00"
+            "time": "2026-10-19T16:30:01+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",

@@ -21,8 +21,8 @@ the framework's
   },
   "require": {
     "sunra/php-simple-html-dom-parser": "1.5.2",
-    "judijasa/php-daas-framework": "dev-main#<hash>",
-    "judijasa/ema": "dev-main#<hash>"
+    "judijasa/php-daas-framework": "dev-main",
+    "judijasa/ema": "dev-main"
   },
   "repositories": [
     {
@@ -49,41 +49,64 @@ Consumer-relevant keys:
   plugin that is not allow-listed).
 - `require` — the dependencies. `sunra/php-simple-html-dom-parser` is a regular
   Packagist package pinned to a stable tag; `judijasa/php-daas-framework` and
-  `judijasa/ema` are VCS packages pinned to an exact commit (see Dependency
-  pinning below).
+  `judijasa/ema` are VCS packages consumed from `dev-main`, either floating or
+  frozen to a commit (see Dependency updates below).
 - `repositories` — the two framework packages are not published on Packagist,
   so Composer must be told where their VCS sources live.
 
-## Dependency pinning
+## Dependency updates
 
 Both external packages — `judijasa/php-daas-framework` and `judijasa/ema` —
-are delivered exclusively via Composer (single code delivery path). Each is
-pinned to a known-good commit in `composer.json` using the `dev-main#<hash>`
-form, recorded in `composer.lock`. There is no Nix-side pin to keep in step
-anymore: `flake.nix` supplies only the environment binaries (php + extensions,
-composer, mariadb, bash, tmux, jq), not the code of either package.
+are delivered exclusively via Composer (single code delivery path). There is no
+Nix-side pin to keep in step anymore: `flake.nix` supplies only the environment
+binaries (php + extensions, composer, mariadb, bash, tmux, jq), not the code of
+either package.
 
-To bump a package to a newer upstream commit, update its `require` entry in
-`composer.json` and refresh the lock:
+`composer.json` may reference them in either form, and this repo has no policy
+mandating one:
+
+- `dev-main` — floats on the upstream branch.
+- `dev-main#<hash>` — frozen to an exact commit.
+
+The tradeoff: a hash holds the revision fixed until it is re-pinned, while a
+floating requirement follows upstream on the next update. Either way
+`composer.lock` records the resolved revision, and every `composer install`
+(dev bootstrap, production deploy) installs exactly that revision — so
+"latest" is a property of the update step, not of the requirement form.
+
+### Update to the latest
+
+Re-resolve the requirements against upstream and refresh the lock:
+
+```bash
+composer update judijasa/php-daas-framework judijasa/ema
+```
+
+A floating requirement moves to upstream `main` HEAD; a frozen one does not
+move, because the hash is the constraint.
+
+### Re-pin to a specific commit
+
+Rewrite the requirement to an exact commit, which must already be pushed — the
+`#<hash>` suffix is resolved from the package's remote:
 
 ```bash
 composer require "judijasa/php-daas-framework:dev-main#<hash>" \
                  "judijasa/ema:dev-main#<hash>"
 ```
 
-The `#<hash>` suffix tells Composer to resolve `dev-main` to that exact commit,
-recorded in `composer.lock`. Subsequent `composer install` runs (including on
-the production server) always fetch that revision.
+This rewrites `composer.json` and `composer.lock` and refreshes `vendor/`.
 
 Upstream documentation cited from these docs (the framework's and `ema`'s
 `doc/system/*.md`) is linked at upstream `main`, while the runtime follows the
-pinned commit. When the two disagree, the pin wins — if a documented behaviour
-seems to be missing, read the same document at the pinned revision.
+revision recorded in `composer.lock`. When the two disagree, the lock wins — if
+a documented behaviour seems to be missing, read the same document at the locked
+revision.
 
-### When to bump
+### When to update
 
 - After validating a new upstream version locally (`nix develop` + full test run).
-- Bump each package independently — the nix env rev and each Composer code rev
+- Update each package independently — the nix env rev and each Composer code rev
   are decoupled, so the two packages no longer have to agree with each other.
-- Commit the updated `composer.json` and `composer.lock` so the pinned
+- Commit the updated `composer.json` and `composer.lock` so the resolved
   revisions are tracked in git.
