@@ -13,7 +13,7 @@ use Utils\Logger;
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function backfill($conn,
     $batch_size_limit = 200,
-    $timeout = 60 * 45  // secs
+    $timeout = 60 * 60 * 24  // secs
 ){
     $base_url = "https://www.cnsc.gov.co";
     indexer($conn, $base_url, false, $batch_size_limit, $timeout);
