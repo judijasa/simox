@@ -54,6 +54,14 @@ package was removed from `composer.json`.
 
 ## Open items
 
+- **Backfill resumability** — a run stopped by the timeout restarted at page 0
+  and re-crawled the known prefix, and a later `update()` then reported
+  "Nothing to save" while the archive still had unknown pages, because its stop
+  condition only inspects the newest page. Resolved 2026-10-19: `indexer()`
+  filters stored node ids on every page, so `update()` keeps its cheap
+  stop-at-first-known-page behavior while `backfill()` walks past known pages
+  and resumes at the first unknown one; the end-of-run log now distinguishes an
+  up-to-date incremental scan from a fully consumed archive.
 - **List ordering (newest-first)** — `update()`'s stop-after-no-new-node
   depends on `/avisos-informativos` being ordered newest-first; verify in
   Phase 1. If it is not, fall back to a max-`node_id` watermark or a fixed
@@ -64,6 +72,8 @@ package was removed from `composer.json`.
   name/code based (reuse `src/utils/string_ops.php`
   `remove_accents()`/`contains()`). Confirmed during Phase 1; normalization is
   out of scope here.
-- **`update()` does not refresh edits** — like simo, content freezes on first
-  insert and only `last_seen` is refreshed; an edit to an existing aviso (same
-  `node_id`) is not re-captured. Revision tracking is a pipeline concern.
+- **`update()` does not refresh edits** — content freezes on first insert and
+  an edit to an existing aviso (same `node_id`) is not re-captured. Unlike
+  simo, which re-crawls every page, both CNSC modes skip stored nodes, so
+  `last_seen` is only set at insert time and never refreshed. Revision tracking
+  is a pipeline concern.

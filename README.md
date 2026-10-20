@@ -42,9 +42,12 @@ EMA_TARGET=sandbox phprun 'src/scripts/simo/indexer/main.php:main()'
 
 The CNSC "Avisos informativos" indexer snapshots the amendments published on
 `www.cnsc.gov.co` (the job offers themselves come from the SIMO indexer above).
-It has two agents: `backfill()` dumps the whole archive once (manual) and
-`update()` is the incremental cron, which stops at the first page with no new
-node. Both write to `cnsc_aviso_snapshot` in the same `simo0` instance:
+It has two agents: `backfill()` dumps the whole archive (manual, resumable —
+re-run it until it reports the archive fully consumed) and `update()` is the
+incremental cron, which stops at the first page with no new node, so it only
+catches avisos newer than what is already stored and cannot fill a gap left by
+an unfinished backfill. Both write to `cnsc_aviso_snapshot` in the same `simo0`
+instance:
 
 ```bash
 EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill()'

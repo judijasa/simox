@@ -7,7 +7,9 @@ use Utils\CronJob;
 use Utils\Crawler\HttpClient;
 use Utils\Logger;
 
-// Manual one-time dump of the whole "Avisos informativos" archive.
+// Manual dump of the whole "Avisos informativos" archive. Resumable: each run
+// skips nodes already stored and continues at the first unknown page, so it can
+// be re-run until it reports the archive fully consumed.
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function backfill($conn,
     $batch_size_limit = 200,
@@ -40,6 +42,7 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
     $batch_size = 0;
 
     $total_saved = 0;
+    $new_ids_found = 0;
     $start_time = time();
     $timed_out = false;
     $page = 0;  // the site's pager is zero-based
@@ -55,12 +58,18 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
             break;
         }
 
-        if ($incremental) {
-            $node_ids = new_node_ids($conn, $node_ids);
-            if (count($node_ids) === 0) {
+        // Both modes skip nodes already stored. update() stops at the first
+        // page with nothing new (the pager is newest-first); backfill() keeps
+        // walking, so a run cut short by the timeout resumes at the first
+        // unknown page instead of re-crawling the known prefix.
+        $node_ids = new_node_ids($conn, $node_ids);
+        if (count($node_ids) === 0) {
+            if ($incremental) {
                 break;
             }
+            continue;
         }
+        $new_ids_found += count($node_ids);
 
         foreach ($node_ids as $node_id) {
             if (in_array($node_id, $batch_node_ids, true)) {
@@ -99,7 +108,13 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
         Logger::info("WARNING: timeout stopped crawling at page $page.");
     }
 
-    if ($total_saved == 0) {
-        Logger::info("Nothing to save. Skipping db insertion.");
+    if ($total_saved == 0 && !$timed_out) {
+        if ($new_ids_found === 0) {
+            Logger::info($incremental
+                ? "Avisos on the most recent page (page 0) already exist. Exiting early."
+                : "Archive fully consumed; nothing to save.");
+        } else {
+            Logger::info("No avisos could be saved; skipping db insertion.");
+        }
     }
 }
