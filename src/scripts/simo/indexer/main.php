@@ -38,7 +38,7 @@ function indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
     $total_saved = 0;
     $start_time = time();
     $timed_out = false;
-    for ($page = 1; ; $page++){
+    for ($page = 0; ; $page++){
         if (time() - $start_time > $timeout) {
             $timed_out = true;
             break;
