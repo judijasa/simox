@@ -26,13 +26,32 @@
         # tarball until nixpkgs catches up.
         # TODO: revert to plain `pkgs.php84` once the pinned nixpkgs carries
         # php84 >= 8.4.27.
-        php84 = pkgs.php84.overrideAttrs (old: {
+        #
+        # Built straight from generic.nix (not `pkgs.php84.override`) so
+        # `packageOverrides` reaches the php-packages scope: 8.4.27's new OOM
+        # regression tests (CVE-2026-109618) spawn php-cgi subprocesses that
+        # fail under the nix sandbox, aborting the build even though the
+        # extension compiles and the fix ships in the source. Skip the filter
+        # suite; the extension list mirrors nixpkgs' php84 default.
+        php84Base = pkgs.callPackage (pkgs.path + "/pkgs/development/interpreters/php/generic.nix") {
+          stdenv = if pkgs.stdenv.cc.isClang then pkgs.llvmPackages.stdenv else pkgs.stdenv;
+          pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
           version = "8.4.27";
-          src = pkgs.fetchurl {
-            url = "https://www.php.net/distributions/php-8.4.27.tar.bz2";
-            hash = "sha256-slMKh3xyL0sIyeF0owywi6wrfhkD7m6eMV8KqfX4LCQ=";
+          hash = "sha256-slMKh3xyL0sIyeF0owywi6wrfhkD7m6eMV8KqfX4LCQ=";
+          packageOverrides = final: prev: {
+            extensions = prev.extensions // {
+              filter = prev.extensions.filter.override { doCheck = false; };
+            };
           };
-        });
+        };
+        php84 = php84Base.withExtensions ({ all, ... }:
+          with all;
+          [
+            bcmath calendar curl ctype dom exif fileinfo filter ftp gd gettext gmp iconv intl ldap mbstring mysqli mysqlnd openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql posix readline session simplexml sockets soap sodium sysvsem sqlite3 tokenizer xmlreader xmlwriter zip zlib
+          ]
+          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.27" "8.4") [ all.imap ]
+          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.27" "8.5") [ all.opcache ]
+        );
         phpPkg = php84.withExtensions ({ all, enabled }:
           enabled ++ [
             all.mysqli
