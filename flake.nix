@@ -19,7 +19,21 @@
         # jakoch/phantomjs-installer composer side-effect): the flake makes
         # the extensions exist/loadable, and composer.json enforces them at
         # install (missing → hard failure).
-        phpPkg = pkgs.php84.withExtensions ({ all, enabled }:
+        #
+        # Security: PHP 8.4.27 fixes two critical unauthenticated RCEs
+        # (CVE-2026-109618, CVE-2026-109619) present in <= 8.4.26. The pinned
+        # nixpkgs still ships 8.4.23, so we pin the source to the 8.4.27
+        # tarball until nixpkgs catches up.
+        # TODO: revert to plain `pkgs.php84` once the pinned nixpkgs carries
+        # php84 >= 8.4.27.
+        php84 = pkgs.php84.overrideAttrs (old: {
+          version = "8.4.27";
+          src = pkgs.fetchurl {
+            url = "https://www.php.net/distributions/php-8.4.27.tar.bz2";
+            hash = "sha256-slMKh3xyL0sIyeF0owywi6wrfhkD7m6eMV8KqfX4LCQ=";
+          };
+        });
+        phpPkg = php84.withExtensions ({ all, enabled }:
           enabled ++ [
             all.mysqli
             all.pdo_mysql
