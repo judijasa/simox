@@ -1,9 +1,9 @@
 CREATE OR REPLACE TABLE convocatoria (
     id INT AUTO_INCREMENT,
     code INT,  -- id by simo
-    nombre VARCHAR(250),
+    nombre VARCHAR(255),
     agno YEAR,
-    codigo VARCHAR(50),
+    codigo VARCHAR(255),
     entidad JSON,
     entidad_id SMALLINT UNSIGNED,
     es_tipo_fase BOOL,
