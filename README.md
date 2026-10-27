@@ -57,13 +57,17 @@ EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:update()'
 The SIMO "historico" backfill dumps the whole historical archive
 (`empleos/ofertaPublica/historico`, ~66k offers) into the same
 `empleo_snapshot` as the publico indexer, tagged `source='historico'`. The
-historico endpoint has no stable sort order, so a cross-run page cursor cannot
-be trusted: `backfill()` pages the archive from 0 until the first empty page and
-relies on the snapshot unique key to dedupe. It has no cron — run it manually
-(and re-run) until it reports 0 new rows:
+historico endpoint has no stable sort order, so a durable cross-run page cursor
+cannot be trusted: `backfill()` pages the archive from 0 until the first empty
+page and relies on the snapshot unique key to dedupe. It has no cron — run it
+manually (and re-run) until a pass from page 0 reports 0 new rows. An aborted
+pass logs the page it died on and flushes its pending batch; the optional
+`$start_page` resumes from there, though only a pass from page 0 confirms the
+archive is fully consumed:
 
 ```bash
 EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill(200, 50, 86400, 213)'
 ```
 
 The SIMO "convocatoria" flag-updater classifies every convocatoria into the

@@ -6,21 +6,24 @@ use Utils\Agent;
 use Utils\Logger;
 
 // Manual dump of the whole "historico" archive (empleos/ofertaPublica/historico).
-// Unlike the publico indexer it has no stable sort order, so a cross-run page
-// cursor cannot be trusted: each run pages the archive from 0 until the first
-// empty page and relies on the (opec, source, fecha_inscripcion) unique key to
-// dedupe. The archive is fully consumed once a full pass reports 0 new rows.
+// Unlike the publico indexer it has no stable sort order, so a durable cross-run
+// page cursor cannot be trusted: each run pages the archive from 0 (or from an
+// explicit $start_page, to resume a pass that aborted) until the first empty
+// page, and relies on the (opec, source, fecha_inscripcion) unique key to
+// dedupe. The archive is fully consumed once a pass that started at page 0
+// reports 0 new rows: a resumed pass only covers the tail and cannot prove it.
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function backfill($conn,
     $batch_size_limit = 200,
     $jobs_per_page = 50,
-    $timeout = 60 * 60 * 24  // secs
+    $timeout = 60 * 60 * 24,  // secs
+    $start_page = 0
 ){
     $base_url = "https://simo.cnsc.gov.co";
-    historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout);
+    historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout, $start_page);
 }
 
-function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
+function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout, $start_page = 0){
     $batch = array();
     $batch_job_ids = array();
     $batch_size = 0;
@@ -34,13 +37,29 @@ function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, 
     $total_saved = 0;
     $start_time = time();
     $timed_out = false;
-    for ($page = 0; ; $page++){
+    for ($page = $start_page; ; $page++){
         if (time() - $start_time > $timeout) {
             $timed_out = true;
             break;
         }
 
-        $new_jobs = get_api_data($base_api_request, $page);
+        try {
+            $new_jobs = get_api_data($base_api_request, $page);
+        } catch (Throwable $e) {
+            // Report the resume point first: it is the only state worth
+            // carrying out of an aborted pass.
+            Logger::info("Historico crawl failed at page $page: " . $e->getMessage()
+                . " — resume with start_page=$page.");
+            // The pending batch was never flushed; persist it so resuming at
+            // this page does not silently drop it (idempotent via the unique key).
+            if ($batch_size > 0) {
+                persist_snapshots($conn, $batch, 'historico');
+                $total_saved += $batch_size;
+                Logger::info("Saved the pending $batch_size historico jobs ($total_saved total this pass).");
+            }
+            throw $e;
+        }
+
         if ($new_jobs instanceof ArrayObject && count($new_jobs) === 0) {
             break;
         }
@@ -67,13 +86,20 @@ function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, 
     }
 
     if ($timed_out) {
-        Logger::info("WARNING: timeout stopped historico crawl at page $page.");
+        Logger::info("WARNING: timeout stopped historico crawl at page $page — resume with start_page=$page.");
     }
 
     $after = count_historico_rows($conn);
     $new_rows = $after - $before;
-    Logger::info("Historico pass complete: $new_rows new rows ($after total). "
-        . "Re-run until this reports 0 new rows to confirm the archive is fully consumed.");
+    if ($start_page > 0) {
+        // A resumed pass only covers the tail, so it must not print the
+        // completion signal: only a pass from page 0 proves completeness.
+        Logger::info("Historico pass (resumed at page $start_page) complete: $new_rows new rows ($after total). "
+            . "Only a pass from page 0 confirms the archive is fully consumed.");
+    } else {
+        Logger::info("Historico pass complete: $new_rows new rows ($after total). "
+            . "Re-run until this reports 0 new rows to confirm the archive is fully consumed.");
+    }
 }
 
 function count_historico_rows($conn){
