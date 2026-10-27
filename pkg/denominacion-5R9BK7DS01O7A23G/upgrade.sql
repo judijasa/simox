@@ -3,7 +3,7 @@ CREATE OR REPLACE TABLE denominacion (
     code INT NOT NULL,  -- id at simo
     nivel JSON,
     nivel_id SMALLINT UNSIGNED,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
 
     PRIMARY KEY(id),
     UNIQUE KEY uk_denominacion_code(code),
