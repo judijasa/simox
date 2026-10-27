@@ -114,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/ema.git",
-                "reference": "dee7517c1fdd4992c0d4e2b05c1413a665680714"
+                "reference": "3613ac7315f55cfa6f60d94c8188b3ea4fe4c716"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/ema/zipball/dee7517c1fdd4992c0d4e2b05c1413a665680714",
-                "reference": "dee7517c1fdd4992c0d4e2b05c1413a665680714",
+                "url": "https://api.github.com/repos/judijasa/ema/zipball/3613ac7315f55cfa6f60d94c8188b3ea4fe4c716",
+                "reference": "3613ac7315f55cfa6f60d94c8188b3ea4fe4c716",
                 "shasum": ""
             },
             "require": {
@@ -148,7 +148,7 @@
                 "source": "https://github.com/judijasa/ema/tree/main",
                 "issues": "https://github.com/judijasa/ema/issues"
             },
-            "time": "2026-10-26T23:45:43+00:00"
+            "time": "2026-10-27T13:59:01+00:00"
         },
         {
             "name": "judijasa/php-daas-framework",
