@@ -1,7 +1,7 @@
 CREATE OR REPLACE TABLE convocatoria (
     id INT AUTO_INCREMENT,
     code INT,  -- id by simo
-    nombre VARCHAR(255),
+    nombre VARCHAR(512),
     agno YEAR,
     codigo VARCHAR(255),
     entidad JSON,
