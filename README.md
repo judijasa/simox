@@ -63,7 +63,8 @@ page and relies on the snapshot unique key to dedupe. It has no cron — run it
 manually (and re-run) until a pass from page 0 reports 0 new rows. An aborted
 pass logs the page it died on and flushes its pending batch; the optional
 `$start_page` resumes from there, though only a pass from page 0 confirms the
-archive is fully consumed:
+archive is fully consumed. A page is retried twice (2s, then 4s) before the
+pass aborts, since the endpoint intermittently answers 500:
 
 ```bash
 EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'

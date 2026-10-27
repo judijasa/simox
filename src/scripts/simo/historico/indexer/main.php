@@ -12,6 +12,9 @@ use Utils\Logger;
 // page, and relies on the (opec, source, fecha_inscripcion) unique key to
 // dedupe. The archive is fully consumed once a pass that started at page 0
 // reports 0 new rows: a resumed pass only covers the tail and cannot prove it.
+// A page is retried twice before the pass aborts, because the endpoint
+// intermittently answers 500 on a URL that succeeds moments later.
+// To resume: phprun '.../backfill(start_page: <page>)'
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function backfill($conn,
     $batch_size_limit = 200,
@@ -44,7 +47,7 @@ function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, 
         }
 
         try {
-            $new_jobs = get_api_data($base_api_request, $page);
+            $new_jobs = get_page_with_retries($base_api_request, $page);
         } catch (Throwable $e) {
             // Report the resume point first: it is the only state worth
             // carrying out of an aborted pass.
@@ -99,6 +102,26 @@ function historico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, 
     } else {
         Logger::info("Historico pass complete: $new_rows new rows ($after total). "
             . "Re-run until this reports 0 new rows to confirm the archive is fully consumed.");
+    }
+}
+
+// Fetches one page, retrying a failure $retries more times with a doubling
+// delay (2s, 4s by default). The endpoint intermittently answers 500 on a URL
+// that succeeds moments later, so a single failure says nothing about the page;
+// only a page that fails every attempt aborts the pass.
+function get_page_with_retries($base_api_request, $page, $retries = 2, $delay = 2){
+    for ($attempt = 0; ; $attempt++) {
+        try {
+            return get_api_data($base_api_request, $page);
+        } catch (Throwable $e) {
+            if ($attempt >= $retries) {
+                throw $e;
+            }
+            $wait = $delay * (2 ** $attempt);
+            Logger::info("Historico page $page failed (" . $e->getMessage() . ") — retry "
+                . ($attempt + 1) . "/$retries in {$wait}s.");
+            sleep($wait);
+        }
     }
 }
 
