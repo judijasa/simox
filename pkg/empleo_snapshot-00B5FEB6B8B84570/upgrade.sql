@@ -1,6 +1,7 @@
 CREATE OR REPLACE TABLE empleo_snapshot (
     id INT AUTO_INCREMENT,
     opec INT NOT NULL,
+    source ENUM('publico','historico','provision') NOT NULL DEFAULT 'publico',
     empleo JSON,
     estado_inscripcion VARCHAR(100),
     favorito BOOLEAN,
@@ -12,5 +13,5 @@ CREATE OR REPLACE TABLE empleo_snapshot (
     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY empleo_snapshot_id(id),
-    UNIQUE KEY ux_empleo_snapshot_opec_fecha (opec, fecha_inscripcion)
+    UNIQUE KEY ux_empleo_snapshot_opec_source_fecha (opec, source, fecha_inscripcion)
 );

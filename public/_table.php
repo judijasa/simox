@@ -141,7 +141,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
             }
 
             // Total matching records (drives pagination).
-            $count_query = "SELECT COUNT(*) FROM empleo e WHERE {$config['filter']}{$dept_filter}";
+            $count_query = "SELECT COUNT(*) FROM empleo e WHERE {$config['filter']} AND e.opec_historico = 0{$dept_filter}";
             $stmt = $conn->prepare($count_query);
             if($dept_id_param !== -1){
                 $stmt->bindValue(':dept_str', $dept_id_to_dept_str[$dept_id_param]);
@@ -183,7 +183,7 @@ Author: 20198338 <ciudadania.ab@gmail.com>
                     $lugar_subquery
                 FROM empleo e
                 LEFT JOIN denominacion d ON d.id = e.denominacion_id
-                WHERE {$config['filter']}{$dept_filter}
+                WHERE {$config['filter']} AND e.opec_historico = 0{$dept_filter}
                 ORDER BY {$config['order_col']} DESC, opec DESC
                 LIMIT $items_per_page OFFSET $start_from
             ";

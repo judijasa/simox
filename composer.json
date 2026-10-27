@@ -9,7 +9,7 @@
   },
   "require": {
     "judijasa/php-daas-framework": "dev-main",
-    "judijasa/ema": "dev-main"
+    "judijasa/ema": "dev-main#3613ac7315f55cfa6f60d94c8188b3ea4fe4c716"
   },
   "repositories": [
     {

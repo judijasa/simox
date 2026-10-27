@@ -10,6 +10,9 @@ CREATE OR REPLACE TABLE convocatoria (
     tipo_proceso VARCHAR(100),
     no_cobro_nivel BOOL,
     no_cobro_opec BOOL,
+    convocatoria_padre_id INT,
+    publicar_opec BOOL,
+    opec_historico BOOL,
     tipo_proc_sele_id TINYINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

@@ -99,10 +99,11 @@ function get_api_data($base_api_request, $page){
     return $data;
 }
 
-function persist_snapshots($conn, $jobs){
+function persist_snapshots($conn, $jobs, $source = 'publico'){
     $sql = <<<EOD
         INSERT INTO empleo_snapshot (
             opec,
+            source,
             empleo,
             estado_inscripcion,
             favorito,
@@ -112,6 +113,7 @@ function persist_snapshots($conn, $jobs){
             `access`
         ) VALUES (
             :opec,
+            :source,
             :empleo,
             :estado_inscripcion,
             :favorito,
@@ -126,14 +128,16 @@ function persist_snapshots($conn, $jobs){
     foreach ($jobs as $job) {
         $stmt->execute([
             ':opec'               => $job['id'],
+            ':source'             => $source,
             ':empleo'             => json_encode($job['empleo']),
             ':estado_inscripcion' => $job['estadoInscripcion'],
             // cast boolean to int, otherwise PHP convert false to empty string
             ':favorito'           => (int)$job['favorito'],
             ':inscripcion_id'     => json_encode($job['inscripcionId']),
             // fecha_inscripcion is NOT NULL DEFAULT '': the explicit empty
-            // string (not SQL NULL) is what lets the (opec, fecha_inscripcion)
-            // unique key collide, so coerce missing/null to '' here.
+            // string (not SQL NULL) is what lets the (opec, source,
+            // fecha_inscripcion) unique key collide, so coerce missing/null
+            // to '' here.
             ':fecha_inscripcion'  => $job['fechaInscripcion'] ?? '',
             ':nivel_nombre'       => $job['nivelNombre'],
             ':access'             => json_encode($job['access']),

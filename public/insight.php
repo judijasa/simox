@@ -47,15 +47,15 @@ Author: judijasa <ciudadania.ab@gmail.com>
                 // $today = date("Y-m-d", strtotime('-1 year')); // '0000-00-00';
                 $dbname = 'simo1';
                 $conn = Database::connectTo($dbname, 'simox');
-                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now()) OR fecha_inscripcion IS NULL";
+                $query = "SELECT count(*) FROM empleo WHERE opec_historico = 0 AND (fecha_inscripcion >= date(now()) OR fecha_inscripcion IS NULL)";
                 $stmt = $conn->query($query);
                 $total = $stmt->fetchColumn();
-                $query = "SELECT count(*) FROM empleo WHERE fecha_inscripcion >= date(now())";
+                $query = "SELECT count(*) FROM empleo WHERE opec_historico = 0 AND fecha_inscripcion >= date(now())";
                 $stmt = $conn->query($query);
                 $vigentes = $stmt->fetchColumn();
                 $query = "
                     SELECT count(*) FROM empleo
-                    WHERE fecha_inscripcion IS NULL AND created_date >= NOW() - INTERVAL 1 YEAR";
+                    WHERE opec_historico = 0 AND fecha_inscripcion IS NULL AND created_date >= NOW() - INTERVAL 1 YEAR";
                 $stmt = $conn->query($query);
                 $por_definir = $stmt->fetchColumn();
             } catch (PDOException $e) {
