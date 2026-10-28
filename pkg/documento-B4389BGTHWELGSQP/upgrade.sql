@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE documento_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE documento (
-    id INT AUTO_INCREMENT,
+    id INT,
     code INT,  -- simo id
     ruta_archivo VARCHAR(100),
     content_type VARCHAR(100),

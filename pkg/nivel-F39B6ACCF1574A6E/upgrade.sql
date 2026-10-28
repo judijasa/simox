@@ -1,6 +1,8 @@
+CREATE OR REPLACE SEQUENCE nivel_id_seq AS INT CACHE 50;
+
 -- data taken from empleo.denominacion.nivel
 CREATE OR REPLACE TABLE nivel (
-    id SMALLINT UNSIGNED AUTO_INCREMENT,
+    id INT,
     code SMALLINT UNSIGNED,
     nombre VARCHAR(100),
 

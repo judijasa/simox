@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE cnsc_aviso_snapshot_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE cnsc_aviso_snapshot (
-    id INT AUTO_INCREMENT,
+    id INT,
     node_id INT NOT NULL,
     aviso JSON,
     titulo VARCHAR(500),

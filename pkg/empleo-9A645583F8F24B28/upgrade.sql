@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE empleo_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE empleo (
-    id INT AUTO_INCREMENT,
+    id INT,
     opec INT NOT NULL,
     created_date DATETIME, -- assigned by simo
     asignacion_salarial VARCHAR(50),
@@ -18,7 +20,7 @@ CREATE OR REPLACE TABLE empleo (
     area JSON,
     discapacidades JSON,
     documento_id INT,
-    entidad_id SMALLINT UNSIGNED,
+    entidad_id INT,
     identificador VARCHAR(100),
     vigencia_salarial YEAR,
     urbano BOOL,

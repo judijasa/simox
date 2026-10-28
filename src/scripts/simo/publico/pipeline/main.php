@@ -7,6 +7,7 @@ use Utils\Agent;
 use Utils\CronJob;
 use Utils\DatabaseOps\BatchScan;
 use Utils\DatabaseOps\BatchInsert;
+use Utils\DatabaseOps\GuardedInsert;
 
 function insert_niveles(PDO $conn, array $empleos, int $batch_size): void
 {
@@ -17,7 +18,7 @@ function insert_niveles(PDO $conn, array $empleos, int $batch_size): void
     }
     $niveles = deduplicate_by($niveles, 'id');
     $rows    = array_map(fn($n) => [$n['id'], $n['nombre']], $niveles);
-    BatchInsert::insert($conn, 'nivel', ['code', 'nombre'], $rows, $batch_size);
+    GuardedInsert::insert($conn, 'nivel', ['id', 'code', 'nombre'], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR nivel_id_seq']);
 }
 
 function insert_tipo_entidades(PDO $conn, array $empleos, int $batch_size): void
@@ -29,7 +30,7 @@ function insert_tipo_entidades(PDO $conn, array $empleos, int $batch_size): void
     }
     $tipos = deduplicate_by($tipos, 'id');
     $rows  = array_map(fn($t) => [$t['id'], $t['nombre']], $tipos);
-    BatchInsert::insert($conn, 'tipo_entidad', ['code', 'nombre'], $rows, $batch_size);
+    GuardedInsert::insert($conn, 'tipo_entidad', ['id', 'code', 'nombre'], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR tipo_entidad_id_seq']);
 }
 
 function insert_entidades(PDO $conn, array $empleos, int $batch_size): void
@@ -54,8 +55,8 @@ function insert_entidades(PDO $conn, array $empleos, int $batch_size): void
             $lookup->fetchColumn() ?: null,
         ];
     }
-    $columns = ['code', 'nit', 'nombre', 'tipo_entidad', 'tipo_entidad_id'];
-    BatchInsert::insert($conn, 'entidad', $columns, $rows, $batch_size);
+    $columns = ['id', 'code', 'nit', 'nombre', 'tipo_entidad', 'tipo_entidad_id'];
+    GuardedInsert::insert($conn, 'entidad', $columns, ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR entidad_id_seq']);
 }
 
 function insert_convocatorias(PDO $conn, array $empleos, int $batch_size): void
@@ -87,10 +88,10 @@ function insert_convocatorias(PDO $conn, array $empleos, int $batch_size): void
         ];
     }
     $columns = [
-        'code', 'nombre', 'agno', 'codigo', 'entidad', 'entidad_id', 'es_tipo_fase',
+        'id', 'code', 'nombre', 'agno', 'codigo', 'entidad', 'entidad_id', 'es_tipo_fase',
         'tipo_proceso', 'no_cobro_nivel', 'no_cobro_opec', 'tipo_proc_sele_id'
     ];
-    BatchInsert::insert($conn, 'convocatoria', $columns, $rows, $batch_size);
+    GuardedInsert::insert($conn, 'convocatoria', $columns, ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR convocatoria_id_seq']);
 }
 
 function insert_denominaciones(PDO $conn, array $empleos, int $batch_size): void
@@ -115,8 +116,8 @@ function insert_denominaciones(PDO $conn, array $empleos, int $batch_size): void
             $den['nombre'],
         ];
     }
-    $columns = ['code', 'nivel', 'nivel_id', 'nombre'];
-    BatchInsert::insert($conn, 'denominacion', $columns, $rows, $batch_size);
+    $columns = ['id', 'code', 'nivel', 'nivel_id', 'nombre'];
+    GuardedInsert::insert($conn, 'denominacion', $columns, ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR denominacion_id_seq']);
 }
 
 function insert_dependencias(PDO $conn, array $empleos, int $batch_size): void
@@ -130,7 +131,7 @@ function insert_dependencias(PDO $conn, array $empleos, int $batch_size): void
     }
     $deps = deduplicate_by($deps, 'id');
     $rows = array_map(fn($d) => [$d['id'], $d['nombre']], $deps);
-    BatchInsert::insert($conn, 'dependencia', ['code', 'nombre'], $rows, $batch_size);
+    GuardedInsert::insert($conn, 'dependencia', ['id', 'code', 'nombre'], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR dependencia_id_seq']);
 }
 
 function insert_municipios(PDO $conn, array $empleos, int $batch_size): void
@@ -144,7 +145,7 @@ function insert_municipios(PDO $conn, array $empleos, int $batch_size): void
     }
     $muns = deduplicate_by($muns, 'id');
     $rows = array_map(fn($m) => [$m['id'], $m['nombre'], $m['departamento']['nombre'] ?? null], $muns);
-    BatchInsert::insert($conn, 'municipio', ['code', 'nombre', 'departamento'], $rows, $batch_size);
+    GuardedInsert::insert($conn, 'municipio', ['id', 'code', 'nombre', 'departamento'], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR municipio_id_seq']);
 }
 
 function insert_requisitos(PDO $conn, array $empleos, int $batch_size): void
@@ -164,8 +165,8 @@ function insert_requisitos(PDO $conn, array $empleos, int $batch_size): void
         json_encode($r['alternativas'] ?? []),
         json_encode($r['equivalencias'] ?? []),
     ], $reqs);
-    $columns = ['code', 'estudio', 'experiencia', 'otros', 'alternativas', 'equivalencias'];
-    BatchInsert::insert($conn, 'requisito', $columns, $rows, $batch_size);
+    $columns = ['id', 'code', 'estudio', 'experiencia', 'otros', 'alternativas', 'equivalencias'];
+    GuardedInsert::insert($conn, 'requisito', $columns, ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR requisito_id_seq']);
 }
 
 function insert_funciones(PDO $conn, array $empleos, int $batch_size): void
@@ -178,7 +179,7 @@ function insert_funciones(PDO $conn, array $empleos, int $batch_size): void
     }
     $fns  = deduplicate_by($fns, 'id');
     $rows = array_map(fn($f) => [$f['id'], $f['descripcion']], $fns);
-    BatchInsert::insert($conn, 'funcion', ['code', 'descripcion'], $rows, $batch_size);
+    GuardedInsert::insert($conn, 'funcion', ['id', 'code', 'descripcion'], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR funcion_id_seq']);
 }
 
 function insert_documentos(PDO $conn, array $empleos, int $batch_size): void
@@ -198,10 +199,10 @@ function insert_documentos(PDO $conn, array $empleos, int $batch_size): void
         $d['fecha'] ?? null,
         $d['documentoOrigenId'] ?? null,
     ], $docs);
-    BatchInsert::insert($conn, 'documento', [
-        'code', 'ruta_archivo', 'content_type', 'version', 'stage_id',
+    GuardedInsert::insert($conn, 'documento', [
+        'id', 'code', 'ruta_archivo', 'content_type', 'version', 'stage_id',
         'fecha', 'documento_origen_id'
-    ], $rows, $batch_size);
+    ], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR documento_id_seq']);
 }
 
 function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
@@ -235,11 +236,11 @@ function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
             $vac['ocupadasPrePensionados'] ?? null,
         ];
     }
-    BatchInsert::insert($conn, 'vacante', [
-        'code', 'cantidad_ascensos', 'municipio', 'municipio_id', 'dependencia',
+    GuardedInsert::insert($conn, 'vacante', [
+        'id', 'code', 'cantidad_ascensos', 'municipio', 'municipio_id', 'dependencia',
         'dependencia_id', 'fecha_generada', 'cantidad', 'disponible',
         'cargos_vacantes', 'ocupadas_pre_pensionados'
-    ], $rows, $batch_size);
+    ], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR vacante_id_seq']);
 }
 
 function insert_empleo_vacantes(PDO $conn, array $empleos, int $batch_size): void
@@ -342,14 +343,14 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
             $row['access'],
         ];
     }
-    BatchInsert::insert($conn, 'empleo', [
-        'opec', 'created_date', 'asignacion_salarial', 'codigo_empleo', 'sin_codigo',
+    GuardedInsert::insert($conn, 'empleo', [
+        'id', 'opec', 'created_date', 'asignacion_salarial', 'codigo_empleo', 'sin_codigo',
         'denominacion_id', 'descripcion', 'concurso_ascenso', 'condicion_discapacidad',
         'grado_nivel', 'grado_denominacion', 'convocatoria_id', 'area', 'discapacidades',
         'documento_id', 'entidad_id', 'identificador', 'vigencia_salarial', 'urbano',
         'aeronautico', 'no_cobro_opec', 'estado_inscripcion', 'favorito',
         'inscripcion_id', 'fecha_inscripcion', 'nivel_nombre', 'access',
-    ], $insert_rows, $batch_size);
+    ], ['opec'], $insert_rows, $batch_size, ['id' => 'NEXT VALUE FOR empleo_id_seq']);
 }
 
 function process_batch(PDO $conn, array $rows, int $batch_size): void

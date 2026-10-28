@@ -1,9 +1,11 @@
+CREATE OR REPLACE SEQUENCE vacante_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE vacante (
-    id INT AUTO_INCREMENT,
+    id INT,
     code INT NOT NULL, -- id at simo
     cantidad_ascensos SMALLINT UNSIGNED,
     municipio JSON, -- to avoid subqueries of 3rd order in empleo view
-    municipio_id SMALLINT UNSIGNED, -- to search by municipio efficiently
+    municipio_id INT, -- to search by municipio efficiently
     dependencia JSON, -- to avoid subqueries of 3rd order in empleo view
     dependencia_id INT, -- to search by dependencia efficiently
     fecha_generada TIMESTAMP,

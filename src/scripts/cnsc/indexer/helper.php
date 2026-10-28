@@ -2,6 +2,7 @@
 require 'vendor/autoload.php';
 
 use Utils\Crawler\HttpClient;
+use Utils\DatabaseOps\GuardedInsert;
 use Utils\Logger;
 
 /**
@@ -166,48 +167,41 @@ function new_node_ids($conn, array $node_ids){
 }
 
 function persist_snapshots($conn, $avisos){
-    $sql = <<<EOD
-        INSERT INTO cnsc_aviso_snapshot (
-            node_id,
-            aviso,
-            titulo,
-            fecha_publicacion,
-            cuerpo,
-            convocatoria,
-            documentos
-        ) VALUES (
-            :node_id,
-            :aviso,
-            :titulo,
-            :fecha_publicacion,
-            :cuerpo,
-            :convocatoria,
-            :documentos
-        )
-        ON DUPLICATE KEY UPDATE last_seen = CURRENT_TIMESTAMP
-        EOD;
-    $stmt = $conn->prepare($sql);
+    if ($avisos === []) return;
+
+    $rows = [];
     foreach ($avisos as $aviso) {
-        try {
-            $stmt->execute([
-                ':node_id' => $aviso['node_id'],
-                ':aviso' => json_encode($aviso),
-                ':titulo' => $aviso['titulo'],
-                ':fecha_publicacion' => $aviso['fecha_publicacion'],
-                ':cuerpo' => $aviso['cuerpo'],
-                ':convocatoria' => $aviso['convocatoria'] === null
-                    ? null
-                    : json_encode($aviso['convocatoria']),
-                ':documentos' => json_encode($aviso['documentos']),
-            ]);
-        } catch (Throwable $e) {
-            Logger::info("ERROR: could not persist aviso node {$aviso['node_id']} ({$aviso['url']}).");
-            throw new RuntimeException(
-                "Could not persist aviso node {$aviso['node_id']} ({$aviso['url']}): {$e->getMessage()}",
-                0,
-                $e
-            );
-        }
+        $rows[] = [
+            $aviso['node_id'],
+            json_encode($aviso),
+            $aviso['titulo'],
+            $aviso['fecha_publicacion'],
+            $aviso['cuerpo'],
+            $aviso['convocatoria'] === null ? null : json_encode($aviso['convocatoria']),
+            json_encode($aviso['documentos']),
+        ];
+    }
+
+    // Only genuinely-new nodes consume a sequence id; the guard on node_id
+    // (the table's unique key) filters re-offered rows before id allocation.
+    // last_seen stays insert-time-only here, matching the previous behavior.
+    try {
+        GuardedInsert::insert(
+            $conn,
+            'cnsc_aviso_snapshot',
+            ['id', 'node_id', 'aviso', 'titulo', 'fecha_publicacion', 'cuerpo', 'convocatoria', 'documentos'],
+            ['node_id'],
+            $rows,
+            count($rows),
+            ['id' => 'NEXT VALUE FOR cnsc_aviso_snapshot_id_seq']
+        );
+    } catch (Throwable $e) {
+        Logger::info("ERROR: could not persist " . count($avisos) . " aviso snapshot(s).");
+        throw new RuntimeException(
+            "Could not persist aviso snapshots: {$e->getMessage()}",
+            0,
+            $e
+        );
     }
 }
 
@@ -237,7 +231,7 @@ function clean_text($text){
  * Loads an HTML string into a DOMDocument, or null when it cannot be parsed.
  *
  * The sunra/php-simple-html-dom-parser package is not usable on PHP 8.4: its
- * selector regex ("[\\w-:\\*]") is rejected by PCRE2. DOMDocument/XPath covers
+ * selector regex ("[\w-:\*]") is rejected by PCRE2. DOMDocument/XPath covers
  * the same need with no extra dependency, so the package was dropped.
  */
 function parse_html($html){

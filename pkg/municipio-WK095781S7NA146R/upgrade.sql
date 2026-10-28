@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE municipio_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE municipio (
-    id SMALLINT UNSIGNED AUTO_INCREMENT,
+    id INT,
     code INT UNSIGNED NOT NULL, -- id at simo
     nombre VARCHAR(100) NOT NULL,
     departamento VARCHAR(100),

@@ -1,11 +1,13 @@
+CREATE OR REPLACE SEQUENCE convocatoria_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE convocatoria (
-    id INT AUTO_INCREMENT,
+    id INT,
     code INT,  -- id by simo
     nombre VARCHAR(512),
     agno YEAR,
     codigo VARCHAR(255),
     entidad JSON,
-    entidad_id SMALLINT UNSIGNED,
+    entidad_id INT,
     es_tipo_fase BOOL,
     tipo_proceso VARCHAR(100),
     no_cobro_nivel BOOL,

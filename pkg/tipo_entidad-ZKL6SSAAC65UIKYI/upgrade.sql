@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE tipo_entidad_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE tipo_entidad (
-    id TINYINT UNSIGNED AUTO_INCREMENT,
+    id INT,
     code TINYINT UNSIGNED,
     nombre VARCHAR(100),
 

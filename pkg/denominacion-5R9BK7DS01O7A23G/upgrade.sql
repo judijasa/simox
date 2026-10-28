@@ -1,8 +1,10 @@
+CREATE OR REPLACE SEQUENCE denominacion_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE denominacion (
-    id INT AUTO_INCREMENT,
+    id INT,
     code INT NOT NULL,  -- id at simo
     nivel JSON,
-    nivel_id SMALLINT UNSIGNED,
+    nivel_id INT,
     nombre VARCHAR(255) NOT NULL,
 
     PRIMARY KEY(id),

@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE funcion_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE funcion (
-    id INT AUTO_INCREMENT,
+    id INT,
     code INT NOT NULL,
     descripcion TEXT,
 

@@ -1,5 +1,7 @@
+CREATE OR REPLACE SEQUENCE empleo_snapshot_id_seq AS INT CACHE 50;
+
 CREATE OR REPLACE TABLE empleo_snapshot (
-    id INT AUTO_INCREMENT,
+    id INT,
     opec INT NOT NULL,
     source ENUM('publico','historico','provision') NOT NULL DEFAULT 'publico',
     empleo JSON,
