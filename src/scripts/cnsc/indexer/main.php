@@ -20,7 +20,7 @@ function backfill($conn,
 }
 
 // Incremental cron: stops at the first page with no new node_id.
-#[CronJob(schedule: '0 18 * * *', scope: 'worker')]
+// #[CronJob(schedule: '0 18 * * *', scope: 'worker')]
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function update($conn,
     $batch_size_limit = 200,

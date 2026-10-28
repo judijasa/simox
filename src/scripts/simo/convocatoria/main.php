@@ -45,7 +45,7 @@ function backfill($conn,
     );
 }
 
-#[CronJob(schedule: '0 4 * * *', scope: 'worker')]
+// #[CronJob(schedule: '0 4 * * *', scope: 'worker')]
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function update($conn,
     $batch_size_limit = 200,
