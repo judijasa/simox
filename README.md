@@ -69,6 +69,7 @@ pass aborts, since the endpoint intermittently answers 500:
 ```bash
 EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'
 EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill(200, 50, 86400, 213)'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill(start_page: 213)'
 ```
 
 The SIMO "convocatoria" flag-updater classifies every convocatoria into the
