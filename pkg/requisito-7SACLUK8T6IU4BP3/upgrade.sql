@@ -3,7 +3,7 @@ CREATE OR REPLACE SEQUENCE requisito_id_seq AS INT CACHE 50;
 CREATE OR REPLACE TABLE requisito (
     id INT,
     code INT,
-    estudio TEXT,
+    estudio MEDIUMTEXT,
     experiencia TEXT,
     otros TEXT,
     alternativas JSON,

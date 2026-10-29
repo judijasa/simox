@@ -222,6 +222,16 @@ function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
     foreach ($vacs as $vac) {
         $mun_lookup->execute([':code' => $vac['municipio']['id'] ?? null]);
         $dep_lookup->execute([':code' => $vac['dependencia']['id'] ?? null]);
+
+        $fecha_raw = $vac['fechaGenerada'] ?? null;
+        $fecha = null;
+        if ($fecha_raw !== null
+            && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$fecha_raw, $m)
+            && (int)$m[1] >= 1000
+            && checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+            $fecha = (string)$fecha_raw;
+        }
+
         $rows[] = [
             $vac['id'],
             $vac['cantidadAscensos'] ?? null,
@@ -229,7 +239,8 @@ function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
             $mun_lookup->fetchColumn() ?: null,
             json_encode($vac['dependencia'] ?? null),
             $dep_lookup->fetchColumn() ?: null,
-            $vac['fechaGenerada'] ?? null,
+            $fecha,
+            $fecha_raw,
             $vac['cantidad'] ?? null,
             $vac['disponible'] ?? null,
             json_encode($vac['cargosVacantes'] ?? []),
@@ -238,7 +249,7 @@ function insert_vacantes(PDO $conn, array $empleos, int $batch_size): void
     }
     GuardedInsert::insert($conn, 'vacante', [
         'id', 'code', 'cantidad_ascensos', 'municipio', 'municipio_id', 'dependencia',
-        'dependencia_id', 'fecha_generada', 'cantidad', 'disponible',
+        'dependencia_id', 'fecha_generada', 'fecha_generada_src', 'cantidad', 'disponible',
         'cargos_vacantes', 'ocupadas_pre_pensionados'
     ], ['code'], $rows, $batch_size, ['id' => 'NEXT VALUE FOR vacante_id_seq']);
 }

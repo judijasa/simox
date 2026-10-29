@@ -8,7 +8,8 @@ CREATE OR REPLACE TABLE vacante (
     municipio_id INT, -- to search by municipio efficiently
     dependencia JSON, -- to avoid subqueries of 3rd order in empleo view
     dependencia_id INT, -- to search by dependencia efficiently
-    fecha_generada TIMESTAMP,
+    fecha_generada DATE,
+    fecha_generada_src VARCHAR(64),
     cantidad SMALLINT UNSIGNED,
     disponible SMALLINT UNSIGNED,
     cargos_vacantes JSON,
