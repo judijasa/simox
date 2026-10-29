@@ -85,7 +85,9 @@ function make_http_client(){
 function classify($conn, HttpClient $client, $base_url, $sql, $relocate, $batch_size_limit, $jobs_per_page, $timeout){
     $cache = [];
     $rows = $conn->query($sql)->fetchAll();
+    $total = count($rows);
 
+    Logger::info("classifying $total convocatorias");
     $start_time = time();
     $classified = 0;
     $flipped_sources = [];
@@ -100,6 +102,9 @@ function classify($conn, HttpClient $client, $base_url, $sql, $relocate, $batch_
             continue;
         }
         $classified++;
+        if ($classified % 50 === 0) {
+            Logger::info("progress: $classified/$total classified (" . (time() - $start_time) . "s)");
+        }
         if ($result['flipped']) {
             $flipped_sources[$result['source_id']] = true;
         }
