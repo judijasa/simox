@@ -13,7 +13,7 @@ function main($conn,
     $jobs_per_page = 50, $timeout = 60 * 45  // secs
 ){
     $base_url = "https://simo.cnsc.gov.co";
-    indexer(
+    publico_indexer(
         $conn,
         $base_url,
         $batch_size_limit,
@@ -21,7 +21,7 @@ function main($conn,
         $timeout);
 }
 
-function indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
+function publico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $timeout){
     $batch = array();
     $batch_job_ids = array();
     $batch_size = 0;

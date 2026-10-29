@@ -25,7 +25,7 @@ function backfill($conn,
     $start_page = 0
 ){
     $base_url = "https://www.cnsc.gov.co";
-    indexer($conn, $base_url, false, $batch_size_limit, $timeout, $start_page);
+    cnsc_indexer($conn, $base_url, false, $batch_size_limit, $timeout, $start_page);
 }
 
 // Incremental cron: stops at the first page with no new node_id.
@@ -36,10 +36,10 @@ function update($conn,
     $timeout = 60 * 45  // secs
 ){
     $base_url = "https://www.cnsc.gov.co";
-    indexer($conn, $base_url, true, $batch_size_limit, $timeout);
+    cnsc_indexer($conn, $base_url, true, $batch_size_limit, $timeout);
 }
 
-function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout, $start_page = 0){
+function cnsc_indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout, $start_page = 0){
     $client = new HttpClient([
         // The site serves an incomplete certificate chain.
         'ignore_ssl' => true,
