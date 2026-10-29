@@ -4,7 +4,7 @@
 read-only replica and follows through replication, so only `simo0` is rebuilt.
 The schema and the data are two independent parts: the schema is rebuilt from
 the packages in this repo (step 1), the data is refilled by the crawlers
-(steps 2–3). Neither part touches the instance itself (datadir, systemd
+(step 2). Neither part touches the instance itself (datadir, systemd
 unit, port, socket), and neither touches users/grants — those are reconciled by
 the framework's `gen-service-accounts`.
 
@@ -55,23 +55,20 @@ mariadb client on the instance socket (`MYSQL_UNIX_PORT` in `[simo0]`).
 
 ## 2. Populate
 
-The schema must exist and be empty. Each command is one pass:
-`publico/indexer:main()` and `publico/pipeline:main()` are the functions the
-nightly cron calls, while the `backfill()` agents are manual and have no cron
-(the `convocatoria` and `cnsc` crons run `update()` instead). Order matters only
-where noted.
+The indexer and the pipeline are cron-owned (`0 2 * * *` and `0 5 * * *`): once
+the schema exists they run on their own, filling `empleo_snapshot` and then
+`empleo`, the dimension tables and `convocatoria`. The agents below have no cron
+and must be run by hand.
 
 | # | Command | Effect |
 |---|---|---|
-| 1 | `phprun 'src/scripts/simo/publico/indexer/main.php:main()'` | current offers → `empleo_snapshot` |
-| 2 | `phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'` | historical archive → the same table, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
-| 3 | `phprun 'src/scripts/simo/publico/pipeline/main.php:main()'` | `empleo_snapshot` → `empleo`, the dimension tables and `convocatoria` |
-| 4 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` — after 3, which is what creates those rows |
-| 5 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent of 1–4 |
+| 1 | `phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'` | historical archive → `empleo_snapshot`, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
+| 2 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` — needs the pipeline to have created those rows first |
+| 3 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent of 1–2 |
 
-`historico:backfill()` is the long pole (~66k offers). Step 5 is the only source
-of `cnsc_aviso_snapshot` rows, so a rebuild that skips it leaves that table
-empty until the 18:00 job fills it.
+`historico:backfill()` is the long pole (~66k offers). Skipping step 3 leaves
+the CNSC archive missing: the 18:00 job only adds avisos newer than what is
+already stored.
 
 ## 3. Verify
 
