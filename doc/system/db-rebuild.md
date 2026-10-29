@@ -55,18 +55,18 @@ mariadb client on the instance socket (`MYSQL_UNIX_PORT` in `[simo0]`).
 
 ## 2. Populate
 
-The indexer and the pipeline are cron-owned (`0 2 * * *` and `0 5 * * *`): once
-the schema exists they run on their own, filling `empleo_snapshot` and then
-`empleo`, the dimension tables and `convocatoria`. The agents below have no cron
-and must be run by hand.
+The indexer is cron-owned (`0 2 * * *`): it fills `empleo_snapshot` with the
+live offers. The pipeline is also cron-owned (`0 5 * * *`) but is run here by
+hand because the next step depends on its output.
 
 | # | Command | Effect |
 |---|---|---|
 | 1 | `phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'` | historical archive → `empleo_snapshot`, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
-| 2 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` — needs the pipeline to have created those rows first |
-| 3 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent of 1–2 |
+| 2 | `phprun 'src/scripts/simo/publico/pipeline/main.php:main()'` | `empleo_snapshot` → `empleo`, the dimension tables and `convocatoria` |
+| 3 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` |
+| 4 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent |
 
-`historico:backfill()` is the long pole (~66k offers). Skipping step 3 leaves
+`historico:backfill()` is the long pole (~66k offers). Skipping `cnsc` leaves
 the CNSC archive missing: the 18:00 job only adds avisos newer than what is
 already stored.
 
@@ -89,9 +89,10 @@ row to rescan.
 
 ## Steady state is cron-owned
 
-Do not run these by hand; the deploy-installed manifest does. Disable the cron
-agents for the duration of a rebuild — they write the same tables, so a rebuild
-running alongside them conflicts.
+Do not run these by hand — the deploy-installed manifest does — except the
+pipeline during a rebuild (step 2). Disable the cron agents for the duration of
+a rebuild: they write the same tables, so a rebuild running alongside them
+conflicts.
 
 | Job | Schedule | Scope |
 |---|---|---|
