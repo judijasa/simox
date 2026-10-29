@@ -8,15 +8,24 @@ use Utils\Crawler\HttpClient;
 use Utils\Logger;
 
 // Manual dump of the whole "Avisos informativos" archive. Resumable: each run
-// skips nodes already stored and continues at the first unknown page, so it can
-// be re-run until it reports the archive fully consumed.
+// skips nodes already stored, so it can be re-run until it reports the archive
+// fully consumed.
+//
+// $start_page resumes an interrupted pass at the page a timeout reported. The
+// pager is newest-first, so newly published avisos push existing content to
+// higher page numbers: a stale $start_page re-covers ground (deduped by
+// new_node_ids) instead of skipping it. A deletion shifts content the other
+// way and could skip a node, so this is a short-term resume aid, not a durable
+// cross-run cursor — hence the default of 0.
+// To resume: phprun '.../backfill(start_page: <page>)'
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function backfill($conn,
     $batch_size_limit = 200,
-    $timeout = 60 * 60 * 24  // secs
+    $timeout = 60 * 60 * 24,  // secs
+    $start_page = 0
 ){
     $base_url = "https://www.cnsc.gov.co";
-    indexer($conn, $base_url, false, $batch_size_limit, $timeout);
+    indexer($conn, $base_url, false, $batch_size_limit, $timeout, $start_page);
 }
 
 // Incremental cron: stops at the first page with no new node_id.
@@ -30,7 +39,7 @@ function update($conn,
     indexer($conn, $base_url, true, $batch_size_limit, $timeout);
 }
 
-function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
+function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout, $start_page = 0){
     $client = new HttpClient([
         // The site serves an incomplete certificate chain.
         'ignore_ssl' => true,
@@ -45,7 +54,9 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
     $new_ids_found = 0;
     $start_time = time();
     $timed_out = false;
-    $page = 0;  // the site's pager is zero-based
+    // The site's pager is zero-based. Page numbers stay absolute, so a resume
+    // at $start_page reports the same page the aborted run stopped on.
+    $page = $start_page;
 
     for (;; $page++) {
         if (time() - $start_time > $timeout) {
@@ -60,8 +71,8 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
 
         // Both modes skip nodes already stored. update() stops at the first
         // page with nothing new (the pager is newest-first); backfill() keeps
-        // walking, so a run cut short by the timeout resumes at the first
-        // unknown page instead of re-crawling the known prefix.
+        // walking, and a resumed backfill starts at $start_page instead of
+        // re-crawling the known prefix.
         $node_ids = new_node_ids($conn, $node_ids);
         if (count($node_ids) === 0) {
             if ($incremental) {
@@ -105,14 +116,20 @@ function indexer($conn, $base_url, $incremental, $batch_size_limit, $timeout){
     }
 
     if ($timed_out) {
-        Logger::info("WARNING: timeout stopped crawling at page $page.");
+        Logger::info("WARNING: timeout stopped crawling at page $page — resume with start_page=$page.");
     }
 
     if ($total_saved == 0 && !$timed_out) {
         if ($new_ids_found === 0) {
-            Logger::info($incremental
-                ? "Avisos on the most recent page (page 0) already exist. Exiting early."
-                : "Archive fully consumed; nothing to save.");
+            if ($incremental) {
+                Logger::info("Avisos on the most recent page (page 0) already exist. Exiting early.");
+            } elseif ($start_page > 0) {
+                // A resumed pass only covers the tail, so it cannot prove the
+                // archive is consumed.
+                Logger::info("No new avisos from page $start_page onward; re-run from page 0 to confirm the archive is consumed.");
+            } else {
+                Logger::info("Archive fully consumed; nothing to save.");
+            }
         } else {
             Logger::info("No avisos could be saved; skipping db insertion.");
         }

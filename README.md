@@ -46,11 +46,17 @@ It has two agents: `backfill()` dumps the whole archive (manual, resumable —
 re-run it until it reports the archive fully consumed) and `update()` is the
 incremental cron, which stops at the first page with no new node, so it only
 catches avisos newer than what is already stored and cannot fill a gap left by
-an unfinished backfill. Both write to `cnsc_aviso_snapshot` in the same `simo0`
-instance:
+an unfinished backfill. A backfill stopped by its timeout logs the page it
+stopped on; the optional `$start_page` resumes from there. That cursor is only
+short-term-stable: the pager is newest-first, so newly published avisos push
+stored content to higher pages (re-covered and deduped by node id), while a
+deletion could shift content the other way and skip a node. Only a pass from
+page 0 confirms the archive is consumed. Both agents write to
+`cnsc_aviso_snapshot` in the same `simo0` instance:
 
 ```bash
 EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill()'
+EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill(start_page: 42)'
 EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:update()'
 ```
 
