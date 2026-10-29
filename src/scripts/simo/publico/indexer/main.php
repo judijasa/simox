@@ -6,7 +6,7 @@ use Utils\Agent;
 use Utils\CronJob;
 use Utils\Logger;
 
-// #[CronJob(schedule: '0 2 * * *', scope: 'worker')]
+#[CronJob(schedule: '0 2 * * *', scope: 'worker')]
 #[Agent(dbTarget: 'simo0', dbAccount: 'simox')]
 function main($conn,
     $batch_size_limit = 200,
