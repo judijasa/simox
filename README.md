@@ -40,57 +40,17 @@ Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribut
 EMA_TARGET=sandbox phprun 'src/scripts/simo/publico/indexer/main.php:main()'
 ```
 
-The CNSC "Avisos informativos" indexer snapshots the amendments published on
-`www.cnsc.gov.co` (the job offers themselves come from the SIMO indexer above).
-It has two agents: `backfill()` dumps the whole archive (manual, resumable —
-re-run it until it reports the archive fully consumed) and `update()` is the
-incremental cron, which stops at the first page with no new node, so it only
-catches avisos newer than what is already stored and cannot fill a gap left by
-an unfinished backfill. A backfill stopped by its timeout logs the page it
-stopped on; the optional `$start_page` resumes from there. That cursor is only
-short-term-stable: the pager is newest-first, so newly published avisos push
-stored content to higher pages (re-covered and deduped by node id), while a
-deletion could shift content the other way and skip a node. Only a pass from
-page 0 confirms the archive is consumed. Both agents write to
-`cnsc_aviso_snapshot` in the same `simo0` instance:
+The remaining crawlers — the CNSC "avisos" archive, the SIMO historical archive
+and the convocatoria classification pass — are one-shot or long-running and are
+not part of the quick test. Their semantics, and the ordered recipe for
+populating a database from scratch (prod rebuild included), are in
+[doc/system/db-rebuild.md](doc/system/db-rebuild.md).
+
+Run the pipeline (snapshot → the `empleo` tables the website reads), then
+inspect what landed:
 
 ```bash
-EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill()'
-EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:backfill(start_page: 42)'
-EMA_TARGET=sandbox phprun 'src/scripts/cnsc/indexer/main.php:update()'
-```
-
-The SIMO "historico" backfill dumps the whole historical archive
-(`empleos/ofertaPublica/historico`, ~66k offers) into the same
-`empleo_snapshot` as the publico indexer, tagged `source='historico'`. The
-historico endpoint has no stable sort order, so a durable cross-run page cursor
-cannot be trusted: `backfill()` pages the archive from 0 until the first empty
-page and relies on the snapshot unique key to dedupe. It has no cron — run it
-manually (and re-run) until a pass from page 0 reports 0 new rows. An aborted
-pass logs the page it died on and flushes its pending batch; the optional
-`$start_page` resumes from there, though only a pass from page 0 confirms the
-archive is fully consumed. A page is retried twice (2s, then 4s) before the
-pass aborts, since the endpoint intermittently answers 500:
-
-```bash
-EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'
-EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill(200, 50, 86400, 213)'
-EMA_TARGET=sandbox phprun 'src/scripts/simo/historico/indexer/main.php:backfill(start_page: 213)'
-```
-
-The SIMO "convocatoria" flag-updater classifies every convocatoria into the
-current (`publicar_opec`) vs historical (`opec_historico`) split, using the
-parent convocatoria's admin flags (the offer payload never carries them). It has
-two agents: `backfill()` classifies everything once (manual, resumable) and
-`update()` is the nightly cron (`0 4 * * *`) that re-checks current
-convocatorias for `publicar_opec -> opec_historico` relocations, bulk-fetches
-the relocated OPECs into `empleo_snapshot`, and denormalizes
-`empleo.opec_historico` (the flag the website filters on to show only current
-offers):
-
-```bash
-EMA_TARGET=sandbox phprun 'src/scripts/simo/convocatoria/main.php:backfill()'
-EMA_TARGET=sandbox phprun 'src/scripts/simo/convocatoria/main.php:update()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/publico/pipeline/main.php:main()'
 ```
 
 Access the local `simo0` instance (schema `simo`) and verify content:
@@ -98,13 +58,7 @@ Access the local `simo0` instance (schema `simo`) and verify content:
 ```bash
 EMA_TARGET=sandbox ema mdb simo0
 SELECT count(*) FROM empleo_snapshot;
-SELECT count(*) FROM cnsc_aviso_snapshot;
-```
-
-Run the pipeline and verify content:
-
-```bash
-EMA_TARGET=sandbox phprun 'src/scripts/simo/publico/pipeline/main.php:main()'
+SELECT count(*) FROM empleo;
 ```
 
 Start PHP's built-in server (from the repo root, inside `nix develop`; serves `public/` as docroot). The website defaults to `simo1` (prod's read-only replica), so for the local sandbox swap it to `simo0` — in `public/_table.php` and `public/insight.php` change `$dbname = 'simo1'` to `$dbname = 'simo0'` — then serve with `EMA_TARGET=sandbox`:
