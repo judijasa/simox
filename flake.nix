@@ -73,6 +73,8 @@
         # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
         jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
+        # casperjs' shebang is `#!/usr/bin/env python`; python3 ships it.
+        pythonPkg = pkgs.python3;
 
         # Common packages shared by dev and prod: the environment binaries
         # only. Framework + ema code (CLIs, dev scripts, pf-provision.sh) is
@@ -84,6 +86,7 @@
           phpComposer
           jqPkg
           tmuxPkg
+          pythonPkg
         ];
       in
       {
