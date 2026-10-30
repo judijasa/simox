@@ -150,12 +150,15 @@ function classify_row($conn, HttpClient $client, $base_url, array $row, array &$
     return true;
 }
 
-// Denormalizes convocatoria.opec_historico onto empleo. The flag-updater is the
-// sole writer of empleo.opec_historico; the pipeline leaves it at the default.
+// Denormalizes convocatoria.opec_historico onto empleo, one-way only (0 -> 1).
+// The pipeline stamps the source-derived value at insert (publico -> 0,
+// historico -> 1); this corrects the one case the source cannot see — an offer
+// snapshotted as publico whose convocatoria has since flipped historical.
 function propagate_empleo_flags($conn){
     $conn->exec(
         'UPDATE empleo e
             JOIN convocatoria c ON e.convocatoria_id = c.id
-            SET e.opec_historico = COALESCE(c.opec_historico, 0)'
+            SET e.opec_historico = 1
+          WHERE c.opec_historico = 1'
     );
 }

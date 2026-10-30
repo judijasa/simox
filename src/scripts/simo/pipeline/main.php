@@ -346,6 +346,7 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
             isset($empleo['urbano']) ? (int)$empleo['urbano'] : null,
             isset($empleo['aeronautico']) ? (int)$empleo['aeronautico'] : null,
             isset($empleo['noCobroOpec']) ? (int)$empleo['noCobroOpec'] : null,
+            $row['source'] === 'historico' ? 1 : 0,
             $row['estado_inscripcion'],
             isset($row['favorito']) ? (int)$row['favorito'] : null,
             $row['inscripcion_id'],
@@ -359,7 +360,7 @@ function insert_empleos(PDO $conn, array $rows, int $batch_size): void
         'denominacion_id', 'descripcion', 'concurso_ascenso', 'condicion_discapacidad',
         'grado_nivel', 'grado_denominacion', 'convocatoria_id', 'area', 'discapacidades',
         'documento_id', 'entidad_id', 'identificador', 'vigencia_salarial', 'urbano',
-        'aeronautico', 'no_cobro_opec', 'estado_inscripcion', 'favorito',
+        'aeronautico', 'no_cobro_opec', 'opec_historico', 'estado_inscripcion', 'favorito',
         'inscripcion_id', 'fecha_inscripcion', 'nivel_nombre', 'access',
     ], ['opec'], $insert_rows, $batch_size, ['id' => 'NEXT VALUE FOR empleo_id_seq']);
 }
@@ -390,7 +391,7 @@ function process_batch(PDO $conn, array $rows, int $batch_size): void
 function main(PDO $conn): void
 {
     $table_name = 'empleo_snapshot';
-    $query = 'SELECT id, empleo, estado_inscripcion, favorito, inscripcion_id,
+    $query = 'SELECT id, source, empleo, estado_inscripcion, favorito, inscripcion_id,
                      fecha_inscripcion, nivel_nombre, `access`
               FROM empleo_snapshot
               WHERE id >= :curr_id AND id < :next_id
