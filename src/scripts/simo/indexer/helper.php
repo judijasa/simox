@@ -1,8 +1,11 @@
 <?php
 require 'vendor/autoload.php';
 
-use Utils\Crawler\CasperTrio;
 use Utils\DatabaseOps\GuardedInsert;
+
+// Shared crawl primitives for the simo indexers: paginating the publico and
+// historico endpoints and persisting their offers into `empleo_snapshot`.
+// Both indexers (`indexer/publico`, `indexer/historico`) require this file.
 
 function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
     $new_batch = $batch;
@@ -17,33 +20,6 @@ function batch_with_new_jobs($batch, $batch_job_ids, $new_jobs){
         }
     }
     return [$new_batch, $new_batch_job_ids, $added_jobs_n];
-}
-
-function get_total_job_offers($base_url){
-    $target_site = $base_url. '/#ofertaEmpleo';
-
-    $casper = new CasperTrio();
-
-    // Forward options to PhantomJS: ignore SSL errors
-    $casper->setOptions(array(
-                              'ignore-ssl-errors' => 'yes'
-                              ));
-    $casper->start($target_site);
-
-    // Wait for '.itemEmpleo' but fetch '.dgrid-status',
-    // otherise problems arise.
-    // '.dgrid-navigation' is at bottom right
-    $casper->waitForSelector('.itemEmpleo', 30000);
-    // '.dgrid-status' is at bottom left
-    $casper->fetchText('.dgrid-status');
-
-    putenv('OPENSSL_CONF=/dev/null');  // fix phpcasperjs bug
-    $casper->run();
-
-    $text = ($casper->getOutput())[15];
-    $casper = null;
-
-    return trim(explode('de',explode('resultados', $text)[0])[1]);
 }
 
 function get_api_data($base_api_request, $page){

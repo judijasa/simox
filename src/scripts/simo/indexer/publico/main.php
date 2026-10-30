@@ -1,5 +1,6 @@
 <?php
 require 'vendor/autoload.php';
+require __DIR__ . '/../helper.php';
 require __DIR__ . '/helper.php';
 
 use Utils\Agent;

@@ -61,8 +61,8 @@ hand because the next step depends on its output.
 
 | # | Command | Effect |
 |---|---|---|
-| 1 | `phprun 'src/scripts/simo/historico/indexer/main.php:backfill()'` | historical archive → `empleo_snapshot`, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
-| 2 | `phprun 'src/scripts/simo/publico/pipeline/main.php:main()'` | `empleo_snapshot` → `empleo`, the dimension tables and `convocatoria` |
+| 1 | `phprun 'src/scripts/simo/indexer/historico/main.php:backfill()'` | historical archive → `empleo_snapshot`, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
+| 2 | `phprun 'src/scripts/simo/pipeline/main.php:main()'` | `empleo_snapshot` → `empleo`, the dimension tables and `convocatoria` |
 | 3 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` |
 | 4 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent |
 
@@ -96,9 +96,9 @@ conflicts.
 
 | Job | Schedule | Scope |
 |---|---|---|
-| `publico/indexer:main()` | `0 2 * * *` | `worker` |
+| `indexer/publico:main()` | `0 2 * * *` | `worker` |
 | `convocatoria:update()` | `0 4 * * *` | `worker` |
-| `publico/pipeline:main()` | `0 5 * * *` | `worker` |
+| `pipeline:main()` | `0 5 * * *` | `worker` |
 | `cnsc/indexer:update()` | `0 18 * * *` | `worker` |
 | `maintenance:trim_log_files()` | `0 6 * * 6` | `host` |
 | `maintenance:nix_store_gc()` | `0 8 * * 6` | `host` |

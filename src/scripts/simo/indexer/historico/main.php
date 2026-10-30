@@ -1,6 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-require __DIR__ . '/../../publico/indexer/helper.php';
+require __DIR__ . '/../helper.php';
 
 use Utils\Agent;
 use Utils\Logger;

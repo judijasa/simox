@@ -37,7 +37,7 @@ ema sandbox srv/simo0-D03J4K6RM0K7X8E4
 Run the indexer (`phprun` injects the DB connection from the `#[Agent]` attribute, so `main()` takes no explicit connection argument). The dev `.env` no longer pins `EMA_TARGET`, so scripts default to `prod` — prefix local runs with `EMA_TARGET=sandbox` to hit the sandbox instance:
 
 ```bash
-EMA_TARGET=sandbox phprun 'src/scripts/simo/publico/indexer/main.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/indexer/publico/main.php:main()'
 ```
 
 The remaining crawlers — the CNSC "avisos" archive, the SIMO historical archive
@@ -50,7 +50,7 @@ Run the pipeline (snapshot → the `empleo` tables the website reads), then
 inspect what landed:
 
 ```bash
-EMA_TARGET=sandbox phprun 'src/scripts/simo/publico/pipeline/main.php:main()'
+EMA_TARGET=sandbox phprun 'src/scripts/simo/pipeline/main.php:main()'
 ```
 
 Access the local `simo0` instance (schema `simo`) and verify content:
