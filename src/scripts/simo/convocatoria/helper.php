@@ -1,6 +1,5 @@
 <?php
 require 'vendor/autoload.php';
-require __DIR__ . '/../publico/indexer/helper.php';
 
 use Utils\Crawler\HttpClient;
 
