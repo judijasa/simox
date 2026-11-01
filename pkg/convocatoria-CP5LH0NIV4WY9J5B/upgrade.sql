@@ -16,6 +16,7 @@ CREATE OR REPLACE TABLE convocatoria (
     publicar_opec BOOL,
     opec_historico BOOL,
     tipo_proc_sele_id TINYINT,
+    descripcion TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY pk_convocatoria_id(id),
