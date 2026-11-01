@@ -26,6 +26,8 @@ CREATE OR REPLACE TABLE empleo (
     urbano BOOL,
     aeronautico BOOL,
     no_cobro_opec BOOL,
+    -- opec_historico = 1 implies source = 'historico',
+    -- but not the other way around.
     opec_historico BOOL NOT NULL DEFAULT 0,
     estado_inscripcion VARCHAR(100),
     favorito BOOL,
