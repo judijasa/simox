@@ -57,14 +57,13 @@ mariadb client on the instance socket (`MYSQL_UNIX_PORT` in `[simo0]`).
 
 The indexer is cron-owned (`0 2 * * *`): it fills `empleo_snapshot` with the
 live offers. The pipeline is also cron-owned (`0 5 * * *`) but is run here by
-hand because the next step depends on its output.
+hand so the rebuilt `simo` is populated end-to-end before verifying.
 
 | # | Command | Effect |
 |---|---|---|
 | 1 | `phprun 'src/scripts/simo/indexer/historico/main.php:backfill()'` | historical archive → `empleo_snapshot`, `source='historico'`; re-run until a pass from page 0 reports 0 new rows |
 | 2 | `phprun 'src/scripts/simo/pipeline/main.php:main()'` | `empleo_snapshot` → `empleo`, the dimension tables and `convocatoria` |
-| 3 | `phprun 'src/scripts/simo/convocatoria/main.php:backfill()'` | classifies `convocatoria` and denormalizes `opec_historico` onto `empleo` |
-| 4 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent |
+| 3 | `phprun 'src/scripts/cnsc/indexer/main.php:backfill()'` | avisos → `cnsc_aviso_snapshot`; independent |
 
 `historico:backfill()` is the long pole (~66k offers). Skipping `cnsc` leaves
 the CNSC archive missing: the 18:00 job only adds avisos newer than what is
@@ -97,7 +96,6 @@ conflicts.
 | Job | Schedule | Scope |
 |---|---|---|
 | `indexer/publico:main()` | `0 2 * * *` | `worker` |
-| `convocatoria:update()` | `0 4 * * *` | `worker` |
 | `pipeline:main()` | `0 5 * * *` | `worker` |
 | `cnsc/indexer:update()` | `0 18 * * *` | `worker` |
 | `maintenance:trim_log_files()` | `0 6 * * 6` | `host` |

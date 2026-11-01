@@ -26,9 +26,6 @@ CREATE OR REPLACE TABLE empleo (
     urbano BOOL,
     aeronautico BOOL,
     no_cobro_opec BOOL,
-    -- opec_historico = 1 implies source = 'historico',
-    -- but not the other way around.
-    opec_historico BOOL NOT NULL DEFAULT 0,
     estado_inscripcion VARCHAR(100),
     favorito BOOL,
     inscripcion_id JSON,
@@ -43,7 +40,6 @@ CREATE OR REPLACE TABLE empleo (
     INDEX ix_empleo_created_date(created_date),
     INDEX ix_empleo_created_at(created_at),
     INDEX ix_empleo_fecha_inscripcion(fecha_inscripcion),
-    INDEX ix_empleo_opec_historico(opec_historico),
     FOREIGN KEY fk_empleo_denominacion_id(denominacion_id)
         REFERENCES denominacion(id)
         -- ON UPDATE CASCADE ON DELETE RESTRICT
