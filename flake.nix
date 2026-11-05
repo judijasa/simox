@@ -69,7 +69,6 @@
         gitPkg = pkgs.git;
         mariadbPkg = pkgs.mariadb_118;
         phpLinter = pkgs.phpstan;  # Your choice for dev php linter
-        pre-commit = pkgs.pre-commit; # pre-commit (Python) Framework
         # jq: runtime dependency of the `ema` CLI (pinned by the ema package),
         jqPkg = pkgs.jq;
         tmuxPkg = pkgs.tmux;
@@ -104,7 +103,6 @@
             gitPkg
             mariadbPkg
             phpLinter
-            pre-commit
           ];
           shellHook = ''
             # Set SHELL to bashInteractive so tmux uses bash with readline support
