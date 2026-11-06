@@ -9,7 +9,7 @@ pool configuration and the web-server contract).
 
 ```bash
 # on the new host, as root (one-time)
-useradd --create-home <PROD_USER>            # lock the password, authorize the project key
+useradd --create-home <PROD_USER>            # lock the password
 # php-fpm: see web_setup.md (web server + vhost are consumer-owned)
 # TLS cert material under /etc/<app>/ssl (CA + this host's client cert): see machine-certs.md
 apt-get install -y cron                      # a cron daemon (cron, crond, or cronie)
@@ -86,9 +86,8 @@ and idempotent: never hand-edit it, edit `etc/hosts` and re-run `make dev-init`.
 
 ## Provisioning a new production server
 
-One-time steps. The app user (`PROD_USER` in `etc/deploy.conf`) must exist with
-SSH access first (create the user with `useradd --create-home`, lock the
-password, install the SSH key).
+One-time steps. The app user (`PROD_USER` in `etc/deploy.conf`) must exist
+first (create the user with `useradd --create-home`, lock the password).
 
 **1. php-fpm (web)** — installed by the deploy's `web` step; the web server and vhost are consumer-owned. See [web_setup.md](web_setup.md).
 
