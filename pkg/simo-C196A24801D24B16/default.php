@@ -20,7 +20,6 @@ return new \Ema\Config\PackageConfig(
         'dependencia-J31Y7UXN1J2K9W4L',
         'cursorseq-A8FEE4C088E5419C',
         'convocatoria-CP5LH0NIV4WY9J5B',
-        'cnsc_aviso_snapshot-S01C5DV9FWYRFZQW',
-        // 'activity_monitor-A170276C72D14319'
+        'cnsc_aviso_snapshot-S01C5DV9FWYRFZQW'
     ],
 );
