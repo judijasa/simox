@@ -1,18 +1,18 @@
 ; ClickHouse endpoint for the cron-job metrics hooks (src/utils/clickhouse.php).
 ;
-; Sections are keyed by the `clickhouse:<name>` tag (the same tag hlab's
-; clickhouse/srv/<name>-D0<GUID>/default.toml declares as its `db`); this
-; client reads [clickhouse:analytics], the database the simox_job_runs /
-; simox_job_counters schema lives in.
+; Sections are keyed by the `clickhouse:<name>` tag the ClickHouse server
+; declares as its database; this client reads [clickhouse:analytics], the
+; database the simox_job_runs / simox_job_counters schema lives in.
 ;
-; Endpoint-only: host and port of the HTTPS interface. The SQL user is the
-; global CLICKHOUSE_USER (default `default`); the password stays empty by
-; policy — mutual TLS with the machine client certificate (SSL_DIR) is the
-; security boundary, so no credential is shipped here.
+; Endpoint-only: host and port of the HTTP interface. The SQL user is the
+; global CLICKHOUSE_USER (default `default`, a passwordless service user
+; allowlisted by the server); CLICKHOUSE_PASSWORD is an optional override,
+; empty by default. The security boundary is ZeroTier membership plus a
+; source-IP allowlist on the server, so no credential is shipped here.
 ;
-; hlab's `doric` CLI uses the native-protocol port on the same server; this
-; client speaks the HTTPS interface, which is what a PHP process can reach
-; without a native driver.
+; This client speaks the plaintext HTTP interface (8123) — the interface a PHP
+; process can reach without a native driver — over ZeroTier, whose wire
+; encryption makes TLS redundant.
 ;
 ; This file carries prod connectivity only and is MANUALLY MAINTAINED by the
 ; consumer (private data: copied into etc/ as a real file by simox's
@@ -22,5 +22,5 @@
 ; An absent etc/clickhouse.ini disables metrics; it never fails a job.
 
 [clickhouse:analytics]
-host = 10.99.x.x
-port = 8443
+host = <CH ZeroTier IP>
+port = 8123

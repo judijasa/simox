@@ -28,26 +28,25 @@ reported. A `start` row with no matching `finish` means the run crashed, hung
 or exited early; the `finish` statuses are `succeeded` and `failed`, and a
 `failed` row carries the exception message.
 
-The tables live in the `analytics` database and are owned by hlab's schema
-packages (`clickhouse/pkg/simox_job_runs-*`, `clickhouse/pkg/simox_job_counters-*`);
-simox only writes rows.
+The tables live in the `analytics` database, whose schema is provided by the
+ClickHouse server operator; simox only writes rows.
 
 ## Transport and auth
 
-ClickHouse's HTTP interface over HTTPS (8443), one JSONEachRow line per insert,
-with `async_insert=1`. Mutual TLS uses the same out-of-band machine client
-certificate as MariaDB: `SSL_DIR/client.crt` + `client.key`, with the server
-verified against `SSL_DIR/ca.crt` when that file is present. Auth is
-passwordless — `CLICKHOUSE_USER` (default `default`) and no password — so no
-secret ships to prod.
+ClickHouse's HTTP interface over plaintext HTTP (8123) on ZeroTier, one
+JSONEachRow line per insert, with `async_insert=1`. ZeroTier already encrypts
+the wire and authenticates each peer, so TLS/mTLS is redundant. Auth is a
+passwordless service user — `CLICKHOUSE_USER` (default `default`) gated by
+ZeroTier membership and a source-IP allowlist on the server; `CLICKHOUSE_PASSWORD`
+is an optional override, empty by default — so no secret ships to prod.
 
 The endpoint is `etc/clickhouse.ini` (private data, from the committed
 `etc/clickhouse.ini.template`):
 
 ```ini
 [clickhouse:analytics]
-host = 10.99.x.x
-port = 8443
+host = <CH ZeroTier IP>
+port = 8123
 ```
 
 `CLICKHOUSE_INI` overrides the path and `CH_HOST` the reported host name
@@ -84,4 +83,3 @@ WHERE run_id = '<run_id>' GROUP BY metric;
 ## Related
 
 - [private-config.md](private-config.md) — `etc/clickhouse.ini` delivery.
-- [machine-certs.md](machine-certs.md) — the client certificate mTLS uses.

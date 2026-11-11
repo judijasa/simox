@@ -10,16 +10,17 @@ declare(strict_types=1);
 // process that requires vendor/autoload.php — notably `phprun` — defines the
 // hooks. A process that does not (the web server) records nothing.
 //
-// Transport: ClickHouse's HTTP interface over HTTPS (port 8443) with mutual
-// TLS — the same out-of-band machine client certificate MariaDB uses
-// (SSL_DIR/client.crt + client.key, with the server verified against
-// SSL_DIR/ca.crt). Auth is passwordless: CLICKHOUSE_USER (default `default`)
-// and no password. The endpoint lives in etc/clickhouse.ini under
-// [clickhouse:analytics]; that file carries no credential.
+// Transport: ClickHouse's HTTP interface over plaintext HTTP (port 8123) on
+// ZeroTier, whose wire encryption and peer identity make TLS/mTLS redundant.
+// Auth is a passwordless service user (CLICKHOUSE_USER, default `default`)
+// gated by ZeroTier membership and a source-IP allowlist on the server;
+// CLICKHOUSE_PASSWORD is an optional override, empty by default. The endpoint
+// lives in etc/clickhouse.ini under [clickhouse:analytics]; that file carries
+// no credential.
 //
-// Rows match hlab's schema (clickhouse/pkg/simox_job_runs-*,
-// clickhouse/pkg/simox_job_counters-*): one `start` + one `finish` row per run
-// in analytics.simox_job_runs, correlated by run_id, plus one row per counter
+// Rows match the ClickHouse server's schema (simox_job_runs /
+// simox_job_counters): one `start` + one `finish` row per run in
+// analytics.simox_job_runs, correlated by run_id, plus one row per counter
 // increment in analytics.simox_job_counters. A run with no `finish` row
 // crashed, hung or exited early. Counters are written incrementally so a run
 // that dies keeps the progress it reported.
@@ -44,7 +45,7 @@ final class ClickHouseMetrics
     private static string $scope = '';
     private static float $startedAt = 0.0;
 
-    /** @var array{host: string, port: int, user: string, password: string, sslDir: string}|null */
+    /** @var array{host: string, port: int, user: string, password: string}|null */
     private static ?array $config = null;
     private static bool $configLoaded = false;
 
@@ -117,7 +118,7 @@ final class ClickHouseMetrics
     }
 
     /**
-     * POST one JSONEachRow line to the HTTPS interface. ClickHouse applies the
+     * POST one JSONEachRow line to the HTTP interface. ClickHouse applies the
      * column DEFAULTs for fields omitted here, so the start row omits
      * status/reason/duration_ms. async_insert=1 batches concurrent writers
      * server-side; the client still waits for the flush before returning.
@@ -133,7 +134,7 @@ final class ClickHouseMetrics
 
         $json = json_encode($row, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $url = 'https://' . $config['host'] . ':' . $config['port'] . '/?' . http_build_query([
+        $url = 'http://' . $config['host'] . ':' . $config['port'] . '/?' . http_build_query([
             'query' => 'INSERT INTO ' . self::DATABASE . '.' . $table . ' FORMAT JSONEachRow',
             'async_insert' => '1',
         ]);
@@ -156,16 +157,7 @@ final class ClickHouseMetrics
             CURLOPT_CONNECTTIMEOUT => 3,
             CURLOPT_TIMEOUT => 5,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
         ];
-        if ($config['sslDir'] !== '') {
-            $options[CURLOPT_SSLCERT] = $config['sslDir'] . '/client.crt';
-            $options[CURLOPT_SSLKEY] = $config['sslDir'] . '/client.key';
-            if (is_file($config['sslDir'] . '/ca.crt')) {
-                $options[CURLOPT_CAINFO] = $config['sslDir'] . '/ca.crt';
-            }
-        }
         curl_setopt_array($handle, $options);
 
         $response = curl_exec($handle);
@@ -186,7 +178,7 @@ final class ClickHouseMetrics
      * Endpoint + identity, read once per process. A missing file or section
      * disables metrics for this process rather than failing the job.
      *
-     * @return array{host: string, port: int, user: string, password: string, sslDir: string}|null
+     * @return array{host: string, port: int, user: string, password: string}|null
      */
     private static function config(): ?array
     {
@@ -215,21 +207,19 @@ final class ClickHouseMetrics
         }
 
         $rawPort = $section['port'] ?? null;
-        $port = 8443;
+        $port = 8123;
         if (is_string($rawPort) && (int) $rawPort > 0) {
             $port = (int) $rawPort;
         }
 
         $user = getenv('CLICKHOUSE_USER');
         $password = getenv('CLICKHOUSE_PASSWORD');
-        $sslDir = getenv('SSL_DIR');
 
         self::$config = [
             'host' => $host,
             'port' => $port,
             'user' => is_string($user) && $user !== '' ? $user : 'default',
             'password' => is_string($password) ? $password : '',
-            'sslDir' => is_string($sslDir) ? $sslDir : '',
         ];
 
         return self::$config;

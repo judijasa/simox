@@ -129,7 +129,7 @@ Adding a database — its own MariaDB instance on its own host (`ema create`), i
 
 ## Cron-job Metrics
 
-Every `phprun` run reports its start/finish boundaries and any `ch_counter()` increments to the shared ClickHouse `analytics` database. The hooks, transport (HTTPS + mTLS), row shape and failure behavior are in [doc/system/clickhouse-metrics.md](doc/system/clickhouse-metrics.md).
+Every `phprun` run reports its start/finish boundaries and any `ch_counter()` increments to the shared ClickHouse `analytics` database. The hooks, transport (HTTP 8123 over ZeroTier), row shape and failure behavior are in [doc/system/clickhouse-metrics.md](doc/system/clickhouse-metrics.md).
 
 ## Service Accounts & Read Replica
 

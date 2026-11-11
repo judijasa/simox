@@ -74,8 +74,9 @@ export DEPLOY_SSL_DIR=/etc/<app>/ssl
 # etc/ema.default.conf carries only a generic ssl-ca/ssl-crl fallback (the real
 # host paths must never be committed), so the real value travels in the
 # git-ignored override etc/ema.conf. `clickhouse.ini` carries the ClickHouse
-# HTTPS endpoint the cron-job metrics hooks read — endpoint only, no credential
-# (mutual TLS is the auth boundary). The ship step skips any name absent from
+# HTTP (8123) endpoint the cron-job metrics hooks read — endpoint only, no
+# credential (ZeroTier membership + a source-IP allowlist is the auth
+# boundary). The ship step skips any name absent from
 # etc/ (materialized from the private repo by bin/fetch-private-data);
 # deploy asks the operator to confirm such an absence (a no-database
 # bootstrap ships no reuter.ini) before handing off to the framework.

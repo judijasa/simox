@@ -2,29 +2,33 @@
 
 Date: 2026-11-09
 Repos: simox (this repo, consumer); php_daas_framework (../php_daas_framework,
-       upstream mechanism); hlab (../hlab, schema owner); simox_cnf
-       (../simox_cnf, private endpoint config).
+       upstream mechanism); simox_cnf (../simox_cnf, private endpoint config).
+       The ClickHouse server (schema + endpoint) is operated separately.
 
 ## Decision
 
-Ingest simox cron-job run metrics into the ClickHouse `analytics` database
-whose schema is owned by ../hlab. Transport is HTTPS (port 8443) with mTLS
-using the existing machine client cert; auth is passwordless. Instrumentation
-is automatic through a framework hook seam, so every `#[Agent]` run emits a
-`start`/`finish` pair with no per-script boilerplate and no duplicated runner.
+Ingest simox cron-job run metrics into the ClickHouse `analytics` database,
+whose schema is provided by the ClickHouse server operator. Transport is
+plaintext HTTP (port 8123) over ZeroTier; auth is a passwordless ClickHouse
+service user, access gated by ZeroTier membership and a source-IP allowlist on
+the CH server. Instrumentation is automatic through a framework hook seam, so
+every `#[Agent]` run emits a `start`/`finish` pair with no per-script
+boilerplate and no duplicated runner.
 
-Rationale: native TCP (9000/9440) has no PHP driver and only pays off for
-high-throughput reads; OTLP imposes an SDK that does not map to the
-hand-designed `simox_job_runs`/`simox_job_counters` schema; password auth
-would ship a secret to prod. The hooks keep the framework ClickHouse-blind and
+Rationale: ZeroTier already encrypts the wire and authenticates each peer, so
+TLS/mTLS is redundant crypto for low-sensitivity telemetry. The win is
+operational — no CA, no cert issuance/rotation, no `SSL_DIR` plumbing through
+cron. Native TCP (9000/9440) still has no PHP driver, so HTTP 8123 is the
+PHP-reachable interface. Client auth is peer identity + firewall allowlist
+rather than app-layer mTLS. The hooks keep the framework ClickHouse-blind and
 simox the sole owner of the recording logic.
 
 Settled choices:
 
-- **Transport** — HTTPS 8443 + mTLS.
-- **Auth** — client cert from `SSL_DIR` (the same out-of-band machine cert as
-  MariaDB); `CLICKHOUSE_USER` is a global default; `CLICKHOUSE_PASSWORD`
-  stays empty (mTLS, no shipped secret).
+- **Transport** — HTTP 8123 (plaintext) over ZeroTier.
+- **Auth** — passwordless service user `CLICKHOUSE_USER` (the ClickHouse
+  analog of the MariaDB service accounts); `CLICKHOUSE_PASSWORD` optional env
+  override, empty by default. No `SSL_DIR`, no cert.
 - **Config** — `etc/clickhouse.ini.template` (committed placeholders) +
   `etc/clickhouse.ini` (private, materialized from simox_cnf), mirroring
   `reuter.ini.template`/`reuter.ini`. Endpoint-only, no credentials in the file.
@@ -32,7 +36,7 @@ Settled choices:
   hooks `on_job_start`/`on_job_finish`; simox defines them in an autoloaded
   `src/utils/clickhouse.php`.
 
-## Target schema (owned by ../hlab, already created)
+## Target schema (provided by the CH server operator, already created)
 
 - `simox_job_runs` (MergeTree event-log) — `run_id`, `job`, `host`, `scope`,
   `event` (`start`|`finish`), `at`, `status`, `reason`, `duration_ms`. One
@@ -59,7 +63,7 @@ Settled choices:
 
 ### simox (this repo)
 
-- [ ] `src/utils/clickhouse.php` — CH client (HTTPS + mTLS via curl,
+- [ ] `src/utils/clickhouse.php` — CH client (HTTP 8123 via curl,
       `JSONEachRow`, `async_insert=1`) plus `on_job_start`/`on_job_finish` and
       `ch_counter($metric, $value)`. `on_job_start` generates `run_id` and
       holds it (with the start timestamp) in module state; `on_job_finish` and
@@ -67,12 +71,14 @@ Settled choices:
 - [ ] `composer.json` — `"autoload": {"files": ["src/utils/clickhouse.php"]}`
       so `phprun.php`'s `require 'vendor/autoload.php'` loads the hooks.
 - [ ] `etc/clickhouse.ini.template` — committed placeholders:
-      `[clickhouse:analytics]` `host = 10.99.x.x`, `port = 8443`.
+      `[clickhouse:analytics]` `host = <CH ZeroTier IP>`, `port = 8123`.
 - [ ] `bin/fetch-private-data` — materialize `clickhouse.ini` from the private
       source (warn-if-missing, like `reuter.ini`).
 - [ ] `DEPLOY_PRIVATE_FILES` — add `clickhouse.ini` so it ships to prod.
-- [ ] `etc/dev.default.conf` — add `CLICKHOUSE_USER` default.
-- [ ] Re-pin `judijasa/php-daas-framework` after the framework change lands.
+- [ ] `etc/dev.default.conf` — add `CLICKHOUSE_USER` default (the passwordless
+      service user; optional `CLICKHOUSE_PASSWORD`).
+- [ ] Update `judijasa/php-daas-framework` (floating `dev-main`) after the
+      framework change lands.
 - [ ] `doc/plans/2026-11-09-clickhouse-metrics-ingestion.md` — this doc.
 
 ### simox_cnf (../simox_cnf — private)
@@ -80,10 +86,11 @@ Settled choices:
 - [ ] `clickhouse.ini` — real `[clickhouse:analytics]` endpoint (`host`/`port`),
       no credentials.
 
-### hlab (../hlab)
+### ClickHouse server (operated externally)
 
-- [ ] None — schema + `analytics` db already exist as doric packages; simox
-      provides sources only.
+- [ ] Expose the HTTP interface (8123) on ZeroTier, allowlist simox's ZeroTier
+      IPs (firewall or ClickHouse `<networks>`), and provision the passwordless
+      service user used by `CLICKHOUSE_USER`.
 
 ## Open items (recommendations; confirm before implementation)
 
@@ -96,5 +103,3 @@ Settled choices:
   (SIGKILL) and `early_exit` (mid-run `exit()`) leave no `finish` row, which
   the schema already reads as "crashed/hung"; producing those statuses
   explicitly is out of scope for v1.
-- **Server cert trust** — the client verifies CH's server cert; use the
-  project CA if CH is issued by it, otherwise a CH-specific CA path.
