@@ -82,8 +82,7 @@ only because the closure copy ran as `PROD_USER`).
   (`ssh-keygen -t ed25519 -N '' -C simox -f ~/.ssh/simox-sshkey`, documented
   in the private config repo's own ssh-keys doc §1); `gen-ssh-config` only *writes*
   the `IdentityFile` line and never generates the key. Whether/where to
-  automate generation (e.g. in `make dev-init`) is a separate discussion, and
-  is the model the hlab `create-prod-user` client would mirror.
+  automate generation (e.g. in `make dev-init`) is a separate discussion.
 - **`trusted-users`** — dropping `PROD_USER` is safe only while nothing runs
   nix as `PROD_USER`; confirm no cron/app path does before landing.
 - **composer as root vs `sudo -u`** — deps are all public HTTPS (no git-auth),
