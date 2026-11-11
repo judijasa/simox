@@ -85,7 +85,8 @@ framework-side mechanism (per-host order inside `deploy_to_host()`, local
 ## Open items
 
 - First real prod deploys are still pending: the private-config overlay
-  (`simox_cnf` etc/machines.ini) must land on a host before `pf-deploy`'s
+  (`etc/machines.ini`, materialized from the private config repo's
+  `machines.ini`) must land on a host before `pf-deploy`'s
   built-in steps, so the `.env`/`reuter.ini`/cron sequence gets exercised on
   the first live host.
 - `DEPLOY_TAGS` still travels host → server-side step even though only `web`

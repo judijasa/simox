@@ -1,7 +1,7 @@
 # Per-database `db` roles — Plan & Progress
 
 Date: 2026-09-18
-Repos: simox (this repo); simox_cnf (../simox_cnf, private config — header
+Repos: simox (this repo); the private config repo (private config — header
        comment only).
 
 ## Decision
@@ -73,7 +73,7 @@ required there again, by design.
       table.
 - [x] `doc/plans/2026-09-18-per-database-db-roles.md` — this doc.
 
-### simox_cnf (../simox_cnf)
+### The private config repo
 
 - [ ] `machines.ini` — header comment: `db:<name>` → `simox_db_<name>`
       (granted only on its own database). Its current text documents the

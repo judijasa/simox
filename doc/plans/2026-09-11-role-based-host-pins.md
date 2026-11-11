@@ -1,7 +1,7 @@
 # Role-based host pins — Plan & Progress
 
 Date: 2026-09-11
-Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
+Repos: simox (this repo, consumer data); the private config repo (private
        config); php_daas_framework (../php_daas_framework, upstream
        mechanism).
 
@@ -113,7 +113,7 @@ still arrives via the `worker`/`db` roles.
       `gen-service-accounts`.
 - [x] `doc/plans/2026-09-11-role-based-host-pins.md` — this doc.
 
-### simox_cnf (../simox_cnf)
+### The private config repo
 
 - [x] `machines.ini` — header comment: source → role → grant mapping; removing
       a tag revokes the corresponding role.

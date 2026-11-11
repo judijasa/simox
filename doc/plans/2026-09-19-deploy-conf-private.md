@@ -1,7 +1,7 @@
 # deploy.conf as private data — Plan & Progress
 
 Date: 2026-09-19
-Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
+Repos: simox (this repo, consumer data); the private config repo (private
        config); php_daas_framework (../php_daas_framework, upstream
        mechanism).
 
@@ -9,7 +9,7 @@ Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
 
 `etc/deploy.conf` stops being committed project-static config and becomes
 private data like every other operational file: the real file lives in
-`simox_cnf`, this repo commits only `etc/deploy.conf.template` (mirroring the
+the private config repo, this repo commits only `etc/deploy.conf.template` (mirroring the
 current production values — they carry no secrets), and the framework's
 `fetch-private-data` injects it as a symlink into `etc/deploy.conf`. The public
 history no longer discloses the deployment target, and that target now reaches
@@ -55,7 +55,7 @@ is skipped while a real file sits at `etc/deploy.conf`.
 ### simox (this repo)
 
 - [x] `etc/deploy.conf` — removed (was committed); the real file now lives in
-      `simox_cnf/deploy.conf`.
+      the private config repo's `deploy.conf`.
 - [x] `etc/deploy.conf.template` — new; mirrors the current production values,
       with the private-data contract in its header (a real file at
       `etc/deploy.conf` shadows the injected data).
@@ -72,7 +72,7 @@ is skipped while a real file sits at `etc/deploy.conf`.
       `etc/deploy.conf`.
 - [x] `doc/plans/2026-09-19-deploy-conf-private.md` — this doc.
 
-### simox_cnf (../simox_cnf)
+### The private config repo
 
 - [x] `deploy.conf` — new; the real deployment target, moved from
       `simox/etc/deploy.conf` with its header reworded to the private-data
@@ -85,7 +85,7 @@ is skipped while a real file sits at `etc/deploy.conf`.
 - **composer pin** — `composer.json` pins the framework by commit; the pin must
   move to the commit carrying the mechanism change before this repo can deploy
   with a private `deploy.conf`, and `vendor/bin` must be refreshed.
-- **`simox_cnf/deploy.conf` has to be committed and pushed** before
+- **the private config repo's `deploy.conf` has to be committed and pushed** before
   `make dev-init` can inject it: the git-ignored clone in `var/private-data` is
   the only source, and a loose working-tree copy is never used.
 - **Running without private data** — `deploy` cannot run until the template is

@@ -1,7 +1,7 @@
 # Private-config deploy — Plan & Progress
 
 Date: 2026-09-15
-Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
+Repos: simox (this repo, consumer data); the private config repo (private
        config); php_daas_framework (../php_daas_framework, upstream
        mechanism).
 
@@ -9,7 +9,7 @@ Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
 
 Adapt to the framework's `0a01503` commit, which moves the deployment of a
 consumer's private operational config into the framework as a generic
-`bin/deploy-private-config` CLI — replacing simox_cnf's own `bin/deploy.sh`.
+`bin/deploy-private-config` CLI — replacing the private config repo's own deploy script.
 Prod ships `reuter.ini` — whole, from the private repo's committed content via
 `git archive <ref>` — to each host's stable per-app dir
 (`DEPLOY_PRIVATE_CONFIG_DIR`), and nothing else; `machines.ini` and `team.ini`
@@ -57,16 +57,16 @@ for the framework-side mechanism.
       header comments: `fetch-private-data` is a built-in per-host step.
 - [x] `doc/plans/2026-09-15-private-config-deploy.md` — this doc.
 
-### simox_cnf (../simox_cnf)
+### The private config repo
 
 - [x] `bin/deploy.sh` — removed (replaced by the framework
       `deploy-private-config`).
 - [x] `README.md` — "Ships to prod?" column; git-only consumption; Deployment
       section rewritten to the framework split. Tracked in
-      `simox_cnf/doc/plans/2026-09-15-private-config-deploy.md`.
+      the private config repo's matching plan.
 - [x] `machines.ini` — header comment: `db:<name>` no longer the "advisory
       anchor for `db-check`" (verified via the host's `mariadb@*` units).
-      Tracked in `simox_cnf/doc/plans/2026-09-15-private-config-deploy.md`.
+      Tracked in the private config repo's matching plan.
 
 ## Open items
 

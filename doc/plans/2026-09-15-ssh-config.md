@@ -1,7 +1,7 @@
 # SSH config generation — Plan & Progress
 
 Date: 2026-09-15
-Repos: simox (this repo, consumer data); simox_cnf (../simox_cnf, private
+Repos: simox (this repo, consumer data); the private config repo (private
        config); php_daas_framework (../php_daas_framework, upstream
        mechanism).
 
@@ -64,15 +64,15 @@ Host simox-<name>
       also drives the ssh config.
 - [x] `doc/plans/2026-09-15-ssh-config.md` — this doc.
 
-### simox_cnf (../simox_cnf)
+### The private config repo
 
 - [ ] `hosts` — real name→IP entries (prod servers only; drop the `john-*`
       member examples). Tracked in
-      `simox_cnf/doc/plans/2026-09-15-ssh-config.md`.
+      the private config repo's matching plan.
 - [ ] `README.md` — `hosts` wording (ssh source, prod-only). Tracked in
-      `simox_cnf/doc/plans/2026-09-15-ssh-config.md`.
+      the private config repo's matching plan.
 - [ ] `doc/system/zerotier-setup.md` — new "SSH config (generated)" section.
-      Tracked in `simox_cnf/doc/plans/2026-09-15-ssh-config.md`.
+      Tracked in the private config repo's matching plan.
 
 ## Open items
 

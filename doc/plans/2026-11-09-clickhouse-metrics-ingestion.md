@@ -2,7 +2,7 @@
 
 Date: 2026-11-09
 Repos: simox (this repo, consumer); php_daas_framework (../php_daas_framework,
-       upstream mechanism); simox_cnf (../simox_cnf, private endpoint config).
+       upstream mechanism); the private config repo (private endpoint config).
        The ClickHouse server (schema + endpoint) is operated separately.
 
 ## Decision
@@ -30,7 +30,7 @@ Settled choices:
   analog of the MariaDB service accounts); `CLICKHOUSE_PASSWORD` optional env
   override, empty by default. No `SSL_DIR`, no cert.
 - **Config** — `etc/clickhouse.ini.template` (committed placeholders) +
-  `etc/clickhouse.ini` (private, materialized from simox_cnf), mirroring
+  `etc/clickhouse.ini` (private, materialized from the private config repo), mirroring
   `reuter.ini.template`/`reuter.ini`. Endpoint-only, no credentials in the file.
 - **Integration** — framework `phprun()` hook seam: optional `function_exists`
   hooks `on_job_start`/`on_job_finish`; simox defines them in an autoloaded
@@ -81,7 +81,7 @@ Settled choices:
       framework change lands.
 - [ ] `doc/plans/2026-11-09-clickhouse-metrics-ingestion.md` — this doc.
 
-### simox_cnf (../simox_cnf — private)
+### The private config repo
 
 - [ ] `clickhouse.ini` — real `[clickhouse:analytics]` endpoint (`host`/`port`),
       no credentials.
