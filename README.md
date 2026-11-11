@@ -121,11 +121,15 @@ deploy all                         # every prod host in etc/machines.ini
 deploy <host>                      # a single prod host (short name or ZeroTier IP)
 ```
 
-`deploy` materializes the private config, runs the framework `deploy` (ships `reuter.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
+`deploy` materializes the private config, runs the framework `deploy` (ships `reuter.ini` and `clickhouse.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
 
 ## Adding a Database
 
 Adding a database — its own MariaDB instance on its own host (`ema create`), its packages, its `reuter.ini` record, its users/grants — is in [doc/system/add-database.md](doc/system/add-database.md).
+
+## Cron-job Metrics
+
+Every `phprun` run reports its start/finish boundaries and any `ch_counter()` increments to the shared ClickHouse `analytics` database. The hooks, transport (HTTPS + mTLS), row shape and failure behavior are in [doc/system/clickhouse-metrics.md](doc/system/clickhouse-metrics.md).
 
 ## Service Accounts & Read Replica
 

@@ -20,5 +20,10 @@
       "type": "vcs",
       "url": "https://github.com/judijasa/ema"
     }
-  ]
+  ],
+  "autoload": {
+    "files": [
+      "src/utils/clickhouse.php"
+    ]
+  }
 }

@@ -14,6 +14,9 @@
 # `reuter.ini` is expected (every DB-connecting host needs it) but its absence
 # is not a materialization error — a no-database bootstrap legitimately has
 # none; it is warned here and confirmed by the deploy wrapper before shipping.
+# `clickhouse.ini` is expected for the cron-job metrics hooks
+# (src/utils/clickhouse.php) but its absence only disables instrumentation, so
+# it is warned here and never fails the step.
 # `dev.conf` is an optional override — its default is committed in
 # etc/dev.default.conf, so a checkout works without the private copy and only a
 # machine that diverges from the default needs one. `ema.conf` is the host-level
@@ -30,11 +33,11 @@
 # error, not a silent skip.
 #
 # Prod hosts have neither git nor the pointer: they receive their runtime files
-# (reuter.ini and ema.conf) from the deploy machine's deploy step instead — the
-# framework's DEPLOY_PRIVATE_FILES ships them into the freshly swapped etc/ (an
-# absent name is skipped and confirmed by the deploy wrapper; a no-database
-# bootstrap ships no reuter.ini), while deploy.conf's values travel as replayed
-# environment. dev.conf never leaves the dev machine.
+# (reuter.ini, ema.conf and clickhouse.ini) from the deploy machine's deploy
+# step instead — the framework's DEPLOY_PRIVATE_FILES ships them into the
+# freshly swapped etc/ (an absent name is skipped and confirmed by the deploy
+# wrapper; a no-database bootstrap ships no reuter.ini), while deploy.conf's
+# values travel as replayed environment. dev.conf never leaves the dev machine.
 # See doc/system/private-config.md.
 #
 # Usage: bin/fetch-private-data [target-dir]   (default: $PWD)
@@ -101,6 +104,11 @@ done
 # ships (the framework skips an absent DEPLOY_PRIVATE_FILES name).
 if ! copy_file reuter.ini; then
     echo "fetch-private-data: private source $SOURCE_DIR has no reuter.ini (no database provisioned yet — the deploy will confirm)." >&2
+fi
+# clickhouse.ini is expected for the cron-job metrics hooks, but an absent one
+# only disables instrumentation: warn, never fail.
+if ! copy_file clickhouse.ini; then
+    echo "fetch-private-data: private source $SOURCE_DIR has no clickhouse.ini (cron-job metrics stay disabled)." >&2
 fi
 for f in "${OPTIONAL_FILES[@]}"; do
     copy_file "$f" || true
