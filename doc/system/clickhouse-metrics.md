@@ -31,6 +31,16 @@ or exited early; the `finish` statuses are `succeeded` and `failed`, and a
 The tables live in the `analytics` database, whose schema is provided by the
 ClickHouse server operator; simox only writes rows.
 
+## Server boundary
+
+The ClickHouse server is operated separately from this repo: simox owns only
+the client (`src/utils/clickhouse.php`) and the endpoint it needs to send rows
+(`etc/clickhouse.ini`). Server-side provisioning, the `analytics` schema, the
+`default` user and the source-IP allowlist are the server operator's concern.
+simox's `gen-firewall`, `machines.ini` and `host-hardening.php` are out of
+scope here — simox hosts only need outbound (already `allow outgoing` by
+default), and inbound 8123 is the server's own firewall, not simox's.
+
 ## Transport and auth
 
 ClickHouse's HTTP interface over plaintext HTTP (8123) on ZeroTier, one
