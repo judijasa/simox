@@ -15,7 +15,7 @@ declare(strict_types=1);
 // Auth is a passwordless service user (CLICKHOUSE_USER, default `default`)
 // gated by ZeroTier membership and a source-IP allowlist on the server;
 // CLICKHOUSE_PASSWORD is an optional override, empty by default. The endpoint
-// lives in etc/clickhouse.ini under [clickhouse:analytics]; that file carries
+// lives in etc/clickhouse-reuter.ini under [clickhouse:analytics]; that file carries
 // no credential.
 //
 // Rows match the ClickHouse server's schema (simox_job_runs /
@@ -190,7 +190,7 @@ final class ClickHouseMetrics
         $override = getenv('CLICKHOUSE_INI');
         $path = is_string($override) && $override !== ''
             ? $override
-            : dirname(__DIR__, 2) . '/etc/clickhouse.ini';
+            : dirname(__DIR__, 2) . '/etc/clickhouse-reuter.ini';
 
         $ini = is_file($path) ? parse_ini_file($path, true) : false;
         $section = is_array($ini) ? ($ini[self::SECTION] ?? null) : null;

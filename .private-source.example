@@ -1,11 +1,11 @@
 # Private config source pointer (git-ignored).
 #
 # The public repo ships only committed templates for the operational data
-# (etc/deploy.conf, etc/machines.ini, etc/reuter.ini, etc/clickhouse.ini,
+# (etc/deploy.conf, etc/machines.ini, etc/reuter.ini, etc/clickhouse-reuter.ini,
 # etc/ema.conf, etc/team.ini, etc/hosts, etc/host-hardening.php). The real
 # values live in a separate, access-controlled private repository — a small
 # git repo whose tracked files are `deploy.conf`, `machines.ini`, `reuter.ini`,
-# `clickhouse.ini`, `ema.conf`, `team.ini`, `hosts` and `host-hardening.php`
+# `clickhouse-reuter.ini`, `ema.conf`, `team.ini`, `hosts` and `host-hardening.php`
 # (mirroring this repo's etc/). This file tells simox's `bin/fetch-private-data`
 # where to find that repo.
 #
@@ -17,7 +17,7 @@
 # PRIVATE_DATA_REF=main
 #
 # The private repo's committed content is the single source of truth: no
-# machine runs on a loose, uncommitted copy. `reuter.ini` and `clickhouse.ini`
+# machine runs on a loose, uncommitted copy. `reuter.ini` and `clickhouse-reuter.ini`
 # are the files every prod host receives (whole, via the framework's
 # DEPLOY_PRIVATE_FILES key; a host that provisions instances also gets
 # `ema.conf` when the consumer uses client-cert auth); `deploy.conf` is
@@ -26,7 +26,7 @@
 # dev/deploy-time and never leave the deploy machine. A `.private-source` that
 # sets no PRIVATE_DATA_GIT is an error, not a silent skip; an absent
 # `.private-source` is a no-op (prod has no git and no pointer — it receives
-# reuter.ini and clickhouse.ini from the deploy machine's deploy step).
+# reuter.ini and clickhouse-reuter.ini from the deploy machine's deploy step).
 #
 # This file never discloses the private repo's identity in the public history
 # (it is git-ignored). Access control on the private repo is the real security

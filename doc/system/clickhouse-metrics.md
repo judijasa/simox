@@ -35,7 +35,7 @@ ClickHouse server operator; simox only writes rows.
 
 The ClickHouse server is operated separately from this repo: simox owns only
 the client (`src/utils/clickhouse.php`) and the endpoint it needs to send rows
-(`etc/clickhouse.ini`). Server-side provisioning, the `analytics` schema, the
+(`etc/clickhouse-reuter.ini`). Server-side provisioning, the `analytics` schema, the
 `default` user and the source-IP allowlist are the server operator's concern.
 simox's `gen-firewall`, `machines.ini` and `host-hardening.php` are out of
 scope here — simox hosts only need outbound (already `allow outgoing` by
@@ -50,8 +50,8 @@ passwordless service user — `CLICKHOUSE_USER` (default `default`) gated by
 ZeroTier membership and a source-IP allowlist on the server; `CLICKHOUSE_PASSWORD`
 is an optional override, empty by default — so no secret ships to prod.
 
-The endpoint is `etc/clickhouse.ini` (private data, from the committed
-`etc/clickhouse.ini.template`):
+The endpoint is `etc/clickhouse-reuter.ini` (private data, from the committed
+`etc/clickhouse-reuter.ini.template`):
 
 ```ini
 [clickhouse:analytics]
@@ -67,7 +67,7 @@ dev `.env` relays it from `etc/dev.default.conf`.
 
 Instrumentation never fails a job: a missing config, an unreachable server or a
 rejected insert is reported on STDERR (captured in the `phprun` log) and
-swallowed. A missing `etc/clickhouse.ini` disables metrics for that process.
+swallowed. A missing `etc/clickhouse-reuter.ini` disables metrics for that process.
 
 ## Querying
 
@@ -92,4 +92,4 @@ WHERE run_id = '<run_id>' GROUP BY metric;
 
 ## Related
 
-- [private-config.md](private-config.md) — `etc/clickhouse.ini` delivery.
+- [private-config.md](private-config.md) — `etc/clickhouse-reuter.ini` delivery.

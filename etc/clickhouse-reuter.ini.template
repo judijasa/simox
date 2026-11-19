@@ -19,7 +19,7 @@
 ; bin/fetch-private-data in dev, shipped into the freshly swapped etc/ by the
 ; framework's DEPLOY_PRIVATE_FILES — see doc/system/private-config.md). The
 ; committed copy is this template: placeholders only, never a real endpoint.
-; An absent etc/clickhouse.ini disables metrics; it never fails a job.
+; An absent etc/clickhouse-reuter.ini disables metrics; it never fails a job.
 
 [clickhouse:analytics]
 host = <CH ZeroTier IP>
