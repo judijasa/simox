@@ -31,91 +31,98 @@ declare(strict_types=1);
 /**
  * Writes the run-boundary and counter rows described above.
  *
- * State is module-level: on_job_start() opens a run, and on_job_finish() /
- * ch_counter() attach to it. A counter outside a run has no run_id to
- * correlate with, so it is ignored.
+ * State is per-instance: start() opens a run, and finish() / counter() attach
+ * to it. A counter outside a run has no run_id to correlate with, so it is
+ * ignored. The global hooks share one default instance (the `clickhouse:simo0`
+ * endpoint); a caller targeting a different endpoint instantiates its own.
  */
 final class ClickHouseMetrics
 {
     // Endpoint section in etc/clickhouse-reuter.ini. The header names the
     // endpoint; the database the tables live in is the section's `database`
-    // value, not the header.
-    private const SECTION = 'clickhouse:simo0';
+    // value, not the header. It is a constructor argument (default
+    // `clickhouse:simo0`) so a caller can point an instance elsewhere.
+    private string $section;
 
-    private static ?string $runId = null;
-    private static string $job = '';
-    private static string $scope = '';
-    private static float $startedAt = 0.0;
+    private ?string $runId = null;
+    private string $job = '';
+    private string $scope = '';
+    private float $startedAt = 0.0;
 
     /** @var array{host: string, port: int, database: string, user: string, password: string}|null */
-    private static ?array $config = null;
-    private static bool $configLoaded = false;
+    private ?array $config = null;
+    private bool $configLoaded = false;
 
-    public static function start(string $job, string $scope): void
+    public function __construct(string $section = 'clickhouse:simo0')
+    {
+        $this->section = $section;
+    }
+
+    public function start(string $job, string $scope): void
     {
         try {
-            self::$runId = bin2hex(random_bytes(16));
-            self::$job = $job;
-            self::$scope = $scope;
-            self::$startedAt = microtime(true);
+            $this->runId = bin2hex(random_bytes(16));
+            $this->job = $job;
+            $this->scope = $scope;
+            $this->startedAt = microtime(true);
 
-            self::insert('simox_job_runs', [
-                'run_id' => self::$runId,
+            $this->insert('simox_job_runs', [
+                'run_id' => $this->runId,
                 'job' => $job,
-                'host' => self::host(),
+                'host' => $this->host(),
                 'scope' => $scope,
                 'event' => 'start',
-                'at' => self::now(),
+                'at' => $this->now(),
             ]);
         } catch (Throwable $e) {
-            self::warn($e->getMessage());
+            $this->warn($e->getMessage());
         }
     }
 
-    public static function finish(string $status, string $job, string $reason = ''): void
+    public function finish(string $status, string $job, string $reason = ''): void
     {
         try {
-            if (self::$runId === null) {
+            if ($this->runId === null) {
                 return;
             }
 
-            $duration = (int) round((microtime(true) - self::$startedAt) * 1000);
+            $duration = (int) round((microtime(true) - $this->startedAt) * 1000);
 
-            self::insert('simox_job_runs', [
-                'run_id' => self::$runId,
+            $this->insert('simox_job_runs', [
+                'run_id' => $this->runId,
                 'job' => $job,
-                'host' => self::host(),
-                'scope' => self::$scope,
+                'host' => $this->host(),
+                'scope' => $this->scope,
                 'event' => 'finish',
-                'at' => self::now(),
+                'at' => $this->now(),
                 'status' => $status,
                 'reason' => $reason,
                 'duration_ms' => max(0, min($duration, 4294967295)),
             ]);
 
-            self::$runId = null;
+            $this->runId = null;
         } catch (Throwable $e) {
-            self::warn($e->getMessage());
+            $this->warn($e->getMessage());
         }
     }
 
-    public static function counter(string $metric, int $value = 1): void
+    public function counter(string $metric, int $value = 1): void
     {
         try {
-            if (self::$runId === null) {
+            if ($this->runId === null) {
                 return;
             }
 
-            self::insert('simox_job_counters', [
-                'run_id' => self::$runId,
-                'job' => self::$job,
-                'host' => self::host(),
+            $this->insert('simox_job_counters', [
+                'run_id' => $this->runId,
+                'job' => $this->job,
+                'host' => $this->host(),
                 'metric' => $metric,
-                'at' => self::now(),
+                'at' => $this->now(),
                 'value' => $value,
             ]);
         } catch (Throwable $e) {
-            self::warn($e->getMessage());
+            $this->warn($e->getMessage());
         }
     }
 
@@ -127,9 +134,9 @@ final class ClickHouseMetrics
      *
      * @param array<string, string|int> $row
      */
-    private static function insert(string $table, array $row): void
+    private function insert(string $table, array $row): void
     {
-        $config = self::config();
+        $config = $this->config();
         if ($config === null) {
             return;
         }
@@ -143,7 +150,7 @@ final class ClickHouseMetrics
 
         $handle = curl_init($url);
         if ($handle === false) {
-            self::warn('could not initialize curl');
+            $this->warn('could not initialize curl');
             return;
         }
 
@@ -168,11 +175,11 @@ final class ClickHouseMetrics
         curl_close($handle);
 
         if ($response === false) {
-            self::warn("$table insert failed: $error");
+            $this->warn("$table insert failed: $error");
             return;
         }
         if ($status >= 400) {
-            self::warn("$table insert rejected (HTTP $status): " . trim(substr((string) $response, 0, 200)));
+            $this->warn("$table insert rejected (HTTP $status): " . trim(substr((string) $response, 0, 200)));
         }
     }
 
@@ -183,12 +190,12 @@ final class ClickHouseMetrics
      *
      * @return array{host: string, port: int, database: string, user: string, password: string}|null
      */
-    private static function config(): ?array
+    private function config(): ?array
     {
-        if (self::$configLoaded) {
-            return self::$config;
+        if ($this->configLoaded) {
+            return $this->config;
         }
-        self::$configLoaded = true;
+        $this->configLoaded = true;
 
         $override = getenv('CLICKHOUSE_INI');
         $path = is_string($override) && $override !== ''
@@ -196,16 +203,16 @@ final class ClickHouseMetrics
             : dirname(__DIR__, 2) . '/etc/clickhouse-reuter.ini';
 
         $ini = is_file($path) ? parse_ini_file($path, true) : false;
-        $section = is_array($ini) ? ($ini[self::SECTION] ?? null) : null;
+        $section = is_array($ini) ? ($ini[$this->section] ?? null) : null;
         if (!is_array($section)) {
-            self::warn("no [" . self::SECTION . "] endpoint in $path; metrics are disabled");
+            $this->warn("no [" . $this->section . "] endpoint in $path; metrics are disabled");
             return null;
         }
 
         $rawHost = $section['host'] ?? null;
         $host = is_string($rawHost) ? trim($rawHost) : '';
         if ($host === '') {
-            self::warn("no host in [$path " . self::SECTION . ']; metrics are disabled');
+            $this->warn("no host in [$path " . $this->section . ']; metrics are disabled');
             return null;
         }
 
@@ -221,14 +228,14 @@ final class ClickHouseMetrics
         $rawDatabase = $section['database'] ?? null;
         $database = is_string($rawDatabase) ? trim($rawDatabase) : '';
         if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $database) !== 1) {
-            self::warn("no valid database in [$path " . self::SECTION . ']; metrics are disabled');
+            $this->warn("no valid database in [$path " . $this->section . ']; metrics are disabled');
             return null;
         }
 
         $user = getenv('CLICKHOUSE_USER');
         $password = getenv('CLICKHOUSE_PASSWORD');
 
-        self::$config = [
+        $this->config = [
             'host' => $host,
             'port' => $port,
             'database' => $database,
@@ -236,12 +243,12 @@ final class ClickHouseMetrics
             'password' => is_string($password) ? $password : '',
         ];
 
-        return self::$config;
+        return $this->config;
     }
 
     // gethostname() names the machine the run happened on; CH_HOST overrides
     // it (e.g. a stable name when the OS hostname is opaque).
-    private static function host(): string
+    private function host(): string
     {
         $override = getenv('CH_HOST');
         if (is_string($override) && $override !== '') {
@@ -255,28 +262,39 @@ final class ClickHouseMetrics
 
     // DateTime64(3, 'UTC'): the column carries UTC, so send UTC rather than the
     // host's local time.
-    private static function now(): string
+    private function now(): string
     {
         return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s.v');
     }
 
-    private static function warn(string $message): void
+    private function warn(string $message): void
     {
         fwrite(STDERR, 'clickhouse: ' . $message . PHP_EOL);
     }
 }
 
+// The framework's phprun() calls these hooks via function_exists(); they share
+// one default ClickHouseMetrics instance (the `clickhouse:simo0` endpoint).
+// A caller that needs a different endpoint instantiates ClickHouseMetrics
+// directly instead of going through the hooks.
+function clickhouse_metrics(): ClickHouseMetrics
+{
+    static $metrics = null;
+
+    return $metrics ??= new ClickHouseMetrics();
+}
+
 function on_job_start(string $job, string $scope): void
 {
-    ClickHouseMetrics::start($job, $scope);
+    clickhouse_metrics()->start($job, $scope);
 }
 
 function on_job_finish(string $status, string $job, string $reason = ''): void
 {
-    ClickHouseMetrics::finish($status, $job, $reason);
+    clickhouse_metrics()->finish($status, $job, $reason);
 }
 
 function ch_counter(string $metric, int $value = 1): void
 {
-    ClickHouseMetrics::counter($metric, $value);
+    clickhouse_metrics()->counter($metric, $value);
 }
