@@ -129,3 +129,85 @@ section recorded in step 5.
 
 Run a deploy and read `db-check`'s warn-only output, or open the database with
 `ema mdb <name>`.
+
+## 9. Removing a database instance
+
+Removal is the reverse of the add sequence and is manual — `ema` has no delete
+verb (`ema drop` is retired, see step 4). Two scopes:
+
+- **Schema only** (keep the instance): drop the schema over the instance's own
+  socket; the instance — datadir, unit, port, socket — is untouched. On the
+  database host, as root:
+
+  ```bash
+  tmux-remote <host> <session>                 # from the repo root
+  ema mdb <name> -e 'DROP DATABASE <dbname>'   # inside the session
+  ```
+
+  `<name>` is the instance (the `[<name>]` section header); `<dbname>` is the
+  schema it serves (that section's `DBNAME`). `ema create` may rebuild it
+  afterward.
+
+- **Whole instance** (the datadir, systemd unit, conf and port): the teardown
+  below. The schema lives in the datadir and goes with it, so no
+  `DROP DATABASE` is needed.
+
+### 9.1 Remove the instance (on the host)
+
+Inside a `tmux-remote <host> <session>` session, as root:
+
+```bash
+systemctl disable --now mariadb@<name>
+rm -rf /var/lib/mariadb/<name>        # data/, socket, pid, log, binlog
+rm -rf /etc/<name>                    # the instance's my.cnf
+```
+
+`mariadb@<name>` is the unit `ema create` enabled; `disable --now` reverses it.
+`/var/lib/mariadb/<name>/` holds the datadir (`data/`) plus the socket, pid,
+log and (primary only) `binlog/`; `/etc/<name>/my.cnf` is the conf `ema create`
+wrote.
+
+### 9.2 Untag the host
+
+Remove the `db:<name>` token from the target host's token list in the private
+`etc/machines.ini` roster. `gen-firewall` emits the database's allow rule only
+while that token is present.
+
+### 9.3 Close the port
+
+```bash
+vendor/bin/gen-firewall <host> --dry-run     # review
+vendor/bin/gen-firewall <host> --apply       # apply (`all` for every host)
+```
+
+With the `db:<name>` token gone the port's allow rule drops out of the desired
+set; `gen-firewall` resets and re-applies the whole set (fail-open), so
+re-running converges. Keep the `[<name>]` section in `reuter.ini` until this
+step — `gen-firewall` reads the port from it, and errors if the section is
+missing while the token is still present.
+
+### 9.4 Drop the connectivity record
+
+Delete the `[<name>]` section from the private `reuter.ini` (delivered by
+[private-config.md](private-config.md)). This removes the instance from
+`db-check`'s reachability check and from anything resolving that section.
+
+### 9.5 Remove the packages
+
+```bash
+git rm -r srv/<name>-<GUID> pkg/<name>.roles-<GUID>
+```
+
+`srv/<name>-<GUID>/` is the database package scaffolded in step 2;
+`pkg/<name>.roles-<GUID>/` is its per-database grants package. The service
+accounts themselves lived in the instance's own datadir and were removed with
+it in step 9.1, so no `gen-service-accounts` pass is needed.
+
+### 9.6 Deploy
+
+```bash
+deploy <host>               # or `deploy all` for every prod host
+```
+
+`db-check` (warn-only) now finds no `mariadb@<name>` unit and no `[<name>]`
+section, so it reports nothing for the removed instance.
