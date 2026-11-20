@@ -1,7 +1,7 @@
 ; ClickHouse endpoint for the cron-job metrics hooks (src/utils/clickhouse.php).
 ;
 ; Sections are keyed by the `clickhouse:<name>` tag the ClickHouse server
-; declares as its database; this client reads [clickhouse:analytics], the
+; declares as its database; this client reads [clickhouse:simo0], the
 ; database the simox_job_runs / simox_job_counters schema lives in.
 ;
 ; Endpoint-only: host and port of the HTTP interface. The SQL user is the
@@ -21,6 +21,6 @@
 ; committed copy is this template: placeholders only, never a real endpoint.
 ; An absent etc/clickhouse-reuter.ini disables metrics; it never fails a job.
 
-[clickhouse:analytics]
+[clickhouse:simo0]
 host = <CH ZeroTier IP>
 port = 8123

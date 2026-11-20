@@ -30,7 +30,7 @@ own client certificate — a separate, occasionally-run step, not part of
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
 | `etc/reuter.ini` | `etc/reuter.ini.template` | per-instance connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`; each section's `DBNAME` names the shared schema) | **yes — via `DEPLOY_PRIVATE_FILES`** |
-| `etc/clickhouse-reuter.ini` | `etc/clickhouse-reuter.ini.template` | ClickHouse HTTP (8123) endpoint (`[clickhouse:analytics]` host/port) for the cron-job metrics hooks; endpoint only, no credential | **yes — via `DEPLOY_PRIVATE_FILES`** |
+| `etc/clickhouse-reuter.ini` | `etc/clickhouse-reuter.ini.template` | ClickHouse HTTP (8123) endpoint (`[clickhouse:simo0]` host/port) for the cron-job metrics hooks; endpoint only, no credential | **yes — via `DEPLOY_PRIVATE_FILES`** |
 | `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **yes — via `DEPLOY_PRIVATE_FILES` (the override over the generic committed default)** |
 | `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |

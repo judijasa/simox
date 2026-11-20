@@ -15,13 +15,13 @@ declare(strict_types=1);
 // Auth is a passwordless service user (CLICKHOUSE_USER, default `default`)
 // gated by ZeroTier membership and a source-IP allowlist on the server;
 // CLICKHOUSE_PASSWORD is an optional override, empty by default. The endpoint
-// lives in etc/clickhouse-reuter.ini under [clickhouse:analytics]; that file carries
+// lives in etc/clickhouse-reuter.ini under [clickhouse:simo0]; that file carries
 // no credential.
 //
 // Rows match the ClickHouse server's schema (simox_job_runs /
 // simox_job_counters): one `start` + one `finish` row per run in
-// analytics.simox_job_runs, correlated by run_id, plus one row per counter
-// increment in analytics.simox_job_counters. A run with no `finish` row
+// simo0.simox_job_runs, correlated by run_id, plus one row per counter
+// increment in simo0.simox_job_counters. A run with no `finish` row
 // crashed, hung or exited early. Counters are written incrementally so a run
 // that dies keeps the progress it reported.
 //
@@ -37,8 +37,8 @@ declare(strict_types=1);
  */
 final class ClickHouseMetrics
 {
-    private const SECTION = 'clickhouse:analytics';
-    private const DATABASE = 'analytics';
+    private const SECTION = 'clickhouse:simo0';
+    private const DATABASE = 'simo0';
 
     private static ?string $runId = null;
     private static string $job = '';
