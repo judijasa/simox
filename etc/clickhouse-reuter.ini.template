@@ -1,14 +1,15 @@
 ; ClickHouse endpoint for the cron-job metrics hooks (src/utils/clickhouse.php).
 ;
-; Sections are keyed by the `clickhouse:<name>` tag the ClickHouse server
-; declares as its database; this client reads [clickhouse:simo0], the
-; database the simox_job_runs / simox_job_counters schema lives in.
+; A section names one endpoint: host/port of the HTTP interface plus the
+; `database` whose simox_job_runs / simox_job_counters schema the client writes
+; to. The header is a local name for the endpoint (this client reads
+; [clickhouse:simo0]); it is not the database name.
 ;
-; Endpoint-only: host and port of the HTTP interface. The SQL user is the
-; global CLICKHOUSE_USER (default `default`, a passwordless service user
-; allowlisted by the server); CLICKHOUSE_PASSWORD is an optional override,
-; empty by default. The security boundary is ZeroTier membership plus a
-; source-IP allowlist on the server, so no credential is shipped here.
+; Endpoint and database only: no credential. The SQL user is the global
+; CLICKHOUSE_USER (default `default`, a passwordless service user allowlisted
+; by the server); CLICKHOUSE_PASSWORD is an optional override, empty by
+; default. The security boundary is ZeroTier membership plus a source-IP
+; allowlist on the server, so no credential is shipped here.
 ;
 ; This client speaks the plaintext HTTP interface (8123) — the interface a PHP
 ; process can reach without a native driver — over ZeroTier, whose wire
@@ -24,3 +25,4 @@
 [clickhouse:simo0]
 host = <CH ZeroTier IP>
 port = 8123
+database = <CH database>

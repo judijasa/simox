@@ -15,13 +15,13 @@ declare(strict_types=1);
 // Auth is a passwordless service user (CLICKHOUSE_USER, default `default`)
 // gated by ZeroTier membership and a source-IP allowlist on the server;
 // CLICKHOUSE_PASSWORD is an optional override, empty by default. The endpoint
-// lives in etc/clickhouse-reuter.ini under [clickhouse:simo0]; that file carries
-// no credential.
+// and the database to write to live in etc/clickhouse-reuter.ini under
+// [clickhouse:simo0]; that file carries no credential.
 //
 // Rows match the ClickHouse server's schema (simox_job_runs /
 // simox_job_counters): one `start` + one `finish` row per run in
-// simo0.simox_job_runs, correlated by run_id, plus one row per counter
-// increment in simo0.simox_job_counters. A run with no `finish` row
+// <database>.simox_job_runs, correlated by run_id, plus one row per counter
+// increment in <database>.simox_job_counters. A run with no `finish` row
 // crashed, hung or exited early. Counters are written incrementally so a run
 // that dies keeps the progress it reported.
 //
@@ -37,15 +37,17 @@ declare(strict_types=1);
  */
 final class ClickHouseMetrics
 {
+    // Endpoint section in etc/clickhouse-reuter.ini. The header names the
+    // endpoint; the database the tables live in is the section's `database`
+    // value, not the header.
     private const SECTION = 'clickhouse:simo0';
-    private const DATABASE = 'simo0';
 
     private static ?string $runId = null;
     private static string $job = '';
     private static string $scope = '';
     private static float $startedAt = 0.0;
 
-    /** @var array{host: string, port: int, user: string, password: string}|null */
+    /** @var array{host: string, port: int, database: string, user: string, password: string}|null */
     private static ?array $config = null;
     private static bool $configLoaded = false;
 
@@ -135,7 +137,7 @@ final class ClickHouseMetrics
         $json = json_encode($row, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $url = 'http://' . $config['host'] . ':' . $config['port'] . '/?' . http_build_query([
-            'query' => 'INSERT INTO ' . self::DATABASE . '.' . $table . ' FORMAT JSONEachRow',
+            'query' => 'INSERT INTO ' . $config['database'] . '.' . $table . ' FORMAT JSONEachRow',
             'async_insert' => '1',
         ]);
 
@@ -175,10 +177,11 @@ final class ClickHouseMetrics
     }
 
     /**
-     * Endpoint + identity, read once per process. A missing file or section
-     * disables metrics for this process rather than failing the job.
+     * Endpoint, database and identity, read once per process. A missing file,
+     * section or database disables metrics for this process rather than
+     * failing the job.
      *
-     * @return array{host: string, port: int, user: string, password: string}|null
+     * @return array{host: string, port: int, database: string, user: string, password: string}|null
      */
     private static function config(): ?array
     {
@@ -212,12 +215,23 @@ final class ClickHouseMetrics
             $port = (int) $rawPort;
         }
 
+        // The section header names the endpoint, not the database: the tables
+        // live in the `database` value. It is interpolated into the INSERT, so
+        // a plain identifier is required.
+        $rawDatabase = $section['database'] ?? null;
+        $database = is_string($rawDatabase) ? trim($rawDatabase) : '';
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $database) !== 1) {
+            self::warn("no valid database in [$path " . self::SECTION . ']; metrics are disabled');
+            return null;
+        }
+
         $user = getenv('CLICKHOUSE_USER');
         $password = getenv('CLICKHOUSE_PASSWORD');
 
         self::$config = [
             'host' => $host,
             'port' => $port,
+            'database' => $database,
             'user' => is_string($user) && $user !== '' ? $user : 'default',
             'password' => is_string($password) ? $password : '',
         ];

@@ -2,7 +2,7 @@
 
 Date: 2026-11-10
 Scope: how simox reports `#[Agent]` run boundaries and counters to the shared
-ClickHouse `simo0` database.
+ClickHouse `simo` database.
 
 ## Shape
 
@@ -28,14 +28,14 @@ reported. A `start` row with no matching `finish` means the run crashed, hung
 or exited early; the `finish` statuses are `succeeded` and `failed`, and a
 `failed` row carries the exception message.
 
-The tables live in the `simo0` database, whose schema is provided by the
+The tables live in the `simo` database, whose schema is provided by the
 ClickHouse server operator; simox only writes rows.
 
 ## Server boundary
 
 The ClickHouse server is operated separately from this repo: simox owns only
 the client (`src/utils/clickhouse.php`) and the endpoint it needs to send rows
-(`etc/clickhouse-reuter.ini`). Server-side provisioning, the `simo0` schema, the
+(`etc/clickhouse-reuter.ini`). Server-side provisioning, the `simo` schema, the
 `default` user and the source-IP allowlist are the server operator's concern.
 simox's `gen-firewall`, `machines.ini` and `host-hardening.php` are out of
 scope here — simox hosts only need outbound (already `allow outgoing` by
@@ -51,12 +51,14 @@ ZeroTier membership and a source-IP allowlist on the server; `CLICKHOUSE_PASSWOR
 is an optional override, empty by default — so no secret ships to prod.
 
 The endpoint is `etc/clickhouse-reuter.ini` (private data, from the committed
-`etc/clickhouse-reuter.ini.template`):
+`etc/clickhouse-reuter.ini.template`). The section header is a local name for
+the endpoint; `database` names the ClickHouse database the tables live in:
 
 ```ini
 [clickhouse:simo0]
 host = <CH ZeroTier IP>
 port = 8123
+database = <CH database>
 ```
 
 `CLICKHOUSE_INI` overrides the path and `CH_HOST` the reported host name
@@ -67,26 +69,27 @@ dev `.env` relays it from `etc/dev.default.conf`.
 
 Instrumentation never fails a job: a missing config, an unreachable server or a
 rejected insert is reported on STDERR (captured in the `phprun` log) and
-swallowed. A missing `etc/clickhouse-reuter.ini` disables metrics for that process.
+swallowed. A missing `etc/clickhouse-reuter.ini` — or a section without
+`database` — disables metrics for that process.
 
 ## Querying
 
 ```sql
 -- finish events, last day
 SELECT job, host, status, count() AS runs, avg(duration_ms) AS avg_ms
-FROM simo0.simox_job_runs
+FROM simo.simox_job_runs
 WHERE event = 'finish' AND at > now() - INTERVAL 1 DAY
 GROUP BY job, host, status ORDER BY runs DESC;
 
 -- runs with no finish row (crashed or hung)
 SELECT s.run_id, s.job, s.host, s.at
-FROM simo0.simox_job_runs AS s
-LEFT JOIN simo0.simox_job_runs AS f
+FROM simo.simox_job_runs AS s
+LEFT JOIN simo.simox_job_runs AS f
   ON f.run_id = s.run_id AND f.event = 'finish'
 WHERE s.event = 'start' AND f.run_id = '';
 
 -- counters of one run
-SELECT metric, sum(value) FROM simo0.simox_job_counters
+SELECT metric, sum(value) FROM simo.simox_job_counters
 WHERE run_id = '<run_id>' GROUP BY metric;
 ```
 
