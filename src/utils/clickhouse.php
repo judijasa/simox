@@ -18,12 +18,11 @@ declare(strict_types=1);
 // and the database to write to live in etc/clickhouse-reuter.ini under
 // [clickhouse:simo0]; that file carries no credential.
 //
-// Rows match the ClickHouse server's schema (simox_job_runs /
-// simox_job_counters): one `start` + one `finish` row per run in
-// <database>.simox_job_runs, correlated by run_id, plus one row per counter
-// increment in <database>.simox_job_counters. A run with no `finish` row
-// crashed, hung or exited early. Counters are written incrementally so a run
-// that dies keeps the progress it reported.
+// Rows match the ClickHouse server's schema (job_runs / job_counters): one
+// `start` + one `finish` row per run in <database>.job_runs, correlated by
+// run_id, plus one row per counter increment in <database>.job_counters. A run
+// with no `finish` row crashed, hung or exited early. Counters are written
+// incrementally so a run that dies keeps the progress it reported.
 //
 // Metrics must never break the job they observe: every failure here is
 // reported on STDERR (captured in the phprun log) and swallowed.
@@ -66,7 +65,7 @@ final class ClickHouseMetrics
             $this->scope = $scope;
             $this->startedAt = microtime(true);
 
-            $this->insert('simox_job_runs', [
+            $this->insert('job_runs', [
                 'run_id' => $this->runId,
                 'job' => $job,
                 'host' => $this->host(),
@@ -88,7 +87,7 @@ final class ClickHouseMetrics
 
             $duration = (int) round((microtime(true) - $this->startedAt) * 1000);
 
-            $this->insert('simox_job_runs', [
+            $this->insert('job_runs', [
                 'run_id' => $this->runId,
                 'job' => $job,
                 'host' => $this->host(),
@@ -113,7 +112,7 @@ final class ClickHouseMetrics
                 return;
             }
 
-            $this->insert('simox_job_counters', [
+            $this->insert('job_counters', [
                 'run_id' => $this->runId,
                 'job' => $this->job,
                 'host' => $this->host(),

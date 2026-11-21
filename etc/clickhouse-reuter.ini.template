@@ -1,7 +1,7 @@
 ; ClickHouse endpoint for the cron-job metrics hooks (src/utils/clickhouse.php).
 ;
 ; A section names one endpoint: host/port of the HTTP interface plus the
-; `database` whose simox_job_runs / simox_job_counters schema the client writes
+; `database` whose job_runs / job_counters schema the client writes
 ; to. The header is a local name for the endpoint (this client reads
 ; [clickhouse:simo0]); it is not the database name.
 ;

@@ -12,9 +12,9 @@ hooks (the contract is in the framework's `doc/system/agents.md`), so every
 
 | Hook | Row |
 |------|-----|
-| `on_job_start($job, $scope)` | `simox_job_runs`, `event = 'start'` |
-| `on_job_finish($status, $job, $reason)` | `simox_job_runs`, `event = 'finish'` |
-| `ch_counter($metric, $value)` | `simox_job_counters`, one row per increment |
+| `on_job_start($job, $scope)` | `job_runs`, `event = 'start'` |
+| `on_job_finish($status, $job, $reason)` | `job_runs`, `event = 'finish'` |
+| `ch_counter($metric, $value)` | `job_counters`, one row per increment |
 
 The file is loaded through Composer's `files` autoload, so anything that
 requires `vendor/autoload.php` defines the hooks. A script calls
@@ -77,19 +77,19 @@ swallowed. A missing `etc/clickhouse-reuter.ini` — or a section without
 ```sql
 -- finish events, last day
 SELECT job, host, status, count() AS runs, avg(duration_ms) AS avg_ms
-FROM simo.simox_job_runs
+FROM simo.job_runs
 WHERE event = 'finish' AND at > now() - INTERVAL 1 DAY
 GROUP BY job, host, status ORDER BY runs DESC;
 
 -- runs with no finish row (crashed or hung)
 SELECT s.run_id, s.job, s.host, s.at
-FROM simo.simox_job_runs AS s
-LEFT JOIN simo.simox_job_runs AS f
+FROM simo.job_runs AS s
+LEFT JOIN simo.job_runs AS f
   ON f.run_id = s.run_id AND f.event = 'finish'
 WHERE s.event = 'start' AND f.run_id = '';
 
 -- counters of one run
-SELECT metric, sum(value) FROM simo.simox_job_counters
+SELECT metric, sum(value) FROM simo.job_counters
 WHERE run_id = '<run_id>' GROUP BY metric;
 ```
 
