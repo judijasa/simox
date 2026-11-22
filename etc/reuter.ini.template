@@ -1,6 +1,8 @@
-; DB connection config consumed by Utils\Connectivity\Database.
+; Connectivity config: Utils\Connectivity\Database reads the
+; [mariadb:<instance>] sections below; src/utils/clickhouse.php reads the
+; [clickhouse:<endpoint>] section at the end of this file.
 ;
-; Sections are keyed by instance name, namespaced as [mariadb:<instance>]
+; MariaDB sections are keyed by instance name, namespaced as [mariadb:<instance>]
 ; (the header is mariadb:<instance>; `DBNAME` names the schema the instance
 ; serves, defaulting to the bare instance name), and the connector resolves an
 ; instance to its [mariadb:<instance>] section:
@@ -77,3 +79,28 @@ PORT=3308
 DBNAME=simo
 MYSQL_UNIX_PORT=/path/to/mysql.sock
 ; SSL_VERIFY_SERVER_CERT=0   # opt out: self-signed server cert (no CA yet)
+
+; ClickHouse endpoint for the cron-job metrics hooks (src/utils/clickhouse.php):
+; the client reads the [clickhouse:<endpoint>] section of this same file (via
+; REUTER_INI), alongside the [mariadb:<instance>] sections above.
+;
+; A section names one endpoint: host/port of the HTTP interface plus the
+; `database` whose job_runs / job_counters schema the client writes to. The
+; header is a local name for the endpoint (the client reads
+; [clickhouse:simo0]); it is not the database name.
+;
+; Endpoint and database only: no credential. The SQL user is the global
+; CLICKHOUSE_USER (default `default`, a passwordless service user allowlisted
+; by the server); CLICKHOUSE_PASSWORD is an optional override, empty by
+; default. The security boundary is ZeroTier membership plus a source-IP
+; allowlist on the server, so no credential is shipped here. The client speaks
+; the plaintext HTTP interface (8123) over ZeroTier, whose wire encryption
+; makes TLS redundant.
+;
+; An absent [clickhouse:<endpoint>] section disables metrics; it never fails a
+; job.
+
+[clickhouse:simo0]
+host = <CH ZeroTier IP>
+port = 8123
+database = <CH database>

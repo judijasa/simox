@@ -3,8 +3,8 @@
 # Production deploy is the consumer entrypoint bin/deploy: it first runs
 # simox's own private-config materialization (bin/fetch-private-data copies the
 # real etc/ files in locally), then the framework `deploy` CLI
-# (vendor/bin/deploy) — which ships DEPLOY_PRIVATE_FILES (reuter.ini ema.conf
-# clickhouse-reuter.ini) to each host, replays the deploy.conf environment to every
+# (vendor/bin/deploy) — which ships DEPLOY_PRIVATE_FILES (reuter.ini ema.conf)
+# to each host, replays the deploy.conf environment to every
 # remote step, and runs its built-in per-host steps (gen-env/db-check on every
 # host, cron install on `worker` hosts) — and finally the consumer post-deploy
 # step

@@ -122,7 +122,7 @@ deploy all                         # every prod host in etc/machines.ini
 deploy <host>                      # a single prod host (short name or ZeroTier IP)
 ```
 
-`deploy` materializes the private config, runs the framework `deploy` (ships `reuter.ini` and `clickhouse-reuter.ini`, replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
+`deploy` materializes the private config, runs the framework `deploy` (ships `reuter.ini` — MariaDB connectivity + the ClickHouse endpoint — replays `deploy.conf`, regenerates `.env`, verifies DB connectivity, installs cron), then the per-host post-deploy step (Apache www-data traversal + nix-built php-fpm). The full flow, plus MariaDB instance provisioning and the `.env`/`REUTER_INI`/`SSL_DIR`/`EMA_TARGET` contract, is in [doc/system/deploy.md](doc/system/deploy.md).
 
 ## Adding a Database
 

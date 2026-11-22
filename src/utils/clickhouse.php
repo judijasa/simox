@@ -15,8 +15,9 @@ declare(strict_types=1);
 // Auth is a passwordless service user (CLICKHOUSE_USER, default `default`)
 // gated by ZeroTier membership and a source-IP allowlist on the server;
 // CLICKHOUSE_PASSWORD is an optional override, empty by default. The endpoint
-// and the database to write to live in etc/clickhouse-reuter.ini under
-// [clickhouse:simo0]; that file carries no credential.
+// and the database to write to live in etc/reuter.ini under [clickhouse:simo0]
+// (that file's [mariadb:<instance>] sections serve the DB connector); it
+// carries no credential.
 //
 // Rows match the ClickHouse server's schema (job_runs / job_counters): one
 // `start` + one `finish` row per run in <database>.job_runs, correlated by
@@ -37,9 +38,9 @@ declare(strict_types=1);
  */
 final class ClickHouseMetrics
 {
-    // Endpoint section in etc/clickhouse-reuter.ini. The header names the
-    // endpoint; the database the tables live in is the section's `database`
-    // value, not the header. It is a constructor argument (default
+    // Endpoint section in etc/reuter.ini (read via REUTER_INI). The header
+    // names the endpoint; the database the tables live in is the section's
+    // `database` value, not the header. It is a constructor argument (default
     // `clickhouse:simo0`) so a caller can point an instance elsewhere.
     private string $section;
 
@@ -196,10 +197,10 @@ final class ClickHouseMetrics
         }
         $this->configLoaded = true;
 
-        $override = getenv('CLICKHOUSE_INI');
+        $override = getenv('REUTER_INI');
         $path = is_string($override) && $override !== ''
             ? $override
-            : dirname(__DIR__, 2) . '/etc/clickhouse-reuter.ini';
+            : dirname(__DIR__, 2) . '/etc/reuter.ini';
 
         $ini = is_file($path) ? parse_ini_file($path, true) : false;
         $section = is_array($ini) ? ($ini[$this->section] ?? null) : null;

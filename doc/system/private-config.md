@@ -29,8 +29,7 @@ own client certificate — a separate, occasionally-run step, not part of
 | File | Committed in public repo | Private data | Ships to prod? |
 |---|---|---|---|
 | `etc/deploy.conf` | `etc/deploy.conf.template` | project deployment target (paths, the app-user name, cron target, the host-side client-cert dir) | **no — deploy-machine only; its values are replayed as environment** |
-| `etc/reuter.ini` | `etc/reuter.ini.template` | per-instance connectivity sections for `<primary>`/`<replica>` (recorded from `ema create`; each section's `DBNAME` names the shared schema) | **yes — via `DEPLOY_PRIVATE_FILES`** |
-| `etc/clickhouse-reuter.ini` | `etc/clickhouse-reuter.ini.template` | ClickHouse HTTP (8123) endpoint (`[clickhouse:simo0]` host/port/`database`) for the cron-job metrics hooks; endpoint and database only, no credential | **yes — via `DEPLOY_PRIVATE_FILES`** |
+| `etc/reuter.ini` | `etc/reuter.ini.template` | connectivity sections: per-instance `[mariadb:<instance>]` for `<primary>`/`<replica>` (recorded from `ema create`; each section's `DBNAME` names the shared schema) plus `[clickhouse:simo0]` (host/port/`database`) for the cron-job metrics hooks; endpoint and database only, no credential | **yes — via `DEPLOY_PRIVATE_FILES`** |
 | `etc/ema.conf` | `etc/ema.default.conf` (consumed default) + optional `etc/ema.conf` override | host-level `ema` config (the `ssl-ca` the instance verifies client certs against) | **yes — via `DEPLOY_PRIVATE_FILES` (the override over the generic committed default)** |
 | `etc/dev.conf` | `etc/dev.default.conf` (consumed default) + optional `etc/dev.conf` override | dev-machine values the framework sources (`DBUSER`, `SSL_DIR`) | no (dev-machine only) |
 | `etc/machines.ini` | `etc/machines.ini.template` | prod ZeroTier IPs + `tag[:name]` roster | no (deploy/dev-time only) |
@@ -60,22 +59,19 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
 
 1. **Materialize (dev/deploy machine).** `bin/fetch-private-data` clones
    `PRIVATE_DATA_GIT` fresh each run (+ optional `PRIVATE_DATA_REF`, default
-   `main`) into a throwaway directory, then copies the nine tracked files
+   `main`) into a throwaway directory, then copies the eight tracked files
    from there into `etc/` as **real files**, overwriting them on every run.
    `etc/deploy.conf` is required — a private source without it fails the step,
    because a checkout that cannot deploy is worse than a loud stop.
    `etc/reuter.ini` is expected but not a hard prerequisite: a no-database
    bootstrap legitimately has none, so its absence is only warned here and
-   confirmed by the deploy wrapper before shipping. `etc/dev.conf` is an
+   confirmed by the deploy wrapper before shipping. It carries both the
+   `[mariadb:<instance>]` and `[clickhouse:<endpoint>]` sections. `etc/dev.conf` is an
    optional override (its default is committed in `etc/dev.default.conf`, so a
    checkout works without the private copy and only a machine that diverges
    needs one); `etc/ema.conf` is the host-level override whose real
    `ssl-ca`/`ssl-crl` ship to prod (the committed `etc/ema.default.conf` carries
-   only a generic fallback). `etc/clickhouse-reuter.ini` carries the ClickHouse HTTP
-   (8123) endpoint the cron-job metrics hooks read (endpoint only — ZeroTier
-   membership + a source-IP allowlist is the auth boundary); like `reuter.ini`
-   it is expected, but its absence only
-   disables instrumentation, so it is warned rather than treated as fatal.
+   only a generic fallback).
    `etc/machines.ini`, `etc/team.ini`, `etc/hosts` and
    `etc/host-hardening.php` are copied only when the private source provides
    them. `make dev-init` runs it, so a dev checkout carries its own
@@ -83,7 +79,7 @@ One retrieval mechanism — git, through `.private-source` — and two steps:
    carries). An absent `.private-source` makes the step a no-op, and the repo
    then runs on its committed defaults.
 2. **Ship (framework, during deploy).** `deploy` ships the files named in
-   `DEPLOY_PRIVATE_FILES` (here `reuter.ini ema.conf clickhouse-reuter.ini`) — and nothing else — **whole**
+   `DEPLOY_PRIVATE_FILES` (here `reuter.ini ema.conf`) — and nothing else — **whole**
    from the deploy machine's `etc/` into the freshly swapped `etc/` on each
    prod host (the roster read locally from `etc/machines.ini` via
    `vendor/bin/pf-roster`), skipping any name that is absent from `etc/` —
@@ -101,10 +97,10 @@ source repo; copying overwrites, so a local edit to one of these files is lost �
 the private repo is the place to change settings.
 
 Prod hosts have neither git nor the `.private-source` pointer, so they only ever
-receive `reuter.ini`, `ema.conf` and `clickhouse-reuter.ini` through the framework's
+receive `reuter.ini` and `ema.conf` through the framework's
 ship step above; `ema.conf` carries the host-level `ssl-ca` (the committed
-`etc/ema.default.conf` is only a generic fallback) and `clickhouse-reuter.ini` the
-ClickHouse endpoint.
+`etc/ema.default.conf` is only a generic fallback) and `reuter.ini` the
+ClickHouse endpoint alongside the MariaDB connectivity.
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
 credentials. Each `[mariadb:<primary>]`/`[mariadb:<replica>]` section carries `SERVER`/`PORT`/
@@ -127,9 +123,9 @@ splicing) — except on a no-database bootstrap, where its absence is confirmed
 and nothing ships. `ema.conf` ships too: its
 host-level `ssl-ca` is the real host path, which the committed
 `etc/ema.default.conf` carries only as a generic fallback (the real value must
-never be committed), so `DEPLOY_PRIVATE_FILES` names `reuter.ini ema.conf
-clickhouse-reuter.ini`. The last is expected but not required: an absent
-`clickhouse-reuter.ini` only disables the cron-job metrics hooks.
+never be committed), so `DEPLOY_PRIVATE_FILES` names `reuter.ini ema.conf`.
+`reuter.ini`'s `[clickhouse:<endpoint>]` section is expected but not required:
+an absent section only disables the cron-job metrics hooks.
 `dev.conf` never leaves the deploy machine — it is sourced there
 (the framework's `init-local-env.sh`, from the committed default then the
 optional override) and read by `gen-cert`. `machines.ini` feeds the local
@@ -149,7 +145,7 @@ and silently revoke a member's access on the next run.
 ## Usage
 
 Copy `.private-source.example` to `.private-source` and point it at the private
-repo (tracked files: `deploy.conf`, `reuter.ini`, `clickhouse-reuter.ini`, `ema.conf`,
+repo (tracked files: `deploy.conf`, `reuter.ini`, `ema.conf`,
 `dev.conf`, `machines.ini`, `team.ini`, `hosts`, `host-hardening.php`) with
 `PRIVATE_DATA_GIT` (+ optional
 `PRIVATE_DATA_REF`). Then:

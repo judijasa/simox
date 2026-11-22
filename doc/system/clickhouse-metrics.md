@@ -35,7 +35,7 @@ ClickHouse server operator; simox only writes rows.
 
 The ClickHouse server is operated separately from this repo: simox owns only
 the client (`src/utils/clickhouse.php`) and the endpoint it needs to send rows
-(`etc/clickhouse-reuter.ini`). Server-side provisioning, the `simo` schema, the
+(the `[clickhouse:<endpoint>]` section of `etc/reuter.ini`). Server-side provisioning, the `simo` schema, the
 `default` user and the source-IP allowlist are the server operator's concern.
 simox's `gen-firewall`, `machines.ini` and `host-hardening.php` are out of
 scope here — simox hosts only need outbound (already `allow outgoing` by
@@ -50,8 +50,8 @@ passwordless service user — `CLICKHOUSE_USER` (default `default`) gated by
 ZeroTier membership and a source-IP allowlist on the server; `CLICKHOUSE_PASSWORD`
 is an optional override, empty by default — so no secret ships to prod.
 
-The endpoint is `etc/clickhouse-reuter.ini` (private data, from the committed
-`etc/clickhouse-reuter.ini.template`). The section header is a local name for
+The endpoint is the `[clickhouse:<endpoint>]` section of `etc/reuter.ini`
+(private data, from the committed `etc/reuter.ini.template`). The section header is a local name for
 the endpoint; `database` names the ClickHouse database the tables live in:
 
 ```ini
@@ -61,15 +61,15 @@ port = 8123
 database = <CH database>
 ```
 
-`CLICKHOUSE_INI` overrides the path and `CH_HOST` the reported host name
-(default: `gethostname()`). `CLICKHOUSE_USER` comes from the environment — the
+`REUTER_INI` names the file (shared with the DB connector) and `CH_HOST` the
+reported host name (default: `gethostname()`). `CLICKHOUSE_USER` comes from the environment — the
 dev `.env` relays it from `etc/dev.default.conf`.
 
 ## Failure behavior
 
 Instrumentation never fails a job: a missing config, an unreachable server or a
 rejected insert is reported on STDERR (captured in the `phprun` log) and
-swallowed. A missing `etc/clickhouse-reuter.ini` — or a section without
+swallowed. A missing `[clickhouse:<endpoint>]` section — or a section without
 `database` — disables metrics for that process.
 
 ## Querying
@@ -95,4 +95,4 @@ WHERE run_id = '<run_id>' GROUP BY metric;
 
 ## Related
 
-- [private-config.md](private-config.md) — `etc/clickhouse-reuter.ini` delivery.
+- [private-config.md](private-config.md) — `etc/reuter.ini` delivery.
