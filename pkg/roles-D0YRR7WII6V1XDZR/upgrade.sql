@@ -5,7 +5,7 @@
 -- hardcoded here.
 --
 -- Roles follow what a host runs (`worker`, `web`) or who its members are —
--- never what database it stores. A `db:<name>` tag is a provisioning marker
+-- never what database it stores. A `mariadb:<name>` tag is a provisioning marker
 -- only, so it carries no role here.
 CREATE ROLE IF NOT EXISTS simox_member;
 CREATE ROLE IF NOT EXISTS simox_worker;

@@ -30,7 +30,7 @@ is upstream — this document carries only the consumer-side policy:
 vendor/bin/pf-host <replica>                 # -> <replica-ip>
 vendor/bin/replica-bootstrap --primary <primary> --replica-host <replica-ip>
 
-# open the primary's db:<primary> port to the overlay (the replication channel
+# open the primary's mariadb:<primary> port to the overlay (the replication channel
 # the replica pulls over) — re-apply after a rebuild that changed its PORT:
 vendor/bin/gen-firewall <primary-host> --apply
 
@@ -38,7 +38,7 @@ vendor/bin/gen-firewall <primary-host> --apply
 ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
 # record the printed [mariadb:<replica>] section in the private etc/reuter.ini, then
-# open the replica's db:<replica> port for the website's reads:
+# open the replica's mariadb:<replica> port for the website's reads:
 vendor/bin/gen-firewall <replica-host> --apply
 ```
 
@@ -83,7 +83,7 @@ pin, which must be the address `<primary>` sees as the replica's client source
 (the framework's CLI doc has the full argument).
 
 Open the primary's port before the build. The replica's IO thread pulls the
-primary's binlog over the primary's `db:<primary>` port, so that port must be
+primary's binlog over the primary's `mariadb:<primary>` port, so that port must be
 reachable from `<replica>` **before** `ema create` — otherwise the build fails
 with `Slave_IO_Running='Connecting'` / `Last_IO_Error ... Connection timed
 out`. `gen-firewall` opens it from the `[mariadb:<primary>]` `PORT` in `reuter.ini`:
@@ -95,7 +95,7 @@ vendor/bin/gen-firewall <primary-host> --apply
 
 This is normally done when `<primary>` is first added; re-run it after a rebuild
 that changed the primary's `PORT` (the stale rule no longer matches). After the
-build, record `[mariadb:<replica>]` and open the replica's own `db:<replica>` port the
+build, record `[mariadb:<replica>]` and open the replica's own `mariadb:<replica>` port the
 same way — [add-database.md](add-database.md) step 7.
 
 Then build the replica on `<replica>` — inside a `tmux-remote` session, like any

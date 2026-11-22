@@ -6,7 +6,7 @@ case; `<replica>` is the same sequence plus the replica build.
 ## Quick setup
 
 ```bash
-# private etc/machines.ini: add db:<name> to the target host's tokens
+# private etc/machines.ini: add mariadb:<name> to the target host's tokens
 
 ema database <name>                          # scaffold srv/<name>-<GUID>/
 ema schema <name>                            # scaffold pkg/<pkg>-<GUID>/
@@ -26,7 +26,7 @@ deploy <host>                                 # read db-check
 
 ## 1. Tag the host
 
-Add `db:<name>` to the target host's token list in the private
+Add `mariadb:<name>` to the target host's token list in the private
 `etc/machines.ini` roster (`etc/machines.ini.template` documents what
 the tag drives). The roster is read on the deploy machine and never shipped to
 a host, so the tag must be in place before the deploy in step 3.
@@ -40,7 +40,7 @@ roles are global (`member`/`worker`/`web`), not per-database. For the new
 database's own grants, add a `pkg/<name>.roles-<GUID>/` package (mirroring
 `pkg/<primary>.roles-<GUID>/`) whose `upgrade.sql` grants the existing roles,
 scoped with the `{{dbname}}` placeholder — e.g. `GRANT ALL PRIVILEGES ON
-{{dbname}}.* TO <account>_worker;`. A `db:<name>` tag pins no role of its own:
+{{dbname}}.* TO <account>_worker;`. A `mariadb:<name>` tag pins no role of its own:
 access follows what a host runs (`worker`/`web`) or its members, never what
 database it stores.
 
@@ -109,7 +109,7 @@ gen-service-accounts <name>        # apply
 ```
 
 `gen-service-accounts` plans from the roster here and applies the SQL as `root`
-over ssh on the host carrying the `db:<name>` tag, over the instance's own
+over ssh on the host carrying the `mariadb:<name>` tag, over the instance's own
 socket — the `MYSQL_UNIX_PORT` recorded in step 5. The policy it converges to is
 [service-accounts.md](service-accounts.md).
 
@@ -122,7 +122,7 @@ vendor/bin/gen-firewall <host> --apply       # apply (`all` for every host)
 
 `gen-firewall` runs from the repo root on the deploy/dev machine, not on the
 host: it reads the local `etc/machines.ini` and `etc/host-hardening.php` and
-applies over `ssh root@<host>`. The `db:<name>` rule takes the port from the
+applies over `ssh root@<host>`. The `mariadb:<name>` rule takes the port from the
 section recorded in step 5.
 
 ## 8. Verify
@@ -169,7 +169,7 @@ wrote.
 
 ### 9.2 Untag the host
 
-Remove the `db:<name>` token from the target host's token list in the private
+Remove the `mariadb:<name>` token from the target host's token list in the private
 `etc/machines.ini` roster. `gen-firewall` emits the database's allow rule only
 while that token is present.
 
@@ -180,7 +180,7 @@ vendor/bin/gen-firewall <host> --dry-run     # review
 vendor/bin/gen-firewall <host> --apply       # apply (`all` for every host)
 ```
 
-With the `db:<name>` token gone the port's allow rule drops out of the desired
+With the `mariadb:<name>` token gone the port's allow rule drops out of the desired
 set; `gen-firewall` resets and re-applies the whole set (fail-open), so
 re-running converges. Keep the `[mariadb:<name>]` section in `reuter.ini` until this
 step — `gen-firewall` reads the port from it, and errors if the section is

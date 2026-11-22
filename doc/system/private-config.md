@@ -137,7 +137,7 @@ reaches prod.
 
 The service-account reconcile is where that matters most:
 `gen-service-accounts` plans from the roster (`machines.ini`, `team.ini`) and
-applies on the host carrying the database's `db:<name>` tag, as `root` over ssh
+applies on the host carrying the database's `mariadb:<name>` tag, as `root` over ssh
 — so the roster's authority stays on the machine where it is edited and
 reviewed, and no host holds a roster copy that could go stale between deploys
 and silently revoke a member's access on the next run.

@@ -7,10 +7,10 @@
 # Prod deploy targets. Each key is the server's ZeroTier IP (the same
 #        address `deploy` uses for SSH). The value is a comma-separated
 #        list of `tag[:name]` tokens:
-#          named tag   `db:simo0` -> a `db` resource named `simo0`
+#          named tag   `mariadb:simo0` -> a `mariadb` resource named `simo0`
 #          bare tag    `worker`   -> a bare tag data jobs use as their cron
 #                                    scope
-#        `db` is the framework's built-in tag: a `db:<name>` token names a
+#        `mariadb` is the framework's built-in tag: a `mariadb:<name>` token names a
 #        database and enforces the one-to-one server mapping (the instance
 #        itself is provisioned by `ema create`; db-check verifies it via the
 #        host's own `mariadb@*` units, not this roster). Every tag doubles as
@@ -25,7 +25,7 @@
 #                    unit); also opens 80/443/tcp in the firewall (gen-firewall)
 #          `cloud`   opens 9993/udp in the firewall (gen-firewall), gated on
 #                    the runtime cloud test
-#        A host with a `db:<name>` token is a database host; a bare `worker`
+#        A host with a `mariadb:<name>` token is a database host; a bare `worker`
 #        token scopes data jobs to that host; an empty value is a code-only
 #        server (it deploys the codebase but runs no tagged step).
 #
@@ -34,7 +34,7 @@
 #        shared pkg/roles-<GUID> declaration plus etc/team.ini (the `member`
 #        source) and this roster. Only `worker` and `web` are role-pin
 #        sources: `worker` -> `simox_worker`, `web` -> `simox_web`. A
-#        `db:<name>` tag is a provisioning marker only (which instance a host
+#        `mariadb:<name>` tag is a provisioning marker only (which instance a host
 #        stores) — it pins no role, since access follows what a host runs
 #        (`worker`/`web`) or its members, never what it stores (see
 #        doc/system/service-accounts.md). Removing a tag (or a whole host)
@@ -45,17 +45,17 @@
 #        set from etc/host-hardening.php plus this roster. Tags only ADD allow
 #        rules; the baseline (default deny
 #        incoming / allow outgoing, SSH 22/tcp from the ZeroTier range) and
-#        the built-in `db:<name>` port (resolved from etc/reuter.ini) are
+#        the built-in `mariadb:<name>` port (resolved from etc/reuter.ini) are
 #        framework-owned and never listed here. `web` opens 80/443/tcp;
 #        `cloud` opens 9993/udp only when the runtime cloud test also passes
 #        (fail-safe: no response -> no 9993).
 #
 #        Constraint: a named token may appear on exactly ONE server
-#        (`db:simo0` and `db:simo1` are independent databases; `web` is
+#        (`mariadb:simo0` and `mariadb:simo1` are independent databases; `web` is
 #        independent of both). Bare flags carry no name, hence no uniqueness
 #        constraint. A server may host no database (code-only), one database,
 #        or several databases (one MariaDB instance each, created by
 #        `ema create`).
 
-# 10.147.x.10=db:simo0, worker
-# 10.147.x.11=db:simo1, web
+# 10.147.x.10=mariadb:simo0, worker
+# 10.147.x.11=mariadb:simo1, web

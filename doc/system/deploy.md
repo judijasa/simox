@@ -26,8 +26,8 @@ Connecting to a production server via `ema` needs the machine registry config:
 - `etc/machines.ini` — the roster (private data; see
   [private-config.md](private-config.md)). The roster lists the prod
   servers by ZeroTier IP; the value is a comma-separated list of `tag[:name]`
-  tokens (`ip=db:<primary>, db:<replica>, web, worker`). `db` (named) is the
-  framework's built-in tag — a `db:<name>` token names a database (the instance
+  tokens (`ip=mariadb:<primary>, mariadb:<replica>, web, worker`). `mariadb` (named) is the
+  framework's built-in tag — a `mariadb:<name>` token names a database (the instance
   itself is provisioned by `ema create`, not by deploy, and `db-check` verifies
   it via the host's own `mariadb@*` units). Every tag doubles as a cron scope:
   a `#[CronJob]` declares `scope: <tag[:name]>` (or `scope: host` to run on
@@ -36,10 +36,10 @@ Connecting to a production server via `ema` needs the machine registry config:
   (restore Apache www-data traversal). `worker` and `web` are the role-pin
   sources `gen-service-accounts` reconciles against the shared
   `pkg/roles-<GUID>` declaration (`worker` → `<account>_worker`,
-  `web` → `<account>_web`); a `db:<name>` token pins no role (provisioning only);
+  `web` → `<account>_web`); a `mariadb:<name>` token pins no role (provisioning only);
   see [service-accounts.md](service-accounts.md). Each named token maps to exactly
   one server; a server may host several databases. `deploy all` targets every
-  prod host; a server with a `db:<name>` token hosts one or more
+  prod host; a server with a `mariadb:<name>` token hosts one or more
   databases, each with its own MariaDB instance created by `ema create`.
 - `etc/team.ini` — private data. One section per team member, carrying
   `hostname = ZeroTier-IP` entries and no credential: there is no longer one DB

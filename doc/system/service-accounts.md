@@ -25,7 +25,7 @@ gen-service-accounts <name>      # apply
 
 The reconcile runs from the dev machine — the machine that holds the roster
 (`etc/team.ini` for `member`, `etc/machines.ini` for the tag sources) — and
-reaches the host carrying the database's `db:<name>` tag as `root` over ssh,
+reaches the host carrying the database's `mariadb:<name>` tag as `root` over ssh,
 where the deployed repo's own `ema` applies the SQL over the instance's socket.
 No account of its own is needed: the connection is the host's `root`. The
 roster stays here, which is why neither `etc/team.ini` nor `etc/machines.ini`
@@ -42,7 +42,7 @@ gets the corresponding role, and a host carrying several tags gets the union:
 | `web`    | `<account>_web`    | —              | SELECT      |
 
 `member` resolves to the `etc/team.ini` member IPs; `worker` and `web` are
-`etc/machines.ini` bare tags matched exactly. A `db:<name>` tag is a
+`etc/machines.ini` bare tags matched exactly. A `mariadb:<name>` tag is a
 provisioning marker only — it pins no role. A role with no grant on a database
 means the account is not wanted there, so `<account>_web` being absent from
 `<primary>` drops `<account>@<ip>` on `<primary>` for a web host. Privileges

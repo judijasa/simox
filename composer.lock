@@ -156,12 +156,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/judijasa/php_daas_framework.git",
-                "reference": "1ffef799497a4383f4c983b8dab04ac7af80665d"
+                "reference": "272d283907cecbe340e70d2ce0cca98294fbfd6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/1ffef799497a4383f4c983b8dab04ac7af80665d",
-                "reference": "1ffef799497a4383f4c983b8dab04ac7af80665d",
+                "url": "https://api.github.com/repos/judijasa/php_daas_framework/zipball/272d283907cecbe340e70d2ce0cca98294fbfd6c",
+                "reference": "272d283907cecbe340e70d2ce0cca98294fbfd6c",
                 "shasum": ""
             },
             "require": {
@@ -224,7 +224,7 @@
                 "source": "https://github.com/judijasa/php_daas_framework/tree/main",
                 "issues": "https://github.com/judijasa/php_daas_framework/issues"
             },
-            "time": "2026-11-22T16:21:34+00:00"
+            "time": "2026-11-22T17:32:25+00:00"
         },
         {
             "name": "phpcasperjs/phpcasperjs",
