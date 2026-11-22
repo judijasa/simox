@@ -17,7 +17,7 @@ deploy <host>
 tmux-remote <host> <session>                 # then inside the session:
 ema create srv/<name>-<GUID>
 
-# private reuter.ini: record the printed [<name>] section
+# private reuter.ini: record the printed [mariadb:<name>] section
 
 gen-service-accounts <name>      # from the dev machine
 vendor/bin/gen-firewall <host> --apply
@@ -74,11 +74,11 @@ instance and creates the database; it reads nothing from `reuter.ini`, because
 the section does not exist yet. It is create-only (`ema drop` is retired: to
 delete a created database, run a deliberate `DROP DATABASE` over
 `ema mdb <name>` — the instance's datadir/unit are removed by hand) and
-prints the `[<name>]` section on success.
+prints the `[mariadb:<name>]` section on success.
 
 A replica package instead takes `--from-snapshot <path>`: it restores the
 primary's snapshot and attaches replication, reading the primary's
-`[<primary>]` section — so the primary's section must be recorded first. See
+`[mariadb:<primary>]` section — so the primary's section must be recorded first. See
 [replica-bootstrap.md](replica-bootstrap.md).
 
 ## 5. Record the connectivity
@@ -89,7 +89,7 @@ Put the printed section in the private config repo's `reuter.ini` (which
 or empty value means a passwordless account):
 
 ```ini
-[<name>]
+[mariadb:<name>]
 SERVER=<overlay ip>
 PORT=<auto-picked>
 MYSQL_UNIX_PORT=/var/lib/mariadb/<name>/mysql.sock
@@ -144,7 +144,7 @@ verb (`ema drop` is retired, see step 4). Two scopes:
   ema mdb <name> -e 'DROP DATABASE <dbname>'   # inside the session
   ```
 
-  `<name>` is the instance (the `[<name>]` section header); `<dbname>` is the
+  `<name>` is the instance (the `[mariadb:<name>]` section header); `<dbname>` is the
   schema it serves (that section's `DBNAME`). `ema create` may rebuild it
   afterward.
 
@@ -182,13 +182,13 @@ vendor/bin/gen-firewall <host> --apply       # apply (`all` for every host)
 
 With the `db:<name>` token gone the port's allow rule drops out of the desired
 set; `gen-firewall` resets and re-applies the whole set (fail-open), so
-re-running converges. Keep the `[<name>]` section in `reuter.ini` until this
+re-running converges. Keep the `[mariadb:<name>]` section in `reuter.ini` until this
 step — `gen-firewall` reads the port from it, and errors if the section is
 missing while the token is still present.
 
 ### 9.4 Drop the connectivity record
 
-Delete the `[<name>]` section from the private `reuter.ini` (delivered by
+Delete the `[mariadb:<name>]` section from the private `reuter.ini` (delivered by
 [private-config.md](private-config.md)). This removes the instance from
 `db-check`'s reachability check and from anything resolving that section.
 
@@ -209,5 +209,5 @@ it in step 9.1, so no `gen-service-accounts` pass is needed.
 deploy <host>               # or `deploy all` for every prod host
 ```
 
-`db-check` (warn-only) now finds no `mariadb@<name>` unit and no `[<name>]`
+`db-check` (warn-only) now finds no `mariadb@<name>` unit and no `[mariadb:<name>]`
 section, so it reports nothing for the removed instance.

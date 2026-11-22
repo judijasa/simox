@@ -16,7 +16,7 @@ dropped. See the framework's
 ## Quick setup
 
 ```bash
-# from the dev machine, with the database's [<name>] section recorded, the CA in
+# from the dev machine, with the database's [mariadb:<name>] section recorded, the CA in
 # place on the host (etc/ema.conf ssl-ca) and this machine's client certificate
 # installed (see machine-certs.md)
 gen-service-accounts <name> -n   # review the SQL

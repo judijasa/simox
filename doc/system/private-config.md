@@ -107,7 +107,7 @@ ship step above; `ema.conf` carries the host-level `ssl-ca` (the committed
 ClickHouse endpoint.
 
 What is actually secret in `reuter.ini` is the **connectivity endpoints**, not
-credentials. Each `[<primary>]`/`[<replica>]` section carries `SERVER`/`PORT`/
+credentials. Each `[mariadb:<primary>]`/`[mariadb:<replica>]` section carries `SERVER`/`PORT`/
 `MYSQL_UNIX_PORT` (ZeroTier IPs and socket paths, recorded from `ema create`),
 and those live only in the private repo, never in the public history. The
 `<ACCOUNT>_PASSWORD` key is **not** secret: the service account is passwordless, and

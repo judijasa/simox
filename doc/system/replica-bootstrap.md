@@ -37,7 +37,7 @@ vendor/bin/gen-firewall <primary-host> --apply
 # on <replica>, inside a tmux-remote session
 ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
-# record the printed [<replica>] section in the private etc/reuter.ini, then
+# record the printed [mariadb:<replica>] section in the private etc/reuter.ini, then
 # open the replica's db:<replica> port for the website's reads:
 vendor/bin/gen-firewall <replica-host> --apply
 ```
@@ -86,7 +86,7 @@ Open the primary's port before the build. The replica's IO thread pulls the
 primary's binlog over the primary's `db:<primary>` port, so that port must be
 reachable from `<replica>` **before** `ema create` — otherwise the build fails
 with `Slave_IO_Running='Connecting'` / `Last_IO_Error ... Connection timed
-out`. `gen-firewall` opens it from the `[<primary>]` `PORT` in `reuter.ini`:
+out`. `gen-firewall` opens it from the `[mariadb:<primary>]` `PORT` in `reuter.ini`:
 
 ```bash
 vendor/bin/gen-firewall <primary-host> --dry-run
@@ -95,7 +95,7 @@ vendor/bin/gen-firewall <primary-host> --apply
 
 This is normally done when `<primary>` is first added; re-run it after a rebuild
 that changed the primary's `PORT` (the stale rule no longer matches). After the
-build, record `[<replica>]` and open the replica's own `db:<replica>` port the
+build, record `[mariadb:<replica>]` and open the replica's own `db:<replica>` port the
 same way — [add-database.md](add-database.md) step 7.
 
 Then build the replica on `<replica>` — inside a `tmux-remote` session, like any
@@ -107,9 +107,9 @@ ema create srv/<replica>-<GUID> --from-snapshot /root/replica-snapshot-<primary>
 
 ## After the build
 
-Record `<replica>`'s `[<replica>]` section in the private `etc/reuter.ini` — the
+Record `<replica>`'s `[mariadb:<replica>]` section in the private `etc/reuter.ini` — the
 section `ema create` printed, or `ema values <replica>` if it was lost. The
-section header names the instance; its `DBNAME` key names the shared `<schema>`
+header is `mariadb:<instance>`; its `DBNAME` key names the shared `<schema>`
 both instances serve. The website reads `<replica>`, not `<primary>`; both
 sections may carry the single `<account>` password key (optional — absent or
 empty means passwordless); `<account>` is ALL on `<primary>` and SELECT on

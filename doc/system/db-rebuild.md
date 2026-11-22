@@ -27,7 +27,7 @@ ema create srv/simo0-<GUID>
 ```
 
 Initializes the datadir, picks a port, writes the instance conf, asserts and
-starts `mariadb@<instance>`, creates the database and prints the `[simo0]`
+starts `mariadb@<instance>`, creates the database and prints the `[mariadb:simo0]`
 section. Record that section in the private `etc/reuter.ini`; the host must have
 been deployed once, since `ema create` asserts the `mariadb@.service` unit the
 deploy installs (see [add-database.md](add-database.md)).
@@ -45,7 +45,7 @@ The drop is typed first because ema has no delete verb and `ema create` refuses
 while the database exists (see [add-database.md](add-database.md)). Between the
 two commands the section's `DBNAME` no longer resolves, so `ema mdb simo0` fails
 until the second command runs; anything needed in that window goes through the
-mariadb client on the instance socket (`MYSQL_UNIX_PORT` in `[simo0]`).
+mariadb client on the instance socket (`MYSQL_UNIX_PORT` in `[mariadb:simo0]`).
 
 > `ema create -n srv/simo0-<GUID>` prints the equivalent SQL instead of running
 > it. Do not apply that stream by hand: it begins with the srv bootstrap's
