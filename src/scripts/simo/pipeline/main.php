@@ -404,6 +404,9 @@ function main(PDO $conn): void
         $query,
         $batch_size,
         $cursor_key,
-        fn(array $rows) => process_batch($conn, $rows, $batch_size),
+        function (array $rows) use ($conn, $batch_size): void {
+            process_batch($conn, $rows, $batch_size);
+            ch_counter('empleos_processed', count($rows));
+        },
     );
 }

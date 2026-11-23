@@ -21,6 +21,7 @@ function trim_log_files(): void
     }
     $max_size = 1_000_000; // 1MB per log file
 
+    $trimmed = 0;
     foreach (glob("$log_dir/*.log") as $log_file) {
         if (filesize($log_file) <= $max_size) continue;
 
@@ -28,8 +29,11 @@ function trim_log_files(): void
         $lines     = file($log_file);
         $half      = array_slice($lines, (int) (count($lines) / 2));
         file_put_contents($log_file, implode('', $half));
+        $trimmed++;
         Logger::info("Trimmed $log_file to half its original size.");
     }
+
+    ch_counter('logs_trimmed', $trimmed);
 }
 
 #[CronJob(schedule: '0 8 * * 6', scope: 'host')]

@@ -81,4 +81,6 @@ function publico_indexer($conn, $base_url, $batch_size_limit, $jobs_per_page, $t
     if ($total_saved == 0) {
         Logger::info("Nothing to save. Skipping db insertion.");
     }
+
+    ch_counter('jobs_saved', $total_saved);
 }

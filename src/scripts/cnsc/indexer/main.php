@@ -134,4 +134,6 @@ function cnsc_indexer($conn, $base_url, $incremental, $batch_size_limit, $timeou
             Logger::info("No avisos could be saved; skipping db insertion.");
         }
     }
+
+    ch_counter('avisos_saved', $total_saved);
 }
