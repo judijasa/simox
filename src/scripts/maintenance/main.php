@@ -11,7 +11,7 @@ use Utils\Logger;
 #[CronJob(schedule: '0 6 * * 6', scope: 'host')]
 #[Agent(dbTarget: null)]
 function trim_log_files(): void
-// Halves every log file over 1MB in REPO_LOG.
+// Keeps the newest 5MB of every log file in REPO_LOG.
 {
     // The repo-root .env (loaded by the nix phprun wrapper) provides REPO_LOG.
     $log_dir = getenv('REPO_LOG');
@@ -19,21 +19,69 @@ function trim_log_files(): void
         Logger::info('REPO_LOG not set. Skipping log trimming.');
         return;
     }
-    $max_size = 1_000_000; // 1MB per log file
 
-    $trimmed = 0;
-    foreach (glob("$log_dir/*.log") as $log_file) {
-        if (filesize($log_file) <= $max_size) continue;
+    // The cap is the retention policy: no log keeps more than this, so per-log
+    // disk use is bounded by one stated number. Halving the line count of files
+    // over a trigger size instead made the retained size an accident of the
+    // trigger, and left long-line logs near full size.
+    $max_bytes = 5_000_000;
 
-        Logger::info("Trimming $log_file...");
-        $lines     = file($log_file);
-        $half      = array_slice($lines, (int) (count($lines) / 2));
-        file_put_contents($log_file, implode('', $half));
+    $trimmed   = 0;
+    $reclaimed = 0;
+    foreach (glob("$log_dir/*.log") ?: [] as $log_file) {
+        $freed = trim_log_file($log_file, $max_bytes);
+        if ($freed === 0) continue;
+
+        Logger::info("Trimmed $log_file ($freed bytes reclaimed; cap $max_bytes).");
         $trimmed++;
-        Logger::info("Trimmed $log_file to half its original size.");
+        $reclaimed += $freed;
     }
 
     ch_counter('logs_trimmed', $trimmed);
+    ch_counter('log_bytes_reclaimed', $reclaimed);
+}
+
+/**
+ * Keeps the newest $max_bytes bytes of $log_file, starting at a line boundary.
+ * Returns the bytes reclaimed, or 0 when the file is under the cap or the trim
+ * could not be applied.
+ *
+ * The file is rewritten in place rather than replaced: phprun opens its log
+ * with O_APPEND, so the run's next write lands at the new EOF, and the inode
+ * keeps its owner and mode (cron runs as root; a manual run does not).
+ */
+function trim_log_file(string $log_file, int $max_bytes): int
+{
+    clearstatcache(true, $log_file);
+    $size = filesize($log_file);
+    if ($size === false || $size <= $max_bytes) return 0;
+
+    // Read only the tail: the cap bounds memory use, whatever the file size.
+    $handle = fopen($log_file, 'r+b');
+    if ($handle === false) return 0;
+
+    fseek($handle, $size - $max_bytes);
+    $tail = stream_get_contents($handle);
+    if ($tail === false || $tail === '') {
+        fclose($handle);
+        return 0;
+    }
+
+    // Drop the partial first line so the kept log starts on a whole record.
+    $newline = strpos($tail, "\n");
+    if ($newline !== false) {
+        $tail = substr($tail, $newline + 1);
+    }
+
+    // Write before truncating: a short write leaves the file at its old length
+    // (its prefix overwritten) instead of emptying a log on a full disk.
+    $length  = strlen($tail);
+    fseek($handle, 0);
+    $written = fwrite($handle, $tail);
+    $ok      = $written === $length && ftruncate($handle, $length);
+    fclose($handle);
+
+    return $ok ? $size - $length : 0;
 }
 
 #[CronJob(schedule: '0 8 * * 6', scope: 'host')]
