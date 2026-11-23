@@ -20,24 +20,29 @@
         # the extensions exist/loadable, and composer.json enforces them at
         # install (missing → hard failure).
         #
-        # Security: PHP 8.4.27 fixes two critical unauthenticated RCEs
-        # (CVE-2026-109618, CVE-2026-109619) present in <= 8.4.26. The pinned
-        # nixpkgs still ships 8.4.23, so we pin the source to the 8.4.27
-        # tarball until nixpkgs catches up.
+        # Security: PHP 8.4.28 is the 2026-11 security release: 12 CVEs,
+        # including PHP-FPM request smuggling (CVE-2026-129289), the session
+        # RCEs (CVE-2026-126714, CVE-2026-115560, CVE-2026-129481) and the
+        # timezone-cache RCE (CVE-2026-129496). It also carries the 8.4.27
+        # fixes for the two critical unauthenticated RCEs CVE-2026-109618 and
+        # CVE-2026-109619 present in <= 8.4.26. The pinned nixpkgs still ships
+        # 8.4.23, so we pin the source to the 8.4.28 tarball until nixpkgs
+        # catches up.
         # TODO: revert to plain `pkgs.php84` once the pinned nixpkgs carries
-        # php84 >= 8.4.27.
+        # php84 >= 8.4.28.
         #
         # Built straight from generic.nix (not `pkgs.php84.override`) so
-        # `packageOverrides` reaches the php-packages scope: 8.4.27's new OOM
-        # regression tests (CVE-2026-109618) spawn php-cgi subprocesses that
-        # fail under the nix sandbox, aborting the build even though the
-        # extension compiles and the fix ships in the source. Skip the filter
-        # suite; the extension list mirrors nixpkgs' php84 default.
+        # `packageOverrides` reaches the php-packages scope: the OOM regression
+        # tests added in 8.4.27 (CVE-2026-109618) and still shipped in 8.4.28
+        # spawn php-cgi subprocesses that fail under the nix sandbox, aborting
+        # the build even though the extension compiles and the fix ships in
+        # the source. Skip the filter suite; the extension list mirrors
+        # nixpkgs' php84 default.
         php84Base = pkgs.callPackage (pkgs.path + "/pkgs/development/interpreters/php/generic.nix") {
           stdenv = if pkgs.stdenv.cc.isClang then pkgs.llvmPackages.stdenv else pkgs.stdenv;
           pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
-          version = "8.4.27";
-          hash = "sha256-slMKh3xyL0sIyeF0owywi6wrfhkD7m6eMV8KqfX4LCQ=";
+          version = "8.4.28";
+          hash = "sha256-sjqhvlt0YprWJP0BNlwOTfbYh4RzmD8zc0lDPvNJwfc=";
           packageOverrides = final: prev: {
             extensions = prev.extensions // {
               filter = prev.extensions.filter.override { doCheck = false; };
@@ -49,8 +54,8 @@
           [
             bcmath calendar curl ctype dom exif fileinfo filter ftp gd gettext gmp iconv intl ldap mbstring mysqli mysqlnd openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql posix readline session simplexml sockets soap sodium sysvsem sqlite3 tokenizer xmlreader xmlwriter zip zlib
           ]
-          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.27" "8.4") [ all.imap ]
-          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.27" "8.5") [ all.opcache ]
+          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.28" "8.4") [ all.imap ]
+          ++ pkgs.lib.optionals (pkgs.lib.versionOlder "8.4.28" "8.5") [ all.opcache ]
         );
         phpPkg = php84.withExtensions ({ all, enabled }:
           enabled ++ [
